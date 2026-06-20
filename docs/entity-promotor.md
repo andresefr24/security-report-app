@@ -12,6 +12,8 @@ tags: [domain, entity]
 
 The **promotor**: the client and owner of the obra. The principal addressee of every [[entity-informe|informe]], and the legal owner of the resulting documents — though the [[entity-coordinador|coordinator]] must retain his own copy as evidence. The promotor **does not sign** and **is not a user** of the system in phase 1; he only receives.
 
+**First-class entity (D5).** The coordinator registers promotores as standalone records, *before* creating any proyecto, and a proyecto then references its promotor by id. One promotor owns many proyectos. This supersedes the earlier model where promotor data was captured inline at alta de obra. See [[decisions#d5-promotor-first-class]], [[flows#alta-de-promotor]].
+
 ## Role and legal basis
 
 RD 1627/1997 makes the promotor responsible for appointing the coordinator: any obra with a project must have a coordinator en fase de ejecución, and if the project involves more than one technician, a coordinator en fase de proyecto too. Without the coordinator's designation the work cannot start. The promotor is therefore the party the legal obligation ultimately sits with — the root of the open customer-identity question ([[decisions#d2-customer-tension-open]]).
@@ -21,11 +23,11 @@ RD 1627/1997 makes the promotor responsible for appointing the coordinator: any 
 | Field | Notes |
 |---|---|
 | Nombre / razón social | The owning entity (company or public body — e.g. Canal de Isabel II as promotor in the SIAC case). |
-| Datos fiscales / identificación | Captured at alta de obra. |
+| Datos fiscales / identificación | Captured at alta de promotor. |
 | Contacto(s) | Email(s) for the distribution list; the promotor is the principal addressee. |
-| Relación con la obra | One promotor per [[entity-proyecto]]. |
+| Relación con la obra | One promotor → many [[entity-proyecto|proyectos]]. |
 
-The promotor's data is supplied by the promotor but **entered by the coordinator** at alta de obra — the coordinator opens the proyecto; the promotor provides the data. See [[flows#alta-de-obra]].
+The promotor's data is supplied by the promotor but **entered by the coordinator** at **alta de promotor** — a standalone step before any proyecto exists; proyectos then link to the promotor by id. See [[flows#alta-de-promotor]].
 
 ## Ownership and data sensitivity
 

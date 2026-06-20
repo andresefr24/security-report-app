@@ -14,12 +14,12 @@ The **proyecto** (the obra) is the central resource: everything else hangs off i
 
 ## Alta de obra (formulario de obra nueva)
 
-The coordinator opens the proyecto via a "formulario de obra nueva." This is where promotor data and the project's identifying data are captured, and where the distribution list is subscribed. The coordinator opens it; the promotor supplies the data.
+The coordinator opens the proyecto via a "formulario de obra nueva." He **selects an already-registered [[entity-promotor|promotor]]** (registered in a prior step — see [[decisions#d5-promotor-first-class]]), enters the project's identifying data, and subscribes the distribution list. The proyecto links the promotor by id rather than capturing its data inline.
 
 | Field (provisional) | Notes |
 |---|---|
 | Código de obra | Identifier (the stakeholder referenced "un código X"). |
-| Promotor | Link to [[entity-promotor]]. |
+| Promotor | Reference (by id) to an existing [[entity-promotor]], selected — not entered — here. |
 | Descripción del proyecto | What the obra is. |
 | Plazo de ejecución | Start/end dates. |
 | Monto / presupuesto | Contract value. |
