@@ -1,0 +1,54 @@
+name: Publicar prototipos en GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'prototypes/**'
+      - 'scripts/build-manifest.mjs'
+      - '.github/workflows/prototypes.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Un solo despliegue a la vez; no cancela el que esté en curso.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Regenerar manifest.json
+        run: node scripts/build-manifest.mjs
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Subir artefacto (carpeta prototypes)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: prototypes
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Desplegar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
