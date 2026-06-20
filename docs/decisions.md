@@ -10,6 +10,27 @@ tags: [decision, architecture]
 
 Append-only log of architecture and product decisions, newest first. Each entry: the decision, the reasoning, and the trade-off accepted.
 
+## D5 — Promotor as a first-class entity, registered before projects {#d5-promotor-first-class}
+
+**Date:** 2026-06-16. **Status:** decided (phase 1).
+
+The promotor is a standalone managed entity. The coordinator registers promotores first, then creates proyectos *belonging to* a promotor. A proyecto references its promotor by id; promotor data is no longer captured inline inside the alta de obra.
+
+**Reasoning:** one promotor owns many obras, so registering it once and reusing it is cleaner and matches reality. **Trade-off:** the flow gains an "alta de promotor" step before alta de obra. Supersedes the earlier nested-promotor model in [[domain-model]] and [[entity-promotor]]. Recipients/distribution list stay nested under the proyecto.
+
+## D4 — Architecture: hexagonal + repository, client-side PDF, share-based delivery {#d4-architecture}
+
+**Date:** 2026-06-16. **Status:** decided (phase 1).
+
+The app follows DDD / Clean / Hexagonal architecture with the repository pattern. Concrete F1 consequences:
+
+- **Ports isolate the three volatile concerns** — persistence, AI, delivery — so the F2 backend swap is an adapter change, not a domain change. The repository pattern is what makes today's local async storage and tomorrow's cloud interchangeable.
+- **Output is a PDF** (report filled + photos + signatures) **generated client-side** (e.g. pdf-make / jsPDF). The PDF is the deliverable; the KB's "email is the durable copy" is reinterpreted — the coordinator shares the PDF himself.
+- **Delivery via Web Share API** (primary, mobile) **and/or download + manual attach** as fallback. No programmatic email send in F1; `mailto:` cannot attach files. The distribution list now pre-fills recipients, it does not send on its own.
+- **AI engine is the OpenAI API**, called directly from the client. Transcription (voice notes → text) and report filling are **online-only**. The API key lives in the client — accepted for F1 because users are internal alpha testers who own the key. A proxy / key protection is deferred to F2.
+
+**Reasoning:** keeps F1 backendless (consistent with [[decisions#d1-local-only-pwa]]) while leaving clean seams for F2. **Trade-off:** key exposure and online-only AI are acceptable only under the internal-alpha assumption; both must be revisited before any external user. Persistence layer is IndexedDB via localForage. Design system + prototypes come from Claude design (separate design track).
+
 ## D1 — Local-only PWA, async storage on device {#d1-local-only-pwa}
 
 **Date:** 2026-06-16. **Status:** decided (phase 1).

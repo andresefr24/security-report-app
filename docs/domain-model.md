@@ -15,14 +15,15 @@ The four core entities and how they relate. Detail per entity lives in the `enti
 ## The four entities
 
 - **[[entity-coordinador]]** — the only operator of the system. The Coordinador de Seguridad y Salud en fase de ejecución who runs the visits and authors the reports. Carries the professional registry data that gives reports legal weight.
-- **[[entity-promotor]]** — the client / owner of the obra. Principal addressee of every report; does not sign. Its data is captured at alta de obra.
-- **[[entity-proyecto]]** — the construction work (obra). The central resource everything hangs off: it has one promotor, one coordinator, a distribution list, and many reports.
+- **[[entity-promotor]]** — the client / owner of the obra. Principal addressee of every report; does not sign. A **first-class entity registered before any proyecto** ([[decisions#d5-promotor-first-class]]); one promotor owns many proyectos.
+- **[[entity-proyecto]]** — the construction work (obra). The central resource everything hangs off: it has one promotor (by reference), one coordinator, a distribution list, and many reports.
 - **[[entity-informe]]** — the daily (or weekly) site-visit report. The unit of work the product produces.
 
 ## Relationships
 
 ```mermaid
 erDiagram
+    COORDINADOR ||--o{ PROMOTOR : "da de alta"
     COORDINADOR ||--o{ PROYECTO : "da de alta y coordina"
     PROMOTOR ||--o{ PROYECTO : "es dueño de"
     PROYECTO ||--o{ INFORME : "acumula"
@@ -32,7 +33,7 @@ erDiagram
     COORDINADOR ||--o{ INFORME : "autoriza y firma"
 ```
 
-Cardinalities, in words: a coordinator registers and coordinates many proyectos; each proyecto has exactly one promotor and (for phase 1) one coordinator; a proyecto accumulates many informes over its life and carries one distribution list of recipients; each informe collects one or more signatures and zero-or-more photos, and is authored by the coordinator.
+Cardinalities, in words: a coordinator registers many promotores and coordinates many proyectos; each proyecto references exactly one promotor and (for phase 1) one coordinator; one promotor owns many proyectos; a proyecto accumulates many informes over its life and carries one distribution list of recipients; each informe collects one or more signatures and zero-or-more photos, and is authored by the coordinator.
 
 **Distribution list (recipients)** is modeled as a sub-collection of the proyecto rather than a top-level entity in phase 1 — it's a list of email contacts with a role label (promotor, dirección facultativa, técnico PRL, contratista principal, subcontrata). See [[entity-proyecto#distribution-list]].
 
@@ -45,4 +46,8 @@ Cardinalities, in words: a coordinator registers and coordinates many proyectos;
 
 ## Local persistence shape (phase 1)
 
-Async storage on device. Provisional top-level collections: `coordinador` (single profile), `proyectos`, `informes`, with recipients and signatures/photos nested under their parent. Photos stored as device blobs/base64 with size reduction on capture (replacing today's manual iPhone→WhatsApp→Android shrink trick). This is a sketch, not a schema — finalize when implementation starts.
+IndexedDB on device via localForage ([[decisions#d4-architecture]]). Provisional top-level collections: `coordinador` (single profile), `promotores`, `proyectos`, `informes`, with recipients and signatures/photos nested under their parent. A proyecto stores its `promotorId`; an informe stores its `proyectoId`. Photos stored as device blobs/base64 with size reduction on capture (replacing today's manual iPhone→WhatsApp→Android shrink trick). Behind a repository port so the F2 backend swap is an adapter change. This is a sketch, not a schema — finalize when implementation starts.
+
+## Output artifact
+
+The product's deliverable is a **client-generated PDF** per informe (filled report + photos + signatures), shared by the coordinator via Web Share API and/or download + manual attach. There is no programmatic email and no server-side rendering. See [[decisions#d4-architecture]], [[flows#relleno-del-informe]].
