@@ -1,0 +1,38 @@
+{
+  "prototipo-1.1-movil": {
+    "label": "Prototipo de la app (móvil)",
+    "description": "La maqueta principal, pensada para usar desde el teléfono. Empieza por aquí.",
+    "featured": true,
+    "order": 1
+  },
+  "prototipo-1.1-tablet": {
+    "label": "Prototipo de la app (tablet)",
+    "description": "La misma maqueta adaptada a pantalla de tablet.",
+    "featured": false,
+    "order": 2
+  },
+  "prototipo-1.1-escritorio": {
+    "label": "Prototipo de la app (ordenador)",
+    "description": "La misma maqueta adaptada a pantalla de ordenador.",
+    "featured": false,
+    "order": 3
+  },
+  "flujo-voz-ia": {
+    "label": "Dictar la visita por voz",
+    "description": "Cómo sería contar la visita hablando y que la app proponga el texto del informe.",
+    "featured": false,
+    "order": 4
+  },
+  "sistema-diseno": {
+    "label": "Sistema de diseño (material técnico)",
+    "description": "Colores, tipografías y componentes. Documentación interna del equipo.",
+    "featured": false,
+    "order": 90
+  },
+  "handoff-f1": {
+    "label": "Handoff F1 (material técnico)",
+    "description": "Entrega de diseño para desarrollo. Documentación interna del equipo.",
+    "featured": false,
+    "order": 91
+  }
+}
