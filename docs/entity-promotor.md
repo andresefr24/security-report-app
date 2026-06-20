@@ -1,7 +1,7 @@
 ---
 title: Entity — Promotor
 type: strategic
-updated: 2026-06-16
+updated: 2026-06-20
 validated: false
 tags: [domain, entity]
 ---

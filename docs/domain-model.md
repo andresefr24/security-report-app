@@ -1,7 +1,7 @@
 ---
 title: Domain model
 type: strategic
-updated: 2026-06-16
+updated: 2026-06-20
 validated: false
 tags: [domain, model]
 ---
@@ -47,6 +47,11 @@ Cardinalities, in words: a coordinator registers many promotores and coordinates
 ## Local persistence shape (phase 1)
 
 IndexedDB on device via localForage ([[decisions#d4-architecture]]). Provisional top-level collections: `coordinador` (single profile), `promotores`, `proyectos`, `informes`, with recipients and signatures/photos nested under their parent. A proyecto stores its `promotorId`; an informe stores its `proyectoId`. Photos stored as device blobs/base64 with size reduction on capture (replacing today's manual iPhone→WhatsApp→Android shrink trick). Behind a repository port so the F2 backend swap is an adapter change. This is a sketch, not a schema — finalize when implementation starts.
+
+## Lenguaje ubicuo y campos sugeridos por el diseño
+
+- **UI dice «obra», dominio mantiene `Proyecto`** (no se renombra). Tenerlo presente al leer código vs interfaz. Ver [[decisions#d7-design-system-adopted]].
+- La entrega de diseño ([[design-system]]) sugiere campos provisionales para el Informe que enriquecen el modelo (siguen `validated: false` hasta Q2): `atiende {nombre, cargo}`, `subcontratasPresentes[]`, `fuenteVoz {audioRef, transcripcion}`, `estado: borrador|firmado`, `pdfRef`, `foto.ts`. Ver [[entity-informe#open]].
 
 ## Output artifact
 
