@@ -37,6 +37,8 @@ This is the project vault: the `docs/` folder of the `security-report-app` repo.
 - [[reference-siac]] — SIAC (Canal de Isabel II), the reference product + its business model and competitors.
 - [[tech-research]] — OpenAI API (transcription, structured outputs, key safety) and PWA→native packaging path.
 - [[tech-plan-f1]] — implementation plan for Phase 1 (increments 1.1 and 1.2) on React + TS, hexagonal.
+- [[onboarding-josune]] — onboarding for Josune (fullstack): decisions, infra, phasing and tasks, for-dummies.
+- [[tasks-f1-draft]] — draft milestones M0–M9 for F1 (subject to change after stakeholder review).
 - [[design-system]] — design system normative (shadcn tokens, typography, nav, components, states). Source pieces in `../design/`.
 - [[skill-candidates]] — repetitive-work patterns flagged for possible skill-ization. Gated by the rule of three.
 

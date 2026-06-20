@@ -1,7 +1,7 @@
 ---
 title: Conventions
 type: strategic
-updated: 2026-06-16
+updated: 2026-06-20
 validated: true
 tags: [meta, schema]
 ---

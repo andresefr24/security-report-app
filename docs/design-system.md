@@ -56,7 +56,7 @@ Cada elemento mapea **1:1 a shadcn**; lo que no exista, como composición de pri
 
 **Compuestos propios:** captura de foto (`Card+Button+Dialog`, reduce al capturar), campo de firma (`Canvas+Card`, borrar/rehacer), grabador de voz (`Button+Progress`, onda + cronómetro + estado de transcripción), visor/compartir PDF (`Card+Sheet`).
 
-## Estados (copy en español llano)
+## Estados (copy en español llano) {#estados}
 
 - **Offline:** banda discreta «Sin conexión — se guarda en el dispositivo». La captura **nunca se bloquea**; el PDF se comparte al recuperar señal.
 - **Guardado:** autoguardado por paso + toast «Guardado en el dispositivo» + marca de tiempo en cabecera.

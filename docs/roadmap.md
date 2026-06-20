@@ -26,7 +26,7 @@ The narrow, achievable core. See [[product-overview]].
 
 **Exit criteria:** the stakeholder can replace his manual flow for one obra end-to-end, with output good enough that he'd send it to the promotor.
 
-## Phase 1.5 — AI tuning loop
+## Phase 1.5 — AI tuning loop {#phase-1-5-ai-tuning-loop}
 
 Not a feature wave, a discipline. Stakeholder and Miren use the tool independently and audit each other's reports. We iterate the AI prompting/context with their observations until the filled reports are reliably correct. Needs: OpenAI credentials, the reference report, and example "do / don't" cases for the model.
 

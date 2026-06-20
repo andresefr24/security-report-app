@@ -1,7 +1,7 @@
 ---
 title: Legal context
 type: reference
-updated: 2026-06-16
+updated: 2026-06-20
 validated: false
 tags: [legal, domain]
 ---

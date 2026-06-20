@@ -12,7 +12,7 @@ tags: [domain, entity]
 
 The **proyecto** (the obra) is the central resource: everything else hangs off it. It has one [[entity-promotor|promotor]], one [[entity-coordinador|coordinator]] (phase 1), a distribution list of recipients, and accumulates many [[entity-informe|informes]] over its life.
 
-## Alta de obra (formulario de obra nueva)
+## Alta de obra (formulario de obra nueva) {#alta-de-obra}
 
 The coordinator opens the proyecto via a "formulario de obra nueva." He **selects an already-registered [[entity-promotor|promotor]]** (registered in a prior step — see [[decisions#d5-promotor-first-class]]), enters the project's identifying data, and subscribes the distribution list. The proyecto links the promotor by id rather than capturing its data inline.
 
