@@ -8,7 +8,7 @@ tags: [meta, schema]
 
 # Conventions
 
-Lightweight rules for how this KB is organized. Read before adding or editing files. Adapted from the `mintstash-knowledge` vault conventions.
+Lightweight rules for how this KB is organized. Read before adding or editing files. These are the conventions of the project vault: the `docs/` folder of the `security-report-app` repo.
 
 ## Frontmatter schema
 

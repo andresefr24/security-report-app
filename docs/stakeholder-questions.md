@@ -1,14 +1,14 @@
 ---
 title: Stakeholder questions
 type: rolling
-updated: 2026-06-16
+updated: 2026-06-20
 validated: true
 tags: [open-question, stakeholder]
 ---
 
 # Stakeholder questions
 
-Preguntas abiertas que necesitan respuesta del stakeholder (coordinador) o de Miriam para cerrar modelo y alcance. Se resuelven en las interacciones de validación; al confirmarse, la respuesta se traslada al `entity-*` o decisión que corresponda y se marca aquí como resuelta. Newest concern first.
+Preguntas abiertas que necesitan respuesta del stakeholder (coordinador) o de Miren para cerrar modelo y alcance. Se resuelven en las interacciones de validación; al confirmarse, la respuesta se traslada al `entity-*` o decisión que corresponda y se marca aquí como resuelta. Newest concern first.
 
 ## Pendientes
 
@@ -30,7 +30,7 @@ Campos exactos del promotor requeridos en la cabecera del informe y en el alta d
 
 ### Q5 — Geolocalización y sello temporal {#q5-geo}
 
-¿El informe debe capturar y mostrar geolocalización + timestamp estilo SIAC? Ver [[entity-informe#open]], [[reference-siac]].
+¿El informe debe capturar y mostrar geolocalización + timestamp estilo SIAC? Y en concreto (pregunta del diseño): **¿la firma exige geo + sello de tiempo visibles para valer como evidencia?** Ver [[entity-informe#open]], [[reference-siac]], [[design-system#preguntas-abiertas-del-diseño]].
 
 ## Resueltas
 

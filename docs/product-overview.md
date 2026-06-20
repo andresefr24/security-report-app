@@ -1,7 +1,7 @@
 ---
 title: Product overview
 type: strategic
-updated: 2026-06-16
+updated: 2026-06-20
 validated: true
 tags: [product, vision]
 ---
@@ -18,7 +18,7 @@ The coordinator is legally required (RD 1627/1997) to maintain active presence o
 
 ## Who
 
-The single operator is the **coordinator** (see [[entity-coordinador]]). Everyone else is a recipient, not a user: the **promotor** (work owner, principal addressee, does not sign), plus the dirección facultativa, técnicos de PRL, the main contractor's site managers, and any subcontractor flagged with non-compliance that day (see [[entity-promotor]], [[entity-proyecto]]). Pilot users: Andrés's stakeholder and Miriam, who will dogf, use the tool separately, and audit each other's output.
+The single operator is the **coordinator** (see [[entity-coordinador]]). Everyone else is a recipient, not a user: the **promotor** (work owner, principal addressee, does not sign), plus the dirección facultativa, técnicos de PRL, the main contractor's site managers, and any subcontractor flagged with non-compliance that day (see [[entity-promotor]], [[entity-proyecto]]). Pilot users: Andrés's stakeholder and Miren, who will dogf, use the tool separately, and audit each other's output.
 
 ## Scope of phase 1 (deliberately narrow)
 
@@ -37,4 +37,4 @@ Is this fundamentally a tool **for the coordinator** or a service **for the prom
 
 ## Stack
 
-Not yet decided beyond "PWA with local async storage." To be defined when implementation starts; the OpenAI account for AI-assisted filling already exists (~23 $/mo, in Miriam's name, used by the stakeholder).
+Not yet decided beyond "PWA with local async storage." To be defined when implementation starts; the OpenAI account for AI-assisted filling already exists (~23 $/mo, in Miren's name, used by the stakeholder).

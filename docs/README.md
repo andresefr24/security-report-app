@@ -1,7 +1,7 @@
 ---
 title: README
 type: strategic
-updated: 2026-06-16
+updated: 2026-06-20
 validated: true
 tags: [meta]
 ---
@@ -10,7 +10,7 @@ tags: [meta]
 
 Single source of truth for the **Informe de visita a obra** product (working name). A knowledge base for product, domain, and decision context — authored as markdown, versioned in git, read by Cowork and (manually) synced to Claude.ai project knowledge when context feels stale.
 
-Structure and conventions mirror the `mintstash-knowledge` vault. See [[CONVENTIONS]] before editing.
+This is the project vault: the `docs/` folder of the `security-report-app` repo. See [[CONVENTIONS]] before editing.
 
 ## Start here
 
@@ -32,7 +32,12 @@ Structure and conventions mirror the `mintstash-knowledge` vault. See [[CONVENTI
 - [[roadmap]] — phased plan: F1 local PWA → F2 distribution & cloud repo → F3 actas / libro de incidencias.
 - [[working-preferences]] — how Andrés works, communication contract, validation discipline.
 - [[decisions]] — architecture and product decisions log, with the reasoning behind each.
-- [[reference-siac]] — SIAC (Canal de Isabel II), the existing product used as reference.
+- [[gotchas]] — technical traps discovered and how to sidestep them. Read before touching the affected area.
+- [[stakeholder-questions]] — open questions awaiting the stakeholder's answer (field sets, fecha-vs-mes, etc.).
+- [[reference-siac]] — SIAC (Canal de Isabel II), the reference product + its business model and competitors.
+- [[tech-research]] — OpenAI API (transcription, structured outputs, key safety) and PWA→native packaging path.
+- [[tech-plan-f1]] — implementation plan for Phase 1 (increments 1.1 and 1.2) on React + TS, hexagonal.
+- [[design-system]] — design system normative (shadcn tokens, typography, nav, components, states). Source pieces in `../design/`.
 - [[skill-candidates]] — repetitive-work patterns flagged for possible skill-ization. Gated by the rule of three.
 
 ## Validation status

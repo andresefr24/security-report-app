@@ -1,7 +1,7 @@
 ---
 title: Skill candidates
 type: rolling
-updated: 2026-06-16
+updated: 2026-06-20
 validated: true
 tags: [process, skills]
 ---
@@ -22,6 +22,7 @@ Tracks candidate patterns for skill-ization identified during work but not yet m
 |---|---|---|---|---|
 | 2026-06-16 | Requirements-meeting → structured KB distillation for a new project | This session: transcript + Granola notes → ordered ideas → entity model + flows + decisions | 1 | **Defer.** Already largely covered by the existing `vault-conversation-distill` / `ingest` skills. Re-evaluate only if a distinct, repeatable shape emerges that those skills don't fit. |
 | 2026-06-16 | AI-prompt-tuning loop for form-filling (capture do/don't examples, fold audit feedback into context) | Anticipated for [[roadmap#phase-1-5-ai-tuning-loop]] | 0 (anticipated) | **Wait.** No occurrences yet. Revisit once the tuning loop runs a few times and the shape stabilizes. |
+| 2026-06-20 | Publicar una entrega de prototipos para revisión de stakeholders (carpeta `/prototypes` en repo + GitHub Pages con auto-descubrimiento vía Action/manifest) | Esta sesión: prototipos `.dc.html` → prompt a Claude Code para montar Pages | 1 | **Defer (sesgo a no crear).** Útil y repetible, pero primera vez. Si reaparece una 3ª vez, materializar como skill que genere la estructura `/prototypes` + workflow. |
 
 ## Process notes
 

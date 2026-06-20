@@ -1,7 +1,7 @@
 ---
 title: Roadmap
 type: rolling
-updated: 2026-06-16
+updated: 2026-06-20
 validated: true
 tags: [product, planning]
 ---
@@ -14,6 +14,10 @@ Phased plan. Each phase is gated; later phases depend on validation, feedback, o
 
 The narrow, achievable core. See [[product-overview]].
 
+**Built in two increments** (not roadmap phases): **1.1** esqueleto sin IA (perfil → promotor → obra → informe manual → PDF → compartir) and **1.2** voz + IA encima. See [[decisions#d6-f1-increments]].
+
+**Gate antes de construir:** revisión de los prototipos de diseño con los stakeholders (auditoría dual), publicados en GitHub Pages. See [[decisions#d8-prototype-review-gate]].
+
 - Alta de una obra ([[entity-proyecto]]) with its promotor data and distribution list — see [[flows#alta-de-obra]].
 - Daily informe ([[entity-informe]]) filled with AI assistance, photos attached — see [[flows#relleno-del-informe]].
 - On-device signature capture (finger on tablet/phone) for the coordinator and whoever attends the visit.
@@ -24,7 +28,7 @@ The narrow, achievable core. See [[product-overview]].
 
 ## Phase 1.5 — AI tuning loop
 
-Not a feature wave, a discipline. Stakeholder and Miriam use the tool independently and audit each other's reports. We iterate the AI prompting/context with their observations until the filled reports are reliably correct. Needs: OpenAI credentials, the reference report, and example "do / don't" cases for the model.
+Not a feature wave, a discipline. Stakeholder and Miren use the tool independently and audit each other's reports. We iterate the AI prompting/context with their observations until the filled reports are reliably correct. Needs: OpenAI credentials, the reference report, and example "do / don't" cases for the model.
 
 ## Phase 2 — Distribution and persistence (gated on legal advice)
 

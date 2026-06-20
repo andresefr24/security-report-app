@@ -38,6 +38,10 @@ Coordinators are registered per autonomous community. In Madrid the registry is 
 
 **SIAC** (Canal de Isabel II) is the framing reference — a coordinator-assistance app with geolocation/timestamping. Detail in [[reference-siac]].
 
+## Privacidad — procesamiento de voz e imágenes por IA {#privacidad-ia}
+
+En el incremento 1.2, las **notas de voz y (potencialmente) el contenido de la visita** se envían a la **API de OpenAI** para transcripción y composición ([[decisions#d4-architecture]], [[decisions#d7-design-system-adopted]]). Eso convierte a OpenAI en **encargado del tratamiento** de datos que pueden incluir información de terceros. En el alpha interno (dos usuarios dueños de la cuenta) se asume; **antes de cualquier usuario externo** hay que cubrir: base legal e información a los interesados, acuerdo de encargado del tratamiento (DPA) con OpenAI, y decidir si las imágenes se envían a la IA o se mantienen solo en el dispositivo. El copy de la app debe ser veraz («se procesa de forma segura», no «en el dispositivo»). Es parte del gate legal de abajo, no bloquea F1 alpha.
+
 ## Open questions — require legal advice {#open-questions}
 
 - RGPD basis for storing third-party data and images if/when a central repository is built.
