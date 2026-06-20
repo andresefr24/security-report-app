@@ -37,7 +37,7 @@ async function main() {
   const labels = await loadLabels();
 
   const entries = (await readdir(protoDir))
-    .filter((f) => f.toLowerCase().endsWith('.html') && f.toLowerCase() !== 'index.html')
+    .filter((f) => f.toLowerCase().endsWith('.html') && f.toLowerCase() !== 'index.html' && !f.toLowerCase().endsWith('.dc.html'))
     .sort();
 
   const manifest = entries.map((file) => {
