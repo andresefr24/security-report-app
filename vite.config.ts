@@ -1,5 +1,6 @@
+/// <reference types="vitest/config" />
 import { fileURLToPath, URL } from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -44,4 +45,13 @@ export default defineConfig({
       },
     }),
   ],
+  // Configuración de tests (Vitest).
+  test: {
+    // Navegador "de mentira" para poder montar componentes React.
+    environment: 'jsdom',
+    // Permite usar describe/it/expect sin importarlos en cada archivo.
+    globals: true,
+    // Carga los matchers de jest-dom (toBeInTheDocument, etc.).
+    setupFiles: './src/test/setup.ts',
+  },
 })

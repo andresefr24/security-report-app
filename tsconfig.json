@@ -14,8 +14,10 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Tipos globales: Node (node:url) y los globals de Vitest (describe/it/expect) */
+    "types": ["node", "vitest/globals"],
+
     /* Alias '@/...' -> 'src/...' (igual que en vite.config.ts) */
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     },
