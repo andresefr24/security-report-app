@@ -1,3 +1,4 @@
+import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -6,6 +7,12 @@ import { VitePWA } from 'vite-plugin-pwa'
 // El manifiesto aquí es MÍNIMO (M0); el afinado real —iconos definitivos,
 // nombre comercial, caché offline— es trabajo de M5.
 export default defineConfig({
+  // '@' apunta a src/ (lo usan shadcn/ui y nuestros imports).
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
   plugins: [
     react(),
     VitePWA({
