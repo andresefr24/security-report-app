@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Resolución de módulos al estilo de un bundler (Vite) */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Tipos globales: Node (node:url) y los globals de Vitest (describe/it/expect) */
+    "types": ["node", "vitest/globals"],
+
+    /* Alias '@/...' -> 'src/...' (igual que en vite.config.ts) */
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
+    /* Reglas estrictas: TypeScript nos avisa de más errores */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src", "vite.config.ts"]
+}
