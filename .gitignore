@@ -1,0 +1,23 @@
+# Dependencias
+node_modules/
+
+# Resultados de compilación
+dist/
+dist-ssr/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Caché de herramientas
+*.local
+.vite/
+
+# Editores
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
