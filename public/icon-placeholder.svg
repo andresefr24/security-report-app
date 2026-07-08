@@ -1,0 +1,9 @@
+<!-- ICONO PROVISIONAL (M0). El icono definitivo, en sus tamaños PNG
+     (192/512, normal y maskable), se hace en M5. No usar como final. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#1D4ED8"/>
+  <rect x="160" y="128" width="192" height="256" rx="16" fill="#FFFFFF"/>
+  <rect x="192" y="176" width="128" height="16" rx="8" fill="#1D4ED8"/>
+  <rect x="192" y="224" width="128" height="16" rx="8" fill="#1D4ED8"/>
+  <rect x="192" y="272" width="96" height="16" rx="8" fill="#1D4ED8"/>
+</svg>

@@ -4,6 +4,8 @@ node_modules/
 # Resultados de compilación
 dist/
 dist-ssr/
+dev-dist/
+*.tsbuildinfo
 
 # Logs
 logs/
