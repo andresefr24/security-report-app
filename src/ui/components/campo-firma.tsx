@@ -29,6 +29,11 @@ export function CampoFirma({ valor, onChange }: CampoFirmaProps) {
   // Guardamos onChange en un ref para no re-crear el pad en cada render.
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  // Recordamos la última firma inicial (dataURL) que nos llega por props. Se
+  // guarda como imagen, no como trazos: por eso hay que re-pintarla a mano al
+  // redimensionar y no se puede "deshacer" trazo a trazo (ver botón Deshacer).
+  const valorInicialRef = useRef(valor);
+  valorInicialRef.current = valor;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -39,7 +44,8 @@ export function CampoFirma({ valor, onChange }: CampoFirmaProps) {
 
     // Un canvas tiene dos tamaños: el visual (CSS) y el de píxeles reales. Si no
     // se sincronizan escalando por devicePixelRatio, la firma sale desplazada del
-    // dedo. Reajustamos conservando lo ya dibujado (redimensionar borra el canvas).
+    // dedo. Al redimensionar el canvas se borra, así que volvemos a pintar lo que
+    // había: los trazos dibujados o, si no hay, la firma inicial (imagen).
     function ajustarTamano() {
       const ratio = Math.max(window.devicePixelRatio || 1, 1);
       const dibujado = pad.toData();
@@ -47,12 +53,15 @@ export function CampoFirma({ valor, onChange }: CampoFirmaProps) {
       canvas!.height = canvas!.offsetHeight * ratio;
       canvas!.getContext("2d")?.scale(ratio, ratio);
       pad.clear();
-      if (dibujado.length > 0) pad.fromData(dibujado);
+      if (dibujado.length > 0) {
+        pad.fromData(dibujado);
+      } else if (valorInicialRef.current) {
+        // Pasamos el mismo ratio para que la imagen no salga escalada de más.
+        void pad.fromDataURL(valorInicialRef.current, { ratio });
+      }
     }
 
-    ajustarTamano();
-    // Si venía una firma previa (editar perfil), la pintamos.
-    if (valor) void pad.fromDataURL(valor);
+    ajustarTamano(); // ajusta tamaño y pinta la firma inicial si la hay
 
     // Cada vez que se levanta el dedo, avisamos al formulario con la firma actual.
     const alTerminarTrazo = () => onChangeRef.current(pad.toDataURL());
@@ -64,10 +73,18 @@ export function CampoFirma({ valor, onChange }: CampoFirmaProps) {
       window.removeEventListener("resize", ajustarTamano);
       pad.off(); // desliga los listeners internos de la librería
     };
-    // Solo al montar: la firma inicial se aplica una vez. Ver 5c (cargamos el
-    // perfil ANTES de pintar el formulario, así `valor` ya está en el primer render).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Si la firma inicial llega DESPUÉS de montar (p. ej. cargada de forma
+  // asíncrona) y el usuario aún no ha dibujado, la pintamos. No re-pinta si ya
+  // hay trazos, para no borrar lo que el usuario acaba de firmar.
+  useEffect(() => {
+    const pad = padRef.current;
+    if (!pad || !valor || !pad.isEmpty()) return;
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    void pad.fromDataURL(valor, { ratio });
+  }, [valor]);
 
   function borrar() {
     const pad = padRef.current;
@@ -79,6 +96,9 @@ export function CampoFirma({ valor, onChange }: CampoFirmaProps) {
   function deshacer() {
     const pad = padRef.current;
     if (!pad) return;
+    // Limitación conocida: "Deshacer" solo actúa sobre los trazos que se han
+    // dibujado en esta sesión. Una firma cargada de un perfil guardado es una
+    // imagen (sin trazos), así que sobre ella solo funciona "Borrar".
     const dibujado = pad.toData();
     if (dibujado.length === 0) return;
     dibujado.pop(); // quita el último trazo
