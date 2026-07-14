@@ -125,9 +125,12 @@ export function PerfilPage({ configurarPerfil }: PerfilPageProps) {
         <div className="space-y-1.5">
           <CampoFirma
             valor={firma || undefined}
-            onChange={(valor) =>
-              setValue("firma", valor ?? "", { shouldValidate: true })
-            }
+            onChange={(valor) => {
+              setValue("firma", valor ?? "", { shouldValidate: true });
+              // La firma no dispara el onChange del <form> (no es un input DOM),
+              // así que ocultamos aquí el aviso de "guardado" si se modifica.
+              setGuardado(false);
+            }}
           />
           {errors.firma && (
             <p className="text-[15px] text-destructive">{errors.firma.message}</p>
