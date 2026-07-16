@@ -1,7 +1,12 @@
 # domain/ — el corazón de las reglas
 
-Reglas de negocio **puras**, sin dependencias externas. Nada de aquí sabe que
-existe React, localForage, OpenAI o un PDF.
+Reglas de negocio **puras**. Nada de aquí sabe que existe React, localForage,
+OpenAI o un PDF.
+
+> **Única excepción: `zod`.** Se permite a propósito para que las reglas de
+> validación vivan en un solo sitio (el dominio) y el formulario las reutilice en
+> vez de duplicarlas. Además, en el incremento 1.2 el mismo esquema generará el
+> JSON Schema de la IA (Structured Outputs). Ver [tech-plan §2](../../docs/tech-plan-f1.md).
 
 **Qué va dentro:**
 - Entidades y agregados: `coordinador/`, `promotor/`, `proyecto/`, `informe/`.
