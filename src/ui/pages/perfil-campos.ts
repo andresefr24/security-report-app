@@ -11,29 +11,13 @@ import {
   type Coordinador,
   type DatosCoordinador,
 } from "@/domain/coordinador/coordinador";
+import { esquemaCoordinador } from "@/domain/coordinador/esquema-coordinador";
 
-// Validación de correo igual que en el dominio, para que UI y dominio coincidan.
-const FORMATO_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-// Esquema del formulario. Da el feedback inmediato bajo cada campo; el dominio
-// (crearCoordinador) sigue siendo la regla de verdad al guardar.
-export const esquemaPerfil = z.object({
-  nombreCompleto: z.string().trim().min(1, "Indique el nombre y apellidos."),
-  numeroRegistroIrsst: z
-    .string()
-    .trim()
-    .min(1, "El número de registro de la CAM (IRSST) es obligatorio."),
-  profesion: z.string().trim().optional(),
-  numeroColegiado: z.string().trim().optional(),
-  contacto: z.object({
-    correo: z
-      .string()
-      .trim()
-      .optional()
-      .refine((v) => !v || FORMATO_CORREO.test(v), "El correo no tiene un formato válido."),
-    telefono: z.string().trim().optional(),
-    empresa: z.string().trim().optional(),
-  }),
+// Esquema del formulario = las reglas del dominio + lo propio de la pantalla.
+// Reutilizamos esquemaCoordinador (una sola fuente de verdad; no duplicamos el
+// formato de correo ni los obligatorios) y solo añadimos que la firma es
+// obligatoria AL RELLENAR EL PERFIL, aunque en el dominio siga siendo opcional.
+export const esquemaPerfil = esquemaCoordinador.extend({
   firma: z.string().min(1, "Añada su firma antes de guardar."),
 });
 
@@ -102,9 +86,9 @@ function opcional(valor: string | undefined): string | undefined {
 /** Valores del formulario -> datos para el caso de uso (limpia opcionales vacíos). */
 export function aDatosCoordinador(form: FormularioPerfil): DatosCoordinador {
   const contacto = {
-    correo: opcional(form.contacto.correo),
-    telefono: opcional(form.contacto.telefono),
-    empresa: opcional(form.contacto.empresa),
+    correo: opcional(form.contacto?.correo),
+    telefono: opcional(form.contacto?.telefono),
+    empresa: opcional(form.contacto?.empresa),
   };
   const tieneContacto = contacto.correo || contacto.telefono || contacto.empresa;
 
