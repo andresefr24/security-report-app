@@ -1,6 +1,8 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { InicioPage } from '@/ui/pages/InicioPage'
 import { PerfilPage } from '@/ui/pages/PerfilPage'
+import { PromotoresPage } from '@/ui/pages/PromotoresPage'
+import { PromotorFormPage } from '@/ui/pages/PromotorFormPage'
 import { casosDeUso } from '@/app/composition-root'
 
 // Enrutado de la app (composition root). Cada ruta -> una pantalla de ui/pages.
@@ -15,5 +17,28 @@ export const router = createBrowserRouter([
   {
     path: '/perfil',
     element: <PerfilPage configurarPerfil={casosDeUso.configurarPerfil} />,
+  },
+  {
+    path: '/promotores',
+    element: <PromotoresPage listarPromotores={casosDeUso.listarPromotores} />,
+  },
+  // 'nuevo' va ANTES que ':id', si no se interpretaría "nuevo" como un id.
+  {
+    path: '/promotores/nuevo',
+    element: (
+      <PromotorFormPage
+        altaPromotor={casosDeUso.altaPromotor}
+        editarPromotor={casosDeUso.editarPromotor}
+      />
+    ),
+  },
+  {
+    path: '/promotores/:id',
+    element: (
+      <PromotorFormPage
+        altaPromotor={casosDeUso.altaPromotor}
+        editarPromotor={casosDeUso.editarPromotor}
+      />
+    ),
   },
 ])
