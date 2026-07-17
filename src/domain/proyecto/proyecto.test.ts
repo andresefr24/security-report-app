@@ -108,6 +108,16 @@ describe("crearProyecto", () => {
     if (resultado.ok) expect(resultado.valor.id).toBe("obra-fija-1");
   });
 
+  it("genera un id nuevo si le pasan uno vacío (no lo guarda bajo la clave \"\")", () => {
+    const resultado = crearProyecto(datosValidos({ id: "" }));
+
+    expect(resultado.ok).toBe(true);
+    if (resultado.ok) {
+      expect(resultado.valor.id).not.toBe("");
+      expect(resultado.valor.id).toBeTruthy();
+    }
+  });
+
   it("acepta los campos opcionales (descripción, plazo y presupuesto)", () => {
     const resultado = crearProyecto(
       datosValidos({

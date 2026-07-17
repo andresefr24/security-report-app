@@ -10,7 +10,7 @@
 // Reglas puras: la única dependencia externa es zod (ver README de domain/).
 
 import { exito, fallo, type Result } from "@/domain/shared/result";
-import { nuevoId, type Id } from "@/domain/shared/id";
+import { idONuevo, type Id } from "@/domain/shared/id";
 import {
   esquemaProyecto,
   type FRECUENCIAS_VISITA,
@@ -75,7 +75,7 @@ export function crearProyecto(datos: DatosProyecto): Result<Proyecto> {
 
   return exito({
     ...analisis.data,
-    id: analisis.data.id ?? nuevoId(),
+    id: idONuevo(analisis.data.id),
     _valido: true,
   });
 }

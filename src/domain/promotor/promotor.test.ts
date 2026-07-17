@@ -47,6 +47,16 @@ describe("crearPromotor", () => {
     }
   });
 
+  it("genera un id nuevo si le pasan uno vacío (no lo guarda bajo la clave \"\")", () => {
+    const resultado = crearPromotor(datosValidos({ id: "" }));
+
+    expect(resultado.ok).toBe(true);
+    if (resultado.ok) {
+      expect(resultado.valor.id).not.toBe("");
+      expect(resultado.valor.id).toBeTruthy();
+    }
+  });
+
   it("rechaza un promotor sin nombre o razón social", () => {
     const resultado = crearPromotor(datosValidos({ nombreRazonSocial: "" }));
 
