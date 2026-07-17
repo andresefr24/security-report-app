@@ -7,14 +7,7 @@
 // tech-plan-f1.md §2 y la nota en el README de domain/.
 
 import { z } from "zod";
-
-// Validación ligera de correo: suficiente para avisar de erratas evidentes.
-// No pretende cubrir el RFC entero; el dominio no debería obsesionarse con esto.
-const FORMATO_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-// ¿Es una cadena con contenido real (no vacía ni solo espacios)?
-const tieneTexto = (valor: string | undefined): boolean =>
-  typeof valor === "string" && valor.trim().length > 0;
+import { correoOpcional, textoObligatorio } from "@/domain/shared/validacion";
 
 /**
  * Reglas base del coordinador. Valida sin transformar (no recorta espacios ni
@@ -29,23 +22,15 @@ const tieneTexto = (valor: string | undefined): boolean =>
  * rellenar el perfil, extendiendo este esquema (ver ui/pages/perfil-campos.ts).
  */
 export const esquemaCoordinador = z.object({
-  nombreCompleto: z
-    .string()
-    .refine(tieneTexto, "El nombre y apellidos no pueden estar vacíos."),
-  numeroRegistroIrsst: z
-    .string()
-    .refine(tieneTexto, "El número de registro de la CAM (IRSST) es obligatorio."),
+  nombreCompleto: textoObligatorio("El nombre y apellidos no pueden estar vacíos."),
+  numeroRegistroIrsst: textoObligatorio(
+    "El número de registro de la CAM (IRSST) es obligatorio.",
+  ),
   profesion: z.string().optional(),
   numeroColegiado: z.string().optional(),
   contacto: z
     .object({
-      correo: z
-        .string()
-        .optional()
-        .refine(
-          (v) => !tieneTexto(v) || FORMATO_CORREO.test(v!.trim()),
-          "El correo no tiene un formato válido.",
-        ),
+      correo: correoOpcional,
       telefono: z.string().optional(),
       empresa: z.string().optional(),
     })
