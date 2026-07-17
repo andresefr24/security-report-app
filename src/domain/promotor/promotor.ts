@@ -10,7 +10,7 @@
 // Reglas puras: la única dependencia externa es zod (ver README de domain/).
 
 import { exito, fallo, type Result } from "@/domain/shared/result";
-import { nuevoId, type Id } from "@/domain/shared/id";
+import { idONuevo, type Id } from "@/domain/shared/id";
 import { esquemaPromotor } from "@/domain/promotor/esquema-promotor";
 
 /** Persona de contacto del promotor. Provisional: de momento, una sola. */
@@ -57,7 +57,7 @@ export function crearPromotor(datos: DatosPromotor): Result<Promotor> {
 
   return exito({
     ...analisis.data,
-    id: analisis.data.id ?? nuevoId(),
+    id: idONuevo(analisis.data.id),
     _valido: true,
   });
 }

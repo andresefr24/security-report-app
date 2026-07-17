@@ -7,6 +7,17 @@
 export type Id = string;
 
 /**
+ * Devuelve el id recibido si es utilizable, o uno nuevo si no.
+ *
+ * OJO con `??`: solo sustituye null/undefined, NO la cadena vacía. Un id "" se
+ * colaría y todas las entidades acabarían guardadas bajo la misma clave "",
+ * pisándose unas a otras. Por eso se comprueba que tenga texto de verdad.
+ */
+export function idONuevo(id: string | undefined): Id {
+  return typeof id === "string" && id.trim().length > 0 ? id : nuevoId();
+}
+
+/**
  * Genera un identificador único.
  *
  * OJO: `crypto.randomUUID()` solo existe en **contextos seguros** (https o

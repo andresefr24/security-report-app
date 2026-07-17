@@ -24,7 +24,8 @@ export const router = createBrowserRouter([
     path: '/promotores',
     element: <PromotoresPage listarPromotores={casosDeUso.listarPromotores} />,
   },
-  // 'nuevo' va ANTES que ':id', si no se interpretaría "nuevo" como un id.
+  // React Router v6 ordena por especificidad (un segmento fijo como 'nuevo' gana
+  // al dinámico ':id'), así que el orden en que se declaren da igual.
   {
     path: '/promotores/nuevo',
     element: (
