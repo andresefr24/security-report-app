@@ -31,3 +31,18 @@ export const correoOpcional = z
     (v) => !tieneTexto(v) || FORMATO_CORREO.test(v!.trim()),
     "El correo no tiene un formato válido.",
   );
+
+/**
+ * Correo obligatorio: lo usan los destinatarios de la lista de distribución, que
+ * sin correo no sirven de nada. Da un mensaje distinto según falte o esté mal
+ * escrito, en vez de soltar los dos a la vez.
+ */
+export const correoObligatorio = z.string().superRefine((valor, ctx) => {
+  if (!tieneTexto(valor)) {
+    ctx.addIssue({ code: "custom", message: "El correo es obligatorio." });
+    return;
+  }
+  if (!FORMATO_CORREO.test(valor.trim())) {
+    ctx.addIssue({ code: "custom", message: "El correo no tiene un formato válido." });
+  }
+});
