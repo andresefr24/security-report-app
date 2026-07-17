@@ -6,7 +6,7 @@
 // archivo, sin tocar la pantalla. Ver docs/entity-coordinador.md.
 
 import { z } from "zod";
-import { type FieldPath } from "react-hook-form";
+import { type CampoTexto } from "@/ui/components/campos-formulario";
 import {
   type Coordinador,
   type DatosCoordinador,
@@ -23,16 +23,8 @@ export const esquemaPerfil = esquemaCoordinador.extend({
 
 export type FormularioPerfil = z.infer<typeof esquemaPerfil>;
 
-export interface CampoTexto {
-  nombre: FieldPath<FormularioPerfil>;
-  etiqueta: string;
-  ayuda?: string;
-  tipo?: "text" | "email" | "tel";
-  obligatorio?: boolean;
-}
-
 // Los campos de texto, en orden de aparición. La firma se pinta aparte (canvas).
-export const camposPerfil: CampoTexto[] = [
+export const camposPerfil: CampoTexto<FormularioPerfil>[] = [
   { nombre: "nombreCompleto", etiqueta: "Nombre y apellidos", obligatorio: true },
   {
     nombre: "numeroRegistroIrsst",
