@@ -22,7 +22,7 @@ export interface CampoTexto<T extends FieldValues> {
   nombre: FieldPath<T>;
   etiqueta: string;
   ayuda?: string;
-  tipo?: "text" | "email" | "tel";
+  tipo?: "text" | "email" | "tel" | "date";
   obligatorio?: boolean;
 }
 

@@ -3,6 +3,8 @@ import { InicioPage } from '@/ui/pages/InicioPage'
 import { PerfilPage } from '@/ui/pages/PerfilPage'
 import { PromotoresPage } from '@/ui/pages/PromotoresPage'
 import { PromotorFormPage } from '@/ui/pages/PromotorFormPage'
+import { ObrasPage } from '@/ui/pages/ObrasPage'
+import { ObraFormPage } from '@/ui/pages/ObraFormPage'
 import { casosDeUso } from '@/app/composition-root'
 
 // Enrutado de la app (composition root). Cada ruta -> una pantalla de ui/pages.
@@ -38,6 +40,19 @@ export const router = createBrowserRouter([
       <PromotorFormPage
         altaPromotor={casosDeUso.altaPromotor}
         editarPromotor={casosDeUso.editarPromotor}
+      />
+    ),
+  },
+  {
+    path: '/obras',
+    element: <ObrasPage listarProyectos={casosDeUso.listarProyectos} />,
+  },
+  {
+    path: '/obras/nueva',
+    element: (
+      <ObraFormPage
+        crearProyecto={casosDeUso.crearProyecto}
+        listarPromotores={casosDeUso.listarPromotores}
       />
     ),
   },
