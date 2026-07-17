@@ -11,13 +11,14 @@
 import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { type CrearProyecto } from "@/application/use-cases/crear-proyecto";
 import { type ListarPromotores } from "@/application/use-cases/listar-promotores";
 import { type Promotor } from "@/domain/promotor/promotor";
 import { FRECUENCIAS_VISITA, ROLES_DESTINATARIO } from "@/domain/proyecto/esquema-proyecto";
 import { Button } from "@/ui/components/button";
 import { Card } from "@/ui/components/card";
+import { Input } from "@/ui/components/input";
 import { Label } from "@/ui/components/label";
 import { CamposTexto, mensajeError } from "@/ui/components/campos-formulario";
 import {
@@ -30,8 +31,8 @@ import {
   type FormularioObra,
 } from "@/ui/pages/obra-campos";
 
-// Estilo compartido de los <select> nativos: mismo alto y tamaño de letra que
-// los demás campos (52px, 18px).
+// Estilo de los <select> nativos: mismo alto y tamaño de letra que los demás
+// campos (52px, 18px). Los <input> usan el componente Input, que ya los trae.
 const CLASES_SELECT =
   "h-[52px] w-full rounded-md border border-input bg-background px-3 text-[18px]";
 
@@ -102,7 +103,7 @@ export function ObraFormPage({ crearProyecto, listarPromotores }: ObraFormPagePr
             Antes de crear una obra necesitas registrar a su promotor.
           </p>
           <Button asChild className="h-[52px] w-full text-[18px]">
-            <a href="/promotores/nuevo">Crear el primer promotor</a>
+            <Link to="/promotores/nuevo">Crear el primer promotor</Link>
           </Button>
         </Card>
       </main>
@@ -176,10 +177,10 @@ export function ObraFormPage({ crearProyecto, listarPromotores }: ObraFormPagePr
                 >
                   Correo
                 </Label>
-                <input
+                <Input
                   id={`listaDistribucion.${indice}.correo`}
                   type="email"
-                  className={CLASES_SELECT}
+                  className="h-[52px] text-[18px]"
                   {...register(`listaDistribucion.${indice}.correo`)}
                 />
                 {mensajeError(errors, `listaDistribucion.${indice}.correo`) && (
