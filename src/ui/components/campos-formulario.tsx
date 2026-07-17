@@ -26,6 +26,16 @@ export interface CampoTexto<T extends FieldValues> {
   obligatorio?: boolean;
 }
 
+/**
+ * Convierte "" en undefined al llevar los valores del formulario al dominio: los
+ * campos opcionales vacíos no se guardan. Vive aquí para que los tres
+ * formularios (perfil, promotor, obra) usen el mismo criterio.
+ */
+export function opcional(valor: string | undefined): string | undefined {
+  const limpio = valor?.trim();
+  return limpio ? limpio : undefined;
+}
+
 /** Lee el mensaje de error de un campo, incluso anidado ("contacto.correo"). */
 export function mensajeError<T extends FieldValues>(
   errors: FieldErrors<T>,

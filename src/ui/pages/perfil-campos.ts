@@ -6,7 +6,7 @@
 // archivo, sin tocar la pantalla. Ver docs/entity-coordinador.md.
 
 import { z } from "zod";
-import { type CampoTexto } from "@/ui/components/campos-formulario";
+import { opcional, type CampoTexto } from "@/ui/components/campos-formulario";
 import {
   type Coordinador,
   type DatosCoordinador,
@@ -67,12 +67,6 @@ export function aFormulario(coordinador: Coordinador): FormularioPerfil {
     },
     firma: coordinador.firma ?? "",
   };
-}
-
-// Convierte "" en undefined: los campos opcionales vacíos no se guardan.
-function opcional(valor: string | undefined): string | undefined {
-  const limpio = valor?.trim();
-  return limpio ? limpio : undefined;
 }
 
 /** Valores del formulario -> datos para el caso de uso (limpia opcionales vacíos). */

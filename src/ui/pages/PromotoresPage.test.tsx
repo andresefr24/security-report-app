@@ -4,22 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { PromotoresPage } from "@/ui/pages/PromotoresPage";
 import { AltaPromotor } from "@/application/use-cases/alta-promotor";
 import { ListarPromotores } from "@/application/use-cases/listar-promotores";
-import { type Promotor } from "@/domain/promotor/promotor";
-import { type PromotorRepository } from "@/domain/ports/promotor-repository";
-import { type Id } from "@/domain/shared/id";
-
-class PromotorRepositoryEnMemoria implements PromotorRepository {
-  readonly guardados = new Map<Id, Promotor>();
-  async guardar(promotor: Promotor): Promise<void> {
-    this.guardados.set(promotor.id, promotor);
-  }
-  async obtenerPorId(id: Id): Promise<Promotor | null> {
-    return this.guardados.get(id) ?? null;
-  }
-  async listar(): Promise<Promotor[]> {
-    return [...this.guardados.values()];
-  }
-}
+import { PromotorRepositoryEnMemoria } from "@/test/fakes";
 
 // La pantalla usa <Link>, así que necesita un router alrededor.
 function montar(repo: PromotorRepositoryEnMemoria) {
