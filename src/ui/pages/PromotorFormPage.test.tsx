@@ -4,22 +4,7 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { PromotorFormPage } from "@/ui/pages/PromotorFormPage";
 import { AltaPromotor } from "@/application/use-cases/alta-promotor";
 import { EditarPromotor } from "@/application/use-cases/editar-promotor";
-import { type Promotor } from "@/domain/promotor/promotor";
-import { type PromotorRepository } from "@/domain/ports/promotor-repository";
-import { type Id } from "@/domain/shared/id";
-
-class PromotorRepositoryEnMemoria implements PromotorRepository {
-  readonly guardados = new Map<Id, Promotor>();
-  async guardar(promotor: Promotor): Promise<void> {
-    this.guardados.set(promotor.id, promotor);
-  }
-  async obtenerPorId(id: Id): Promise<Promotor | null> {
-    return this.guardados.get(id) ?? null;
-  }
-  async listar(): Promise<Promotor[]> {
-    return [...this.guardados.values()];
-  }
-}
+import { PromotorRepositoryEnMemoria } from "@/test/fakes";
 
 // La pantalla usa useParams/useNavigate, así que la montamos dentro de un router
 // de memoria (no necesita navegador real). `ruta` simula la URL de entrada.

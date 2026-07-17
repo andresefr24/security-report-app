@@ -9,7 +9,7 @@
 // Ver docs/entity-promotor.md.
 
 import { z } from "zod";
-import { type CampoTexto } from "@/ui/components/campos-formulario";
+import { opcional, type CampoTexto } from "@/ui/components/campos-formulario";
 import { esquemaPromotor } from "@/domain/promotor/esquema-promotor";
 import { type DatosPromotor, type Promotor } from "@/domain/promotor/promotor";
 
@@ -49,12 +49,6 @@ export function aFormularioPromotor(promotor: Promotor): FormularioPromotor {
       telefono: promotor.contacto?.telefono ?? "",
     },
   };
-}
-
-// Convierte "" en undefined: los campos opcionales vacíos no se guardan.
-function opcional(valor: string | undefined): string | undefined {
-  const limpio = valor?.trim();
-  return limpio ? limpio : undefined;
 }
 
 /** Valores del formulario -> datos para el caso de uso (limpia opcionales vacíos). */

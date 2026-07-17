@@ -2,40 +2,8 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { CrearProyecto } from "@/application/use-cases/crear-proyecto";
 import { ListarProyectos } from "@/application/use-cases/listar-proyectos";
 import { AltaPromotor } from "@/application/use-cases/alta-promotor";
-import { type Proyecto } from "@/domain/proyecto/proyecto";
-import { type Promotor } from "@/domain/promotor/promotor";
-import { type ProyectoRepository } from "@/domain/ports/proyecto-repository";
-import { type PromotorRepository } from "@/domain/ports/promotor-repository";
 import { type Id } from "@/domain/shared/id";
-
-class PromotorRepositoryEnMemoria implements PromotorRepository {
-  readonly guardados = new Map<Id, Promotor>();
-  async guardar(promotor: Promotor): Promise<void> {
-    this.guardados.set(promotor.id, promotor);
-  }
-  async obtenerPorId(id: Id): Promise<Promotor | null> {
-    return this.guardados.get(id) ?? null;
-  }
-  async listar(): Promise<Promotor[]> {
-    return [...this.guardados.values()];
-  }
-}
-
-class ProyectoRepositoryEnMemoria implements ProyectoRepository {
-  readonly guardados = new Map<Id, Proyecto>();
-  async guardar(proyecto: Proyecto): Promise<void> {
-    this.guardados.set(proyecto.id, proyecto);
-  }
-  async obtenerPorId(id: Id): Promise<Proyecto | null> {
-    return this.guardados.get(id) ?? null;
-  }
-  async listar(): Promise<Proyecto[]> {
-    return [...this.guardados.values()];
-  }
-  async listarPorPromotor(promotorId: Id): Promise<Proyecto[]> {
-    return [...this.guardados.values()].filter((p) => p.promotorId === promotorId);
-  }
-}
+import { PromotorRepositoryEnMemoria, ProyectoRepositoryEnMemoria } from "@/test/fakes";
 
 describe("Casos de uso de obras", () => {
   let proyectos: ProyectoRepositoryEnMemoria;

@@ -2,8 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { PerfilPage } from "@/ui/pages/PerfilPage";
 import { ConfigurarPerfil } from "@/application/use-cases/configurar-perfil";
-import { type Coordinador } from "@/domain/coordinador/coordinador";
-import { type CoordinadorRepository } from "@/domain/ports/coordinador-repository";
+import { CoordinadorRepositoryEnMemoria } from "@/test/fakes";
 
 // El campo de firma usa <canvas>, que jsdom no dibuja. Lo sustituimos por un
 // botón que, al pulsarlo, simula que el usuario ha firmado.
@@ -14,17 +13,6 @@ vi.mock("@/ui/components/campo-firma", () => ({
     </button>
   ),
 }));
-
-// Repositorio en memoria para no depender de localForage en este test de UI.
-class CoordinadorRepositoryEnMemoria implements CoordinadorRepository {
-  guardado: Coordinador | null = null;
-  async guardar(coordinador: Coordinador): Promise<void> {
-    this.guardado = coordinador;
-  }
-  async obtener(): Promise<Coordinador | null> {
-    return this.guardado;
-  }
-}
 
 describe("PerfilPage", () => {
   let repo: CoordinadorRepositoryEnMemoria;

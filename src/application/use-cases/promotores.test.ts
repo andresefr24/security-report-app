@@ -2,25 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { AltaPromotor } from "@/application/use-cases/alta-promotor";
 import { EditarPromotor } from "@/application/use-cases/editar-promotor";
 import { ListarPromotores } from "@/application/use-cases/listar-promotores";
-import { type Promotor } from "@/domain/promotor/promotor";
-import { type PromotorRepository } from "@/domain/ports/promotor-repository";
-import { type Id } from "@/domain/shared/id";
-
-// Fake en memoria del puerto: un Map, sin localForage ni IndexedDB. Al implementar
-// la misma interfaz que el adaptador real, los casos de uso funcionan igual.
-class PromotorRepositoryEnMemoria implements PromotorRepository {
-  readonly guardados = new Map<Id, Promotor>();
-
-  async guardar(promotor: Promotor): Promise<void> {
-    this.guardados.set(promotor.id, promotor);
-  }
-  async obtenerPorId(id: Id): Promise<Promotor | null> {
-    return this.guardados.get(id) ?? null;
-  }
-  async listar(): Promise<Promotor[]> {
-    return [...this.guardados.values()];
-  }
-}
+import { PromotorRepositoryEnMemoria } from "@/test/fakes";
 
 describe("Casos de uso de promotores", () => {
   let repo: PromotorRepositoryEnMemoria;
