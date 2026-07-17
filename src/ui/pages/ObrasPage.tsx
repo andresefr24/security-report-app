@@ -14,6 +14,11 @@ import { Button } from "@/ui/components/button";
 import { Card } from "@/ui/components/card";
 import { ETIQUETAS_FRECUENCIA } from "@/ui/pages/obra-campos";
 
+/** Concuerda el singular: "1 destinatario", pero "0 / 2 destinatarios". */
+function textoDestinatarios(cuantos: number): string {
+  return cuantos === 1 ? "1 destinatario" : `${cuantos} destinatarios`;
+}
+
 export interface ObrasPageProps {
   listarProyectos: ListarProyectos;
 }
@@ -77,7 +82,7 @@ export function ObrasPage({ listarProyectos }: ObrasPageProps) {
                   </p>
                   <p className="text-[16px] text-muted-foreground">
                     Visita {ETIQUETAS_FRECUENCIA[proyecto.frecuenciaVisita].toLowerCase()} ·{" "}
-                    {proyecto.listaDistribucion?.length ?? 0} destinatarios
+                    {textoDestinatarios(proyecto.listaDistribucion?.length ?? 0)}
                   </p>
                 </Card>
               </li>

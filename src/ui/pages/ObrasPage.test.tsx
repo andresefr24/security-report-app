@@ -52,6 +52,21 @@ describe("ObrasPage", () => {
     expect(screen.getByText(/Visita diaria/i)).toBeInTheDocument();
   });
 
+  it("concuerda el singular al contar los destinatarios", async () => {
+    const alta = await new AltaPromotor(promotores).ejecutar({ nombreRazonSocial: "Promotor" });
+    if (!alta.ok) throw new Error("el alta debería funcionar");
+    await new CrearProyecto(proyectos, promotores).ejecutar({
+      codigoObra: "OB-001",
+      promotorId: alta.valor.id,
+      frecuenciaVisita: "semanal",
+      listaDistribucion: [{ correo: "uno@obra.es", rol: "promotor" }],
+    });
+
+    montar();
+
+    expect(await screen.findByText(/1 destinatario$/)).toBeInTheDocument();
+  });
+
   it("avisa si la obra apunta a un promotor que ya no está", async () => {
     const alta = await new AltaPromotor(promotores).ejecutar({ nombreRazonSocial: "Se irá" });
     if (!alta.ok) throw new Error("el alta debería funcionar");
