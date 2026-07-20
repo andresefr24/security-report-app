@@ -6,13 +6,12 @@
 // props: no lo crea ella (eso lo hace el composition root en app/).
 
 import { useEffect, useState } from "react";
-import { useForm, type FieldErrors } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type ConfigurarPerfil } from "@/application/use-cases/configurar-perfil";
-import { Input } from "@/ui/components/input";
-import { Label } from "@/ui/components/label";
 import { Button } from "@/ui/components/button";
 import { CampoFirma } from "@/ui/components/campo-firma";
+import { CamposTexto } from "@/ui/components/campos-formulario";
 import {
   aDatosCoordinador,
   aFormulario,
@@ -21,17 +20,6 @@ import {
   perfilVacio,
   type FormularioPerfil,
 } from "@/ui/pages/perfil-campos";
-
-// Lee el mensaje de error de un campo, incluso anidado ("contacto.correo").
-function mensajeError(errors: FieldErrors<FormularioPerfil>, nombre: string): string | undefined {
-  let actual: unknown = errors;
-  for (const parte of nombre.split(".")) {
-    actual = (actual as Record<string, unknown> | undefined)?.[parte];
-    if (!actual) return undefined;
-  }
-  const mensaje = (actual as { message?: unknown }).message;
-  return typeof mensaje === "string" ? mensaje : undefined;
-}
 
 export interface PerfilPageProps {
   configurarPerfil: ConfigurarPerfil;
@@ -99,28 +87,7 @@ export function PerfilPage({ configurarPerfil }: PerfilPageProps) {
         className="space-y-6"
         noValidate
       >
-        {camposPerfil.map((campo) => {
-          const error = mensajeError(errors, campo.nombre);
-          return (
-            <div key={campo.nombre} className="space-y-1.5">
-              <Label htmlFor={campo.nombre} className="text-[16px] font-semibold">
-                {campo.etiqueta}
-                {campo.obligatorio && <span className="text-destructive"> *</span>}
-              </Label>
-              {campo.ayuda && (
-                <p className="text-[15px] text-muted-foreground">{campo.ayuda}</p>
-              )}
-              <Input
-                id={campo.nombre}
-                type={campo.tipo ?? "text"}
-                className="h-[52px] text-[18px]"
-                aria-invalid={error ? true : undefined}
-                {...register(campo.nombre)}
-              />
-              {error && <p className="text-[15px] text-destructive">{error}</p>}
-            </div>
-          );
-        })}
+        <CamposTexto campos={camposPerfil} register={register} errors={errors} />
 
         <div className="space-y-1.5">
           <CampoFirma

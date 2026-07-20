@@ -1,22 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { ConfigurarPerfil } from "@/application/use-cases/configurar-perfil";
-import { type Coordinador } from "@/domain/coordinador/coordinador";
-import { type CoordinadorRepository } from "@/domain/ports/coordinador-repository";
-
-// Fake en memoria del puerto: guarda en una variable, sin localForage ni IndexedDB.
-// Al implementar la misma interfaz que el adaptador real, el caso de uso funciona
-// igual con uno u otro. Exponemos `guardado` para poder mirar qué quedó dentro.
-class CoordinadorRepositoryEnMemoria implements CoordinadorRepository {
-  guardado: Coordinador | null = null;
-
-  async guardar(coordinador: Coordinador): Promise<void> {
-    this.guardado = coordinador;
-  }
-
-  async obtener(): Promise<Coordinador | null> {
-    return this.guardado;
-  }
-}
+import { CoordinadorRepositoryEnMemoria } from "@/test/fakes";
 
 describe("ConfigurarPerfil", () => {
   let repo: CoordinadorRepositoryEnMemoria;

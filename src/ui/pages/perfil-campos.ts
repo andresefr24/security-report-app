@@ -6,7 +6,7 @@
 // archivo, sin tocar la pantalla. Ver docs/entity-coordinador.md.
 
 import { z } from "zod";
-import { type FieldPath } from "react-hook-form";
+import { opcional, type CampoTexto } from "@/ui/components/campos-formulario";
 import {
   type Coordinador,
   type DatosCoordinador,
@@ -23,16 +23,8 @@ export const esquemaPerfil = esquemaCoordinador.extend({
 
 export type FormularioPerfil = z.infer<typeof esquemaPerfil>;
 
-export interface CampoTexto {
-  nombre: FieldPath<FormularioPerfil>;
-  etiqueta: string;
-  ayuda?: string;
-  tipo?: "text" | "email" | "tel";
-  obligatorio?: boolean;
-}
-
 // Los campos de texto, en orden de aparición. La firma se pinta aparte (canvas).
-export const camposPerfil: CampoTexto[] = [
+export const camposPerfil: CampoTexto<FormularioPerfil>[] = [
   { nombre: "nombreCompleto", etiqueta: "Nombre y apellidos", obligatorio: true },
   {
     nombre: "numeroRegistroIrsst",
@@ -75,12 +67,6 @@ export function aFormulario(coordinador: Coordinador): FormularioPerfil {
     },
     firma: coordinador.firma ?? "",
   };
-}
-
-// Convierte "" en undefined: los campos opcionales vacíos no se guardan.
-function opcional(valor: string | undefined): string | undefined {
-  const limpio = valor?.trim();
-  return limpio ? limpio : undefined;
 }
 
 /** Valores del formulario -> datos para el caso de uso (limpia opcionales vacíos). */
