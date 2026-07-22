@@ -11,8 +11,13 @@ import { type DatosInforme, type RolFirmante } from "@/domain/informe/informe";
 
 export interface FirmanteRequerido {
   rol: RolFirmante;
-  /** Para las subcontratas, cuál. El coordinador no lo necesita. */
+  /** Para las subcontratas, cuál (para mostrar). El coordinador no lo necesita. */
   subcontrata?: string;
+  /**
+   * Para las subcontratas, el id del incumplimiento que la trajo: ancla estable
+   * de su firma, así renombrar la subcontrata no pierde la firma ya recogida.
+   */
+  incumplimientoId?: string;
 }
 
 export function firmantesRequeridos(informe: DatosInforme): FirmanteRequerido[] {
@@ -21,9 +26,10 @@ export function firmantesRequeridos(informe: DatosInforme): FirmanteRequerido[] 
   const yaAnadidas = new Set<string>();
   for (const incumplimiento of informe.incumplimientos ?? []) {
     const subcontrata = incumplimiento.subcontrata.trim();
+    // Una firma por subcontrata: nos quedamos con el primer incumplimiento suyo.
     if (subcontrata && !yaAnadidas.has(subcontrata)) {
       yaAnadidas.add(subcontrata);
-      requeridos.push({ rol: "subcontrata", subcontrata });
+      requeridos.push({ rol: "subcontrata", subcontrata, incumplimientoId: incumplimiento.id });
     }
   }
 

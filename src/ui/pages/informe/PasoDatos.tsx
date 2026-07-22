@@ -9,6 +9,7 @@
 
 import { type PropsPaso } from "@/ui/components/asistente-informe";
 import { type PersonaAtiende } from "@/domain/informe/informe";
+import { nuevoId } from "@/domain/shared/id";
 import { Card } from "@/ui/components/card";
 import { Input } from "@/ui/components/input";
 import { Label } from "@/ui/components/label";
@@ -47,7 +48,7 @@ export function PasoDatos({ informe, actualizar }: PropsPaso) {
         </div>
 
         {personas.map((persona, indice) => (
-          <Card key={indice} className="space-y-3 p-4">
+          <Card key={persona.id ?? indice} className="space-y-3 p-4">
             <div className="space-y-1.5">
               <Label htmlFor={`persona-${indice}-nombre`} className="text-[16px] font-semibold">
                 Nombre
@@ -84,7 +85,9 @@ export function PasoDatos({ informe, actualizar }: PropsPaso) {
         <Button
           type="button"
           variant="outline"
-          onClick={() => actualizar({ personasAtienden: [...personas, { nombre: "" }] })}
+          onClick={() =>
+            actualizar({ personasAtienden: [...personas, { id: nuevoId(), nombre: "" }] })
+          }
           className="h-[52px] w-full text-[18px]"
         >
           Añadir persona

@@ -29,6 +29,8 @@ export interface Foto {
 
 /** Alguien que atiende la visita y recibe instrucciones. */
 export interface PersonaAtiende {
+  /** Id estable: ancla su firma aunque cambie el nombre o haya nombres repetidos. */
+  id?: Id;
   nombre: string;
   cargo?: string;
 }
@@ -46,8 +48,14 @@ export interface FirmaInforme {
   rol: RolFirmante;
   /** Trazo de la firma como imagen dataURL. */
   firma: string;
-  /** Para las firmas de subcontrata, a cuál pertenece. */
+  /** Para las firmas de subcontrata, el nombre de la subcontrata (para mostrar). */
   subcontrata?: string;
+  /**
+   * Id del elemento al que pertenece la firma (la persona que atiende o el
+   * incumplimiento de la subcontrata). Ancla la firma por id, no por nombre, así
+   * renombrar o repetir nombres no la pierde ni la confunde.
+   */
+  refId?: Id;
 }
 
 /**

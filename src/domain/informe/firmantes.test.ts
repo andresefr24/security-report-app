@@ -19,7 +19,11 @@ describe("firmantesRequeridos", () => {
     });
 
     expect(requeridos).toHaveLength(2);
-    expect(requeridos[1]).toEqual({ rol: "subcontrata", subcontrata: "Ferralla SL" });
+    expect(requeridos[1]).toEqual({
+      rol: "subcontrata",
+      subcontrata: "Ferralla SL",
+      incumplimientoId: "i1",
+    });
   });
 
   it("no repite una subcontrata con varios incumplimientos", () => {
