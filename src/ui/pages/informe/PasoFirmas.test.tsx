@@ -73,6 +73,55 @@ describe("PasoFirmas", () => {
     expect(screen.getByTestId("num-firmas")).toHaveTextContent("1");
   });
 
+  it("da una ranura separada a dos personas que se llaman igual", () => {
+    render(
+      <Arnes
+        inicial={{
+          ...base,
+          personasAtienden: [
+            { id: "p1", nombre: "Juan" },
+            { id: "p2", nombre: "Juan" },
+          ],
+        }}
+      />,
+    );
+
+    // Dos ranuras "Firma de Juan", no una compartida.
+    expect(screen.getAllByText(/Firma de Juan \(atiende la visita\)/i)).toHaveLength(2);
+  });
+
+  it("conserva la firma de una subcontrata aunque se firme otra cosa después (anclada por id)", () => {
+    render(
+      <Arnes
+        inicial={{
+          ...base,
+          incumplimientos: [{ id: "i1", subcontrata: "Ferralla SL", descripcion: "Sin arnés." }],
+          firmas: [
+            {
+              nombre: "Rep. Ferralla",
+              rol: "subcontrata",
+              subcontrata: "Ferralla SL",
+              refId: "i1",
+              firma: "data:image/png;base64,YA",
+            },
+          ],
+        }}
+      />,
+    );
+
+    // Ya hay una firma (la de la subcontrata).
+    expect(screen.getByTestId("num-firmas")).toHaveTextContent("1");
+
+    // Firmamos ahora la del coordinador (primera ranura): la de la subcontrata
+    // NO debe perderse.
+    fireEvent.change(screen.getAllByLabelText(/Nombre de quien firma/i)[0], {
+      target: { value: "Ana Coordinadora" },
+    });
+    fireEvent.click(screen.getAllByRole("button", { name: "firmar" })[0]);
+
+    expect(screen.getByTestId("num-firmas")).toHaveTextContent("2");
+  });
+
   it("deja de avisar cuando la firma obligatoria está completa", () => {
     render(<Arnes inicial={base} />);
 

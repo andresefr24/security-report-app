@@ -3,7 +3,7 @@
 // Es lo que hay detrás del botón "Nuevo informe" de una obra. Crea el borrador
 // (comprobando que la obra existe) y redirige a /informes/:id, ya en el paso 1.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { type CrearBorradorInforme } from "@/application/use-cases/crear-borrador-informe";
 
@@ -15,9 +15,14 @@ export function CrearInformePage({ crearBorradorInforme }: CrearInformePageProps
   const { obraId } = useParams<{ obraId: string }>();
   const navegar = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  // Crear un borrador es una acción con efecto (guarda en disco). Este guard evita
+  // que se lance dos veces: en dev StrictMode invoca el efecto dos veces, y no
+  // queremos dos borradores huérfanos por cada apertura.
+  const yaLanzado = useRef(false);
 
   useEffect(() => {
-    if (!obraId) return;
+    if (!obraId || yaLanzado.current) return;
+    yaLanzado.current = true;
     let activo = true;
     crearBorradorInforme.ejecutar(obraId).then((resultado) => {
       if (!activo) return;

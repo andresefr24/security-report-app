@@ -31,6 +31,7 @@ export const esquemaFoto = z.object({
 
 /** Alguien que acompaña al coordinador en la visita y recibe instrucciones. */
 export const esquemaPersonaAtiende = z.object({
+  id: z.string().optional(),
   nombre: textoObligatorio("Indique el nombre de quien atiende la visita."),
   cargo: z.string().optional(),
 });
@@ -47,8 +48,10 @@ export const esquemaFirmaInforme = z.object({
   nombre: textoObligatorio("Indique quién firma."),
   rol: z.enum(ROLES_FIRMANTE, { message: "Indique el rol de quien firma." }),
   firma: textoObligatorio("Falta el trazo de la firma."),
-  /** Para las firmas de subcontrata, a cuál pertenece (la del incumplimiento). */
+  /** Para las firmas de subcontrata, el nombre de la subcontrata (para mostrar). */
   subcontrata: z.string().optional(),
+  /** Id del elemento al que pertenece la firma (persona o incumplimiento). */
+  refId: z.string().optional(),
 });
 
 export const esquemaInforme = z.object({

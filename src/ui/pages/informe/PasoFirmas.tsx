@@ -23,21 +23,26 @@ import { Input } from "@/ui/components/input";
 import { Label } from "@/ui/components/label";
 
 interface Ranura {
+  /** Clave estable de la ranura, basada en ids (no en nombres). */
   clave: string;
   etiqueta: string;
+  /** Texto corto para el aviso de firmas que faltan. */
+  resumen: string;
   rol: RolFirmante;
   subcontrata?: string;
+  /** Id del elemento (persona o incumplimiento) al que se ancla la firma. */
+  refId?: string;
   /** Para las personas que atienden: su nombre ya viene del paso 1 (no se teclea). */
   nombreFijo?: string;
   /** ¿Es una firma legalmente obligatoria (coordinador o subcontrata)? */
   obligatoria: boolean;
 }
 
-/** Clave con la que una firma guardada se asocia a su ranura. */
+/** Clave con la que una firma guardada se asocia a su ranura (por id, no por nombre). */
 function claveDeFirma(firma: FirmaInforme): string {
   if (firma.rol === "coordinador") return "coordinador";
-  if (firma.rol === "subcontrata") return `sub:${firma.subcontrata ?? ""}`;
-  return `atiende:${firma.nombre}`;
+  if (firma.rol === "subcontrata") return `sub:${firma.refId ?? ""}`;
+  return `atiende:${firma.refId ?? firma.nombre}`;
 }
 
 export function PasoFirmas({ informe, actualizar }: PropsPaso) {
@@ -47,21 +52,31 @@ export function PasoFirmas({ informe, actualizar }: PropsPaso) {
   const ranuras: Ranura[] = [
     ...requeridos.map<Ranura>((req) =>
       req.rol === "coordinador"
-        ? { clave: "coordinador", etiqueta: "Firma del coordinador", rol: "coordinador", obligatoria: true }
+        ? {
+            clave: "coordinador",
+            etiqueta: "Firma del coordinador",
+            resumen: "el coordinador",
+            rol: "coordinador",
+            obligatoria: true,
+          }
         : {
-            clave: `sub:${req.subcontrata}`,
+            clave: `sub:${req.incumplimientoId}`,
             etiqueta: `Firma de la subcontrata ${req.subcontrata}`,
+            resumen: `la subcontrata ${req.subcontrata}`,
             rol: "subcontrata",
             subcontrata: req.subcontrata,
+            refId: req.incumplimientoId,
             obligatoria: true,
           },
     ),
     ...personas
       .filter((p) => p.nombre.trim())
       .map<Ranura>((p) => ({
-        clave: `atiende:${p.nombre}`,
+        clave: `atiende:${p.id ?? p.nombre}`,
         etiqueta: `Firma de ${p.nombre} (atiende la visita)`,
+        resumen: p.nombre,
         rol: "contratista",
+        refId: p.id,
         nombreFijo: p.nombre,
         obligatoria: false,
       })),
@@ -87,7 +102,13 @@ export function PasoFirmas({ informe, actualizar }: PropsPaso) {
       })
       .map((r) => {
         const v = siguiente[r.clave];
-        return { nombre: v.nombre.trim(), rol: r.rol, firma: v.firma, subcontrata: r.subcontrata };
+        return {
+          nombre: v.nombre.trim(),
+          rol: r.rol,
+          firma: v.firma,
+          subcontrata: r.subcontrata,
+          refId: r.refId,
+        };
       });
     actualizar({ firmas: completas });
   }
@@ -100,8 +121,8 @@ export function PasoFirmas({ informe, actualizar }: PropsPaso) {
     <div className="space-y-4">
       {faltan.length > 0 && (
         <p className="rounded-md bg-secondary px-4 py-2 text-[16px] text-warning">
-          Faltan firmas obligatorias: {faltan.map((r) => r.etiqueta.replace("Firma de ", "")).join(", ")}.
-          Puedes guardar el borrador igualmente.
+          Faltan firmas obligatorias: {faltan.map((r) => r.resumen).join(", ")}. Puedes
+          guardar el borrador igualmente.
         </p>
       )}
 
