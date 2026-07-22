@@ -46,6 +46,8 @@ export interface FirmaInforme {
   rol: RolFirmante;
   /** Trazo de la firma como imagen dataURL. */
   firma: string;
+  /** Para las firmas de subcontrata, a cuál pertenece. */
+  subcontrata?: string;
 }
 
 /**

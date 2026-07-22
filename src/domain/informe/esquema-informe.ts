@@ -47,6 +47,8 @@ export const esquemaFirmaInforme = z.object({
   nombre: textoObligatorio("Indique quién firma."),
   rol: z.enum(ROLES_FIRMANTE, { message: "Indique el rol de quien firma." }),
   firma: textoObligatorio("Falta el trazo de la firma."),
+  /** Para las firmas de subcontrata, a cuál pertenece (la del incumplimiento). */
+  subcontrata: z.string().optional(),
 });
 
 export const esquemaInforme = z.object({
