@@ -5,6 +5,8 @@ import { PromotoresPage } from '@/ui/pages/PromotoresPage'
 import { PromotorFormPage } from '@/ui/pages/PromotorFormPage'
 import { ObrasPage } from '@/ui/pages/ObrasPage'
 import { ObraFormPage } from '@/ui/pages/ObraFormPage'
+import { CrearInformePage } from '@/ui/pages/informe/CrearInformePage'
+import { InformeWizardPage } from '@/ui/pages/informe/InformeWizardPage'
 import { casosDeUso } from '@/app/composition-root'
 
 // Enrutado de la app (composition root). Cada ruta -> una pantalla de ui/pages.
@@ -54,6 +56,19 @@ export const router = createBrowserRouter([
       <ObraFormPage
         crearProyecto={casosDeUso.crearProyecto}
         listarPromotores={casosDeUso.listarPromotores}
+      />
+    ),
+  },
+  {
+    path: '/obras/:obraId/informes/nuevo',
+    element: <CrearInformePage crearBorradorInforme={casosDeUso.crearBorradorInforme} />,
+  },
+  {
+    path: '/informes/:id',
+    element: (
+      <InformeWizardPage
+        obtenerInforme={casosDeUso.obtenerInforme}
+        guardarInforme={casosDeUso.guardarInforme}
       />
     ),
   },

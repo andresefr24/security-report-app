@@ -84,6 +84,9 @@ export function ObrasPage({ listarProyectos }: ObrasPageProps) {
                     Visita {ETIQUETAS_FRECUENCIA[proyecto.frecuenciaVisita].toLowerCase()} ·{" "}
                     {textoDestinatarios(proyecto.listaDistribucion?.length ?? 0)}
                   </p>
+                  <Button asChild className="mt-2 h-[52px] w-full text-[18px]">
+                    <Link to={`/obras/${proyecto.id}/informes/nuevo`}>Nuevo informe</Link>
+                  </Button>
                 </Card>
               </li>
             ))}
