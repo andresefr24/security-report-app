@@ -14,6 +14,7 @@ import { ListarProyectos } from "@/application/use-cases/listar-proyectos";
 import { CrearBorradorInforme } from "@/application/use-cases/crear-borrador-informe";
 import { GuardarInforme } from "@/application/use-cases/guardar-informe";
 import { ObtenerInforme } from "@/application/use-cases/obtener-informe";
+import { ListarInformes } from "@/application/use-cases/listar-informes";
 import { LocalForageCoordinadorRepository } from "@/infrastructure/persistence/localforage/coordinador-repository.localforage";
 import { LocalForagePromotorRepository } from "@/infrastructure/persistence/localforage/promotor-repository.localforage";
 import { LocalForageProyectoRepository } from "@/infrastructure/persistence/localforage/proyecto-repository.localforage";
@@ -39,4 +40,5 @@ export const casosDeUso = {
   crearBorradorInforme: new CrearBorradorInforme(informeRepository, proyectoRepository),
   guardarInforme: new GuardarInforme(informeRepository),
   obtenerInforme: new ObtenerInforme(informeRepository),
+  listarInformes: new ListarInformes(informeRepository),
 };

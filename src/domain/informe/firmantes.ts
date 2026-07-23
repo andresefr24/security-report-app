@@ -27,6 +27,11 @@ export function firmantesRequeridos(informe: DatosInforme): FirmanteRequerido[] 
   for (const incumplimiento of informe.incumplimientos ?? []) {
     const subcontrata = incumplimiento.subcontrata.trim();
     // Una firma por subcontrata: nos quedamos con el primer incumplimiento suyo.
+    //
+    // CASO LÍMITE CONOCIDO (revisión del M3, sin arreglar a propósito): si una
+    // subcontrata tiene dos incumplimientos y se borra justo el primero, el ancla
+    // pasa al segundo y su firma ya recogida podría perderse. Es poco probable;
+    // si aparece, la solución sería un id propio de subcontrata en el informe.
     if (subcontrata && !yaAnadidas.has(subcontrata)) {
       yaAnadidas.add(subcontrata);
       requeridos.push({ rol: "subcontrata", subcontrata, incumplimientoId: incumplimiento.id });

@@ -5,21 +5,32 @@ import { ObrasPage } from "@/ui/pages/ObrasPage";
 import { ListarProyectos } from "@/application/use-cases/listar-proyectos";
 import { CrearProyecto } from "@/application/use-cases/crear-proyecto";
 import { AltaPromotor } from "@/application/use-cases/alta-promotor";
-import { PromotorRepositoryEnMemoria, ProyectoRepositoryEnMemoria } from "@/test/fakes";
+import { ListarInformes } from "@/application/use-cases/listar-informes";
+import { CrearBorradorInforme } from "@/application/use-cases/crear-borrador-informe";
+import {
+  InformeRepositoryEnMemoria,
+  PromotorRepositoryEnMemoria,
+  ProyectoRepositoryEnMemoria,
+} from "@/test/fakes";
 
 describe("ObrasPage", () => {
   let proyectos: ProyectoRepositoryEnMemoria;
   let promotores: PromotorRepositoryEnMemoria;
+  let informes: InformeRepositoryEnMemoria;
 
   beforeEach(() => {
     proyectos = new ProyectoRepositoryEnMemoria();
     promotores = new PromotorRepositoryEnMemoria();
+    informes = new InformeRepositoryEnMemoria();
   });
 
   function montar() {
     return render(
       <MemoryRouter>
-        <ObrasPage listarProyectos={new ListarProyectos(proyectos, promotores)} />
+        <ObrasPage
+          listarProyectos={new ListarProyectos(proyectos, promotores)}
+          listarInformes={new ListarInformes(informes)}
+        />
       </MemoryRouter>,
     );
   }
@@ -50,6 +61,65 @@ describe("ObrasPage", () => {
     // El nombre del promotor se resuelve desde su id, no está copiado en la obra.
     expect(screen.getByText("Canal de Isabel II")).toBeInTheDocument();
     expect(screen.getByText(/Visita diaria/i)).toBeInTheDocument();
+  });
+
+  it("no muestra lista de informes en una obra que no tiene ninguno", async () => {
+    const alta = await new AltaPromotor(promotores).ejecutar({ nombreRazonSocial: "Promotor" });
+    if (!alta.ok) throw new Error("el alta debería funcionar");
+    await new CrearProyecto(proyectos, promotores).ejecutar({
+      codigoObra: "OB-001",
+      promotorId: alta.valor.id,
+      frecuenciaVisita: "semanal",
+    });
+
+    montar();
+
+    await screen.findByText("OB-001");
+    expect(screen.queryByText(/Informes de esta obra/i)).not.toBeInTheDocument();
+  });
+
+  it("lista los informes de la obra con enlace para retomar el borrador", async () => {
+    const alta = await new AltaPromotor(promotores).ejecutar({ nombreRazonSocial: "Promotor" });
+    if (!alta.ok) throw new Error("el alta debería funcionar");
+    const obra = await new CrearProyecto(proyectos, promotores).ejecutar({
+      codigoObra: "OB-001",
+      promotorId: alta.valor.id,
+      frecuenciaVisita: "semanal",
+    });
+    if (!obra.ok) throw new Error("crear la obra debería funcionar");
+    const borrador = await new CrearBorradorInforme(informes, proyectos).ejecutar(obra.valor.id);
+    if (!borrador.ok) throw new Error("el borrador debería crearse");
+
+    montar();
+
+    expect(await screen.findByText(/Informes de esta obra/i)).toBeInTheDocument();
+    // El enlace lleva al informe empezado, para seguir donde se dejó.
+    const enlace = screen.getByRole("link", { name: /Borrador/i });
+    expect(enlace).toHaveAttribute("href", `/informes/${borrador.valor.id}`);
+  });
+
+  it("no mezcla los informes de una obra con los de otra", async () => {
+    const alta = await new AltaPromotor(promotores).ejecutar({ nombreRazonSocial: "Promotor" });
+    if (!alta.ok) throw new Error("el alta debería funcionar");
+    const crearObra = new CrearProyecto(proyectos, promotores);
+    const obraA = await crearObra.ejecutar({
+      codigoObra: "OB-A",
+      promotorId: alta.valor.id,
+      frecuenciaVisita: "semanal",
+    });
+    const obraB = await crearObra.ejecutar({
+      codigoObra: "OB-B",
+      promotorId: alta.valor.id,
+      frecuenciaVisita: "semanal",
+    });
+    if (!obraA.ok || !obraB.ok) throw new Error("crear las obras debería funcionar");
+    await new CrearBorradorInforme(informes, proyectos).ejecutar(obraA.valor.id);
+
+    montar();
+
+    await screen.findByText("OB-A");
+    // Solo la obra A tiene informe: aparece una única lista.
+    expect(screen.getAllByText(/Informes de esta obra/i)).toHaveLength(1);
   });
 
   it("concuerda el singular al contar los destinatarios", async () => {
