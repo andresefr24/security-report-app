@@ -7,6 +7,7 @@ import { ListarPromotores } from "@/application/use-cases/listar-promotores";
 import { AltaPromotor } from "@/application/use-cases/alta-promotor";
 import { type Id } from "@/domain/shared/id";
 import { PromotorRepositoryEnMemoria, ProyectoRepositoryEnMemoria } from "@/test/fakes";
+import { FUTURE_PROVIDER, FUTURE_ROUTER } from "@/app/opciones-router";
 
 function montar(proyectos: ProyectoRepositoryEnMemoria, promotores: PromotorRepositoryEnMemoria) {
   const router = createMemoryRouter(
@@ -22,9 +23,9 @@ function montar(proyectos: ProyectoRepositoryEnMemoria, promotores: PromotorRepo
       },
       { path: "/obras", element: <p>Listado de obras</p> },
     ],
-    { initialEntries: ["/obras/nueva"] },
+    { initialEntries: ["/obras/nueva"], future: FUTURE_ROUTER },
   );
-  return render(<RouterProvider router={router} />);
+  return render(<RouterProvider router={router} future={FUTURE_PROVIDER} />);
 }
 
 describe("ObraFormPage", () => {

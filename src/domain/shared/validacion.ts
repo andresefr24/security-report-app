@@ -9,8 +9,11 @@
 
 import { z } from "zod";
 
-/** ¿Es una cadena con contenido real (no vacía ni solo espacios)? */
-export const tieneTexto = (valor: string | undefined): boolean =>
+/**
+ * ¿Es una cadena con contenido real (no vacía ni solo espacios)? Es un type
+ * guard: cuando devuelve true, TypeScript sabe que el valor es `string`.
+ */
+export const tieneTexto = (valor: string | undefined): valor is string =>
   typeof valor === "string" && valor.trim().length > 0;
 
 // Validación ligera de correo: suficiente para avisar de erratas evidentes.

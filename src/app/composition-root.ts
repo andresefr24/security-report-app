@@ -11,14 +11,20 @@ import { EditarPromotor } from "@/application/use-cases/editar-promotor";
 import { ListarPromotores } from "@/application/use-cases/listar-promotores";
 import { CrearProyecto } from "@/application/use-cases/crear-proyecto";
 import { ListarProyectos } from "@/application/use-cases/listar-proyectos";
+import { CrearBorradorInforme } from "@/application/use-cases/crear-borrador-informe";
+import { GuardarInforme } from "@/application/use-cases/guardar-informe";
+import { ObtenerInforme } from "@/application/use-cases/obtener-informe";
+import { ListarInformes } from "@/application/use-cases/listar-informes";
 import { LocalForageCoordinadorRepository } from "@/infrastructure/persistence/localforage/coordinador-repository.localforage";
 import { LocalForagePromotorRepository } from "@/infrastructure/persistence/localforage/promotor-repository.localforage";
 import { LocalForageProyectoRepository } from "@/infrastructure/persistence/localforage/proyecto-repository.localforage";
+import { LocalForageInformeRepository } from "@/infrastructure/persistence/localforage/informe-repository.localforage";
 
 // Adaptadores reales de persistencia (IndexedDB vía localForage).
 const coordinadorRepository = new LocalForageCoordinadorRepository();
 const promotorRepository = new LocalForagePromotorRepository();
 const proyectoRepository = new LocalForageProyectoRepository();
+const informeRepository = new LocalForageInformeRepository();
 
 // Casos de uso ya cableados, listos para dárselos a las pantallas.
 export const casosDeUso = {
@@ -30,4 +36,9 @@ export const casosDeUso = {
   // y resuelven su nombre al listar.
   crearProyecto: new CrearProyecto(proyectoRepository, promotorRepository),
   listarProyectos: new ListarProyectos(proyectoRepository, promotorRepository),
+  // El informe necesita el repositorio de obras para comprobar que la obra existe.
+  crearBorradorInforme: new CrearBorradorInforme(informeRepository, proyectoRepository),
+  guardarInforme: new GuardarInforme(informeRepository),
+  obtenerInforme: new ObtenerInforme(informeRepository),
+  listarInformes: new ListarInformes(informeRepository),
 };
