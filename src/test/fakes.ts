@@ -10,9 +10,11 @@
 import { type Coordinador } from "@/domain/coordinador/coordinador";
 import { type Promotor } from "@/domain/promotor/promotor";
 import { type Proyecto } from "@/domain/proyecto/proyecto";
+import { type Informe } from "@/domain/informe/informe";
 import { type CoordinadorRepository } from "@/domain/ports/coordinador-repository";
 import { type PromotorRepository } from "@/domain/ports/promotor-repository";
 import { type ProyectoRepository } from "@/domain/ports/proyecto-repository";
+import { type InformeRepository } from "@/domain/ports/informe-repository";
 import { type Id } from "@/domain/shared/id";
 
 /** El coordinador es un perfil único: basta una variable. */
@@ -55,5 +57,19 @@ export class ProyectoRepositoryEnMemoria implements ProyectoRepository {
   }
   async listarPorPromotor(promotorId: Id): Promise<Proyecto[]> {
     return [...this.guardados.values()].filter((p) => p.promotorId === promotorId);
+  }
+}
+
+export class InformeRepositoryEnMemoria implements InformeRepository {
+  readonly guardados = new Map<Id, Informe>();
+
+  async guardar(informe: Informe): Promise<void> {
+    this.guardados.set(informe.id, informe);
+  }
+  async obtenerPorId(id: Id): Promise<Informe | null> {
+    return this.guardados.get(id) ?? null;
+  }
+  async listarPorProyecto(proyectoId: Id): Promise<Informe[]> {
+    return [...this.guardados.values()].filter((i) => i.proyectoId === proyectoId);
   }
 }
