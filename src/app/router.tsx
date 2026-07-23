@@ -48,7 +48,12 @@ export const router = createBrowserRouter([
   },
   {
     path: '/obras',
-    element: <ObrasPage listarProyectos={casosDeUso.listarProyectos} />,
+    element: (
+      <ObrasPage
+        listarProyectos={casosDeUso.listarProyectos}
+        listarInformes={casosDeUso.listarInformes}
+      />
+    ),
   },
   {
     path: '/obras/nueva',
