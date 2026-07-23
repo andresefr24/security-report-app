@@ -7,6 +7,7 @@ import { CrearProyecto } from "@/application/use-cases/crear-proyecto";
 import { AltaPromotor } from "@/application/use-cases/alta-promotor";
 import { ListarInformes } from "@/application/use-cases/listar-informes";
 import { CrearBorradorInforme } from "@/application/use-cases/crear-borrador-informe";
+import { FUTURE_COMPONENTE } from "@/app/opciones-router";
 import {
   InformeRepositoryEnMemoria,
   PromotorRepositoryEnMemoria,
@@ -26,7 +27,7 @@ describe("ObrasPage", () => {
 
   function montar() {
     return render(
-      <MemoryRouter>
+      <MemoryRouter future={FUTURE_COMPONENTE}>
         <ObrasPage
           listarProyectos={new ListarProyectos(proyectos, promotores)}
           listarInformes={new ListarInformes(informes)}
