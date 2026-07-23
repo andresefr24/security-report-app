@@ -5,6 +5,7 @@ import { PromotorFormPage } from "@/ui/pages/PromotorFormPage";
 import { AltaPromotor } from "@/application/use-cases/alta-promotor";
 import { EditarPromotor } from "@/application/use-cases/editar-promotor";
 import { PromotorRepositoryEnMemoria } from "@/test/fakes";
+import { FUTURE_PROVIDER, FUTURE_ROUTER } from "@/app/opciones-router";
 
 // La pantalla usa useParams/useNavigate, así que la montamos dentro de un router
 // de memoria (no necesita navegador real). `ruta` simula la URL de entrada.
@@ -21,9 +22,9 @@ function montar(repo: PromotorRepositoryEnMemoria, ruta: string) {
       { path: "/promotores/:id", element: pagina },
       { path: "/promotores", element: <p>Listado</p> },
     ],
-    { initialEntries: [ruta] },
+    { initialEntries: [ruta], future: FUTURE_ROUTER },
   );
-  return render(<RouterProvider router={router} />);
+  return render(<RouterProvider router={router} future={FUTURE_PROVIDER} />);
 }
 
 describe("PromotorFormPage", () => {

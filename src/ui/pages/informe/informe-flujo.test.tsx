@@ -9,6 +9,7 @@ import { ObtenerInforme } from "@/application/use-cases/obtener-informe";
 import { AltaPromotor } from "@/application/use-cases/alta-promotor";
 import { CrearProyecto } from "@/application/use-cases/crear-proyecto";
 import { type Id } from "@/domain/shared/id";
+import { FUTURE_PROVIDER, FUTURE_ROUTER } from "@/app/opciones-router";
 import {
   InformeRepositoryEnMemoria,
   ProyectoRepositoryEnMemoria,
@@ -60,9 +61,9 @@ describe("Flujo del informe (crear borrador → wizard)", () => {
         },
         { path: "/obras", element: <p>Listado de obras</p> },
       ],
-      { initialEntries: [rutaInicial] },
+      { initialEntries: [rutaInicial], future: FUTURE_ROUTER },
     );
-    return render(<RouterProvider router={router} />);
+    return render(<RouterProvider router={router} future={FUTURE_PROVIDER} />);
   }
 
   it("crea el borrador y abre el wizard en el paso 1", async () => {

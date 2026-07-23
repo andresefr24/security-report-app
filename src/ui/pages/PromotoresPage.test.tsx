@@ -5,11 +5,12 @@ import { PromotoresPage } from "@/ui/pages/PromotoresPage";
 import { AltaPromotor } from "@/application/use-cases/alta-promotor";
 import { ListarPromotores } from "@/application/use-cases/listar-promotores";
 import { PromotorRepositoryEnMemoria } from "@/test/fakes";
+import { FUTURE_COMPONENTE } from "@/app/opciones-router";
 
 // La pantalla usa <Link>, así que necesita un router alrededor.
 function montar(repo: PromotorRepositoryEnMemoria) {
   return render(
-    <MemoryRouter>
+    <MemoryRouter future={FUTURE_COMPONENTE}>
       <PromotoresPage listarPromotores={new ListarPromotores(repo)} />
     </MemoryRouter>,
   );
