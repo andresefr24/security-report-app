@@ -56,9 +56,11 @@ export function EntregarInformePage({
     if (!id || yaLanzado.current) return;
     yaLanzado.current = true;
 
+    let activo = true;
     (async () => {
       try {
         const cierre = await finalizarInforme.ejecutar(id);
+        if (!activo) return;
         if (!cierre.ok) {
           setProblemas(cierre.errores);
           setIncompleto(true);
@@ -66,6 +68,7 @@ export function EntregarInformePage({
         }
 
         const generado = await generarPdfDelInforme.ejecutar(id);
+        if (!activo) return;
         if (!generado.ok) {
           setProblemas(generado.errores);
           return;
@@ -81,12 +84,15 @@ export function EntregarInformePage({
         // Si algo revienta (p. ej. la librería del PDF), lo decimos en vez de
         // dejar la pantalla esperando para siempre.
         console.error("No se pudo preparar el informe:", error);
-        setProblemas(["No se pudo preparar el informe. Inténtalo de nuevo."]);
+        if (activo) setProblemas(["No se pudo preparar el informe. Inténtalo de nuevo."]);
       } finally {
         // Pase lo que pase, dejamos de "estar trabajando".
-        setTrabajando(false);
+        if (activo) setTrabajando(false);
       }
     })();
+    return () => {
+      activo = false;
+    };
   }, [id, finalizarInforme, generarPdfDelInforme]);
 
   // Liberamos la memoria del PDF al salir de la pantalla.
@@ -161,6 +167,8 @@ export function EntregarInformePage({
   }
 
   const destinatarios = proyecto?.listaDistribucion ?? [];
+  // Se calcula una vez, no en cada render (crea un File para preguntarlo).
+  const sePuedeCompartir = compartir.sePuedeCompartir(pdf.blob, pdf.nombre);
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-10 space-y-6">
@@ -178,7 +186,7 @@ export function EntregarInformePage({
       </Card>
 
       <div className="space-y-3">
-        {compartir.sePuedeCompartir(pdf.blob, pdf.nombre) && (
+        {sePuedeCompartir && (
           <Button onClick={alCompartir} className="h-[52px] w-full text-[18px]">
             Compartir
           </Button>
@@ -208,7 +216,7 @@ export function EntregarInformePage({
         ) : (
           <ul className="space-y-1">
             {destinatarios.map((destinatario) => (
-              <li key={destinatario.correo} className="text-[18px]">
+              <li key={`${destinatario.correo}-${destinatario.rol}`} className="text-[18px]">
                 {destinatario.correo}{" "}
                 <span className="text-[16px] text-muted-foreground">
                   ({ETIQUETAS_ROL[destinatario.rol]})

@@ -12,6 +12,9 @@ import {
   type ResultadoCompartir,
 } from "@/domain/ports/share-port";
 
+/** Margen para que el navegador empiece la descarga antes de soltar el archivo. */
+const TIEMPO_ANTES_DE_LIBERAR = 60_000;
+
 export class WebShareAdapter implements SharePort {
   sePuedeCompartir(pdf: Blob, nombreArchivo: string): boolean {
     if (typeof navigator.canShare !== "function" || typeof navigator.share !== "function") {
@@ -49,8 +52,11 @@ export class WebShareAdapter implements SharePort {
     document.body.appendChild(enlace);
     enlace.click();
     document.body.removeChild(enlace);
-    // Liberamos la memoria del objeto temporal.
-    URL.revokeObjectURL(url);
+
+    // OJO: liberar el archivo temporal aquí mismo puede CANCELAR la descarga en
+    // Safari/iOS, que aún no ha empezado a leerlo (en escritorio no se nota).
+    // Le damos un momento antes de soltarlo.
+    setTimeout(() => URL.revokeObjectURL(url), TIEMPO_ANTES_DE_LIBERAR);
   }
 
   private comoArchivo(pdf: Blob, nombreArchivo: string): File {
