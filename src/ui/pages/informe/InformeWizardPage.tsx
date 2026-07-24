@@ -44,7 +44,8 @@ export function InformeWizardPage({ obtenerInforme, guardarInforme }: InformeWiz
       pasos={PASOS}
       obtenerInforme={obtenerInforme}
       guardarInforme={guardarInforme}
-      alFinalizar={() => navegar("/obras")}
+      // Al terminar los 5 pasos se va a la entrega: cerrar, ver el PDF y compartir.
+      alFinalizar={() => navegar(`/informes/${id}/entregar`)}
     />
   );
 }

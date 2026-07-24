@@ -15,6 +15,10 @@ import { CrearBorradorInforme } from "@/application/use-cases/crear-borrador-inf
 import { GuardarInforme } from "@/application/use-cases/guardar-informe";
 import { ObtenerInforme } from "@/application/use-cases/obtener-informe";
 import { ListarInformes } from "@/application/use-cases/listar-informes";
+import { FinalizarInforme } from "@/application/use-cases/finalizar-informe";
+import { GenerarPdfDelInforme } from "@/application/use-cases/generar-pdf-del-informe";
+import { PdfMakeAdapter } from "@/infrastructure/pdf/pdf.pdfmake";
+import { WebShareAdapter } from "@/infrastructure/sharing/share.web";
 import { LocalForageCoordinadorRepository } from "@/infrastructure/persistence/localforage/coordinador-repository.localforage";
 import { LocalForagePromotorRepository } from "@/infrastructure/persistence/localforage/promotor-repository.localforage";
 import { LocalForageProyectoRepository } from "@/infrastructure/persistence/localforage/proyecto-repository.localforage";
@@ -25,6 +29,10 @@ const coordinadorRepository = new LocalForageCoordinadorRepository();
 const promotorRepository = new LocalForagePromotorRepository();
 const proyectoRepository = new LocalForageProyectoRepository();
 const informeRepository = new LocalForageInformeRepository();
+
+// Adaptadores de servicios: generar el PDF y entregarlo.
+const pdfPort = new PdfMakeAdapter();
+export const sharePort = new WebShareAdapter();
 
 // Casos de uso ya cableados, listos para dárselos a las pantallas.
 export const casosDeUso = {
@@ -41,4 +49,13 @@ export const casosDeUso = {
   guardarInforme: new GuardarInforme(informeRepository),
   obtenerInforme: new ObtenerInforme(informeRepository),
   listarInformes: new ListarInformes(informeRepository),
+  finalizarInforme: new FinalizarInforme(informeRepository),
+  // El PDF reúne informe + obra + promotor + perfil del coordinador.
+  generarPdfDelInforme: new GenerarPdfDelInforme(
+    informeRepository,
+    proyectoRepository,
+    promotorRepository,
+    coordinadorRepository,
+    pdfPort,
+  ),
 };
