@@ -47,4 +47,4 @@ Algunos hitos son **definitivos** (dependen de arquitectura ya cerrada) y otros 
 
 ## Orden de trabajo
 
-Termina **M0–M5 (incremento 1.1)** antes de **M6–M9 (incremento 1.2)**. No empujes ni despliegues nada sin que Josune lo confirme.
+Termina **M0–M5 (incremento 1.1)**; luego el **hito de infraestructura MI (despliegue continuo en Vercel)**; y después **M6–M9 (incremento 1.2)**. MI no es una feature del producto ni renumera la IA: va en la frontera 1.1→1.2 para que desde ahí lo que entre en `main` se pueda probar en vivo. No empujes ni despliegues nada sin que Josune lo confirme.
