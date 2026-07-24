@@ -1,7 +1,7 @@
 ---
 title: Tech plan — Fase 1 (incrementos 1.1 y 1.2)
 type: strategic
-updated: 2026-06-20
+updated: 2026-07-25
 validated: true
 tags: [engineering, plan, architecture]
 ---
@@ -88,6 +88,7 @@ Hitos:
 - **M3 — Informe manual (wizard 5 pasos).** Editor en wizard modular (datos · fotos · contenido · incumplimientos · firmas) con **autoguardado por paso** y banda "Sin conexión"; adjuntar fotos (compresión), contenido a mano, incumplimientos (regla de firmantes), firmas (`signature_pad`). Cada paso es módulo independiente (campos provisionales, Q2). Ver [[design-system]].
 - **M4 — PDF + compartir.** `PdfPort`/pdfmake con fotos y firmas embebidas; `SharePort` con Web Share + fallback descarga; copia conservada.
 - **M5 — Endurecido PWA.** Offline del app shell, instalación, persistencia, **estados consistentes** (offline / guardado / error-validación / vacío con su copy de [[design-system#estados]]), pase de accesibilidad (presbicia), e2e Playwright del flujo entero.
+- **MI — Despliegue continuo (Vercel).** *Hito de infraestructura transversal, va tras M5; NO renumera los M6–M9 de la IA.* Repo conectado a Vercel (integración Git, preset Vite, salida `dist`, rama de producción `main`): push a `main` → deploy automático; cada rama/PR → *preview*. `vercel.json` con rewrite de SPA (`/(.*) → /index.html`) porque el enrutado es de cliente (deep links como `/informes/:id/entregar`). Resuelve la duda de hosting: Vercel sirve desde raíz, así que `base`/`start_url` en `'/'` son correctos. Mismo montaje que en mintstash. Único paso manual: importar el repo en Vercel (Andrés).
 
 **Criterio de salida (de [[roadmap]]):** el stakeholder puede reemplazar su flujo manual para una obra de principio a fin, con un PDF que enviaría al promotor.
 
@@ -109,6 +110,7 @@ Hitos:
 - **Accesibilidad:** presbicia — tipografía grande, alto contraste, áreas táctiles amplias ([[working-preferences#design-constraints]]).
 - **Testing por capa:** dominio puro (Vitest), casos de uso con fakes de puertos, adaptadores con tests de integración, e2e del flujo crítico (Playwright).
 - **Distribución:** F1 = PWA instalable "Añadir a pantalla de inicio", sin empaquetar; TWA/Capacitor en F2 ([[tech-research#pwa-nativa]]). *(Pendiente de confirmación de Andrés.)*
+- **Hosting / CI:** el sitio se despliega en **Vercel** desde `main` (deploy automático + previews por rama). Ver el hito **MI** en §8. Esto fija el host de F1 y cierra la antigua duda del `base` bajo subpath.
 
 ## 11. Riesgos y dependencias
 
@@ -118,4 +120,4 @@ Hitos:
 
 ## 12. Secuencia recomendada
 
-Construir 1.1 entero hasta el criterio de salida (M0–M5) antes de empezar 1.2 (M6–M9). La costura de unión es el contenido del informe: 1.2 solo cambia cómo se rellena ese campo, no lo que cuelga de él.
+Construir 1.1 entero hasta el criterio de salida (M0–M5); montar el hito de infraestructura **MI (despliegue continuo en Vercel)** en la frontera; y luego 1.2 (M6–M9). La costura de unión es el contenido del informe: 1.2 solo cambia cómo se rellena ese campo, no lo que cuelga de él.

@@ -1,7 +1,7 @@
 ---
 title: Tareas F1 (M0–M9)
 type: rolling
-updated: 2026-06-20
+updated: 2026-07-25
 validated: true
 tags: [tasks, plan]
 ---
@@ -14,7 +14,7 @@ Esta es tu hoja de ruta de la Fase 1, Josune. Cada hito es un trozo de trabajo q
 - 🟢 **Definitiva** — depende de decisiones de arquitectura ya cerradas. No va a cambiar por lo que digan los stakeholders. Puedes construirla con confianza.
 - 🟡 **Estructura definitiva, detalle provisional** — la forma de la tarea está clara, pero algunos campos/textos concretos dependen del informe real ([[stakeholder-questions#q2-campos-informe]]) o de la revisión de prototipos ([[decisions#d8-prototype-review-gate]]). Construye la estructura; deja flexible lo que se marca como provisional.
 
-**Orden:** termina **todo el incremento 1.1 (M0–M5)** antes de empezar el 1.2 (M6–M9) — [[decisions#d6-f1-increments]]. Base técnica completa: [[tech-plan-f1]]. Diseño: [[design-system]].
+**Orden:** termina **todo el incremento 1.1 (M0–M5)**; luego monta el **hito de infraestructura MI (despliegue continuo en Vercel)**; y después el 1.2 (M6–M9) — [[decisions#d6-f1-increments]]. MI va justo al cerrar el esqueleto, antes de arrancar la IA, para que a partir de ahí todo lo que entre en `main` se pueda probar en vivo. Base técnica completa: [[tech-plan-f1]]. Diseño: [[design-system]].
 
 > **Recordatorio de vocabulario:** en pantalla decimos "obra", pero en el código la entidad se llama `Proyecto`. En pantalla "informe" = entidad `Informe`. El operador único es el coordinador.
 
@@ -150,6 +150,32 @@ La meta del 1.1 es que un coordinador pueda hacer **todo el recorrido a mano**: 
 **Hecho cuando.** El recorrido completo funciona de punta a punta, **offline**, la app se instala, y un coordinador podría usarla para reemplazar su flujo manual en una obra (este es el **criterio de salida del 1.1**, [[roadmap]]).
 
 **Trampas.** Recuerda insistir en que el coordinador **instale la app** (no usarla en pestaña), o iOS le borrará los datos a los 7 días ([[gotchas#g3-ios-7-day-eviction]]).
+
+---
+
+## MI · Despliegue continuo en Vercel 🟢 Definitiva
+
+> **Ojo a la numeración.** Este es un **hito de infraestructura** (transversal), no una feature del producto. Por eso lleva "MI" (Milestone de Infraestructura) y no "M6": los hitos **M6–M9 ya son el incremento 1.2 (voz + IA)** y no se tocan. Va **después de M5**, en la frontera entre el esqueleto y la IA.
+
+**Por qué.** Hasta ahora probamos en local. Queremos que **cada cambio que entra en `main` esté vivo en una URL en segundos**, para que tú, Andrés y el stakeholder podáis probar lo último desde el móvil sin montar nada. Es justo lo que ya tenemos en **mintstash**, y lo replicamos aquí.
+
+**Qué construyes.**
+- Un **`vercel.json`** con el *rewrite* de SPA (todas las rutas → `index.html`):
+  ```json
+  { "rewrites": [ { "source": "/(.*)", "destination": "/index.html" } ] }
+  ```
+  Es **imprescindible**: la app usa rutas del navegador (React Router) con enlaces profundos como `/informes/:id/entregar`. Sin el rewrite, recargar en una de esas URLs daría **404** (Vercel buscaría un archivo que no existe).
+- **Conectar el repo a Vercel** (integración con GitHub): preset **Vite**, build `npm run build`, salida `dist`, **rama de producción = `main`**.
+- Con eso: cada **push a `main` → deploy automático** a la URL de producción; y **cada rama/PR → su propia URL de *preview***, una versión en vivo para revisar tu trabajo antes de mergear (encaja de lujo con nuestro flujo de PR por hito).
+
+**Cómo guiarte con tu Claude.** Casi todo es configuración en el panel de Vercel. "Crea un `vercel.json` con el rewrite de SPA y confírmame que `npm run build` deja el sitio en `dist`." El **único paso manual lo hace Andrés** (igual que activó GitHub Pages): entrar en vercel.com, importar el repo y elegir `main` como rama de producción.
+
+**Hecho cuando.** Hago push a `main` y a los pocos segundos veo el cambio en la URL de producción; abro un enlace profundo (p. ej. `/obras`) y **recarga sin 404**; una rama con PR genera su **URL de preview** propia.
+
+**Trampas.**
+- Sin el rewrite SPA, los enlaces profundos y el refresco dan **404**. Es el primer sitio donde mirar si algo "desaparece" al recargar.
+- Vercel sirve desde la **raíz del dominio**, así que `base` de Vite y `start_url` del manifiesto en `'/'` son correctos — esto **cierra la duda de hosting bajo subpath** que veníamos arrastrando desde M0.
+- En el 1.2, cuando entre la clave de OpenAI, va como **variable de entorno en Vercel, NUNCA al repo** ([[gotchas#g1-openai-key-client]]); y aun así queda expuesta en cliente, así que el **tope de gasto** tiene que estar puesto.
 
 ---
 
