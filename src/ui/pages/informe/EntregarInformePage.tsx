@@ -57,28 +57,35 @@ export function EntregarInformePage({
     yaLanzado.current = true;
 
     (async () => {
-      const cierre = await finalizarInforme.ejecutar(id);
-      if (!cierre.ok) {
-        setProblemas(cierre.errores);
-        setIncompleto(true);
-        setTrabajando(false);
-        return;
-      }
+      try {
+        const cierre = await finalizarInforme.ejecutar(id);
+        if (!cierre.ok) {
+          setProblemas(cierre.errores);
+          setIncompleto(true);
+          return;
+        }
 
-      const generado = await generarPdfDelInforme.ejecutar(id);
-      if (!generado.ok) {
-        setProblemas(generado.errores);
-        setTrabajando(false);
-        return;
-      }
+        const generado = await generarPdfDelInforme.ejecutar(id);
+        if (!generado.ok) {
+          setProblemas(generado.errores);
+          return;
+        }
 
-      setPdf({
-        blob: generado.valor.pdf,
-        nombre: generado.valor.nombreArchivo,
-        url: URL.createObjectURL(generado.valor.pdf),
-      });
-      setProyecto(generado.valor.proyecto);
-      setTrabajando(false);
+        setPdf({
+          blob: generado.valor.pdf,
+          nombre: generado.valor.nombreArchivo,
+          url: URL.createObjectURL(generado.valor.pdf),
+        });
+        setProyecto(generado.valor.proyecto);
+      } catch (error) {
+        // Si algo revienta (p. ej. la librería del PDF), lo decimos en vez de
+        // dejar la pantalla esperando para siempre.
+        console.error("No se pudo preparar el informe:", error);
+        setProblemas(["No se pudo preparar el informe. Inténtalo de nuevo."]);
+      } finally {
+        // Pase lo que pase, dejamos de "estar trabajando".
+        setTrabajando(false);
+      }
     })();
   }, [id, finalizarInforme, generarPdfDelInforme]);
 
