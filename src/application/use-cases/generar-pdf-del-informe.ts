@@ -18,6 +18,13 @@ import { type PdfPort } from "@/domain/ports/pdf-port";
 import { fallo, exito, type Result } from "@/domain/shared/result";
 import { type Id } from "@/domain/shared/id";
 
+/**
+ * Mensaje de "falta el perfil". Se exporta para que la pantalla pueda reconocer
+ * ESTE fallo concreto y ofrecer un botón que lleve al perfil, en vez de dejar al
+ * coordinador en un callejón sin salida.
+ */
+export const FALTA_EL_PERFIL = "Rellena tu perfil antes de generar el informe.";
+
 export interface PdfGenerado {
   pdf: Blob;
   /** Nombre con el que se compartirá o descargará el archivo. */
@@ -59,7 +66,7 @@ export class GenerarPdfDelInforme {
 
     const coordinador = await this.coordinadores.obtener();
     if (!coordinador) {
-      return fallo(["Rellena tu perfil antes de generar el informe."]);
+      return fallo([FALTA_EL_PERFIL]);
     }
 
     // El promotor puede faltar (si se borró): el PDF lo indica en vez de mentir.
