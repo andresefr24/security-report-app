@@ -9,6 +9,7 @@
 // IRSST es lo que da validez legal al documento; un PDF sin él no sirve.
 
 import { type Informe } from "@/domain/informe/informe";
+import { type Proyecto } from "@/domain/proyecto/proyecto";
 import { type InformeRepository } from "@/domain/ports/informe-repository";
 import { type ProyectoRepository } from "@/domain/ports/proyecto-repository";
 import { type PromotorRepository } from "@/domain/ports/promotor-repository";
@@ -22,6 +23,8 @@ export interface PdfGenerado {
   /** Nombre con el que se compartirá o descargará el archivo. */
   nombreArchivo: string;
   informe: Informe;
+  /** La obra, para que la pantalla de entrega muestre sus destinatarios. */
+  proyecto: Proyecto;
 }
 
 /**
@@ -68,6 +71,7 @@ export class GenerarPdfDelInforme {
       pdf,
       nombreArchivo: nombreDeArchivo(proyecto.codigoObra, informe.fechaHora),
       informe,
+      proyecto,
     });
   }
 }
