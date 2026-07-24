@@ -13,7 +13,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { type FinalizarInforme } from "@/application/use-cases/finalizar-informe";
-import { type GenerarPdfDelInforme } from "@/application/use-cases/generar-pdf-del-informe";
+import {
+  FALTA_EL_PERFIL,
+  type GenerarPdfDelInforme,
+} from "@/application/use-cases/generar-pdf-del-informe";
 import { type SharePort } from "@/domain/ports/share-port";
 import { type Proyecto } from "@/domain/proyecto/proyecto";
 import { Button } from "@/ui/components/button";
@@ -126,12 +129,24 @@ export function EntregarInformePage({
   }
 
   if (!pdf) {
+    // Si lo que falta es el perfil, no basta con decirlo: hay que llevarle allí
+    // (design-system: nunca una pantalla sin salida).
+    const faltaElPerfil = problemas.includes(FALTA_EL_PERFIL);
     return (
       <main className="mx-auto max-w-2xl px-6 py-10 space-y-6">
         <p className="text-[18px] text-destructive" role="alert">
           {problemas.join(" ")}
         </p>
-        <Button onClick={() => navegar("/obras")} className="h-[52px] w-full text-[18px]">
+        {faltaElPerfil && (
+          <Button onClick={() => navegar("/perfil")} className="h-[52px] w-full text-[18px]">
+            Ir a mi perfil
+          </Button>
+        )}
+        <Button
+          variant={faltaElPerfil ? "secondary" : "default"}
+          onClick={() => navegar("/obras")}
+          className="h-[52px] w-full text-[18px]"
+        >
           Volver a las obras
         </Button>
       </main>

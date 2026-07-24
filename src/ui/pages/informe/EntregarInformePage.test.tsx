@@ -106,6 +106,7 @@ describe("EntregarInformePage", () => {
         },
         { path: "/informes/:id", element: <p>Wizard del informe</p> },
         { path: "/obras", element: <p>Listado de obras</p> },
+        { path: "/perfil", element: <p>Pantalla de perfil</p> },
       ],
       { initialEntries: [`/informes/${informeId}/entregar`], future: FUTURE_ROUTER },
     );
@@ -193,7 +194,7 @@ describe("EntregarInformePage", () => {
     expect(screen.getByText(/no envía correos/i)).toBeInTheDocument();
   });
 
-  it("no genera el PDF si el coordinador no tiene perfil", async () => {
+  it("no genera el PDF si el coordinador no tiene perfil, y le lleva a rellenarlo", async () => {
     const informeId = await unInforme({
       contenido: "Visita sin incidencias.",
       firmas: [FIRMA_COORDINADOR],
@@ -203,5 +204,8 @@ describe("EntregarInformePage", () => {
     montar(informeId, new SharePortFalso());
 
     expect(await screen.findByText(/Rellena tu perfil/i)).toBeInTheDocument();
+    // No basta con decirlo: tiene que haber salida (no un callejón sin salida).
+    fireEvent.click(screen.getByRole("button", { name: /Ir a mi perfil/i }));
+    expect(await screen.findByText("Pantalla de perfil")).toBeInTheDocument();
   });
 });
