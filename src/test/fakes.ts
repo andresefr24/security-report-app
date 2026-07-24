@@ -15,6 +15,7 @@ import { type CoordinadorRepository } from "@/domain/ports/coordinador-repositor
 import { type PromotorRepository } from "@/domain/ports/promotor-repository";
 import { type ProyectoRepository } from "@/domain/ports/proyecto-repository";
 import { type InformeRepository } from "@/domain/ports/informe-repository";
+import { type PdfPort, type DatosDelPdf } from "@/domain/ports/pdf-port";
 import { type Id } from "@/domain/shared/id";
 
 /** El coordinador es un perfil único: basta una variable. */
@@ -57,6 +58,19 @@ export class ProyectoRepositoryEnMemoria implements ProyectoRepository {
   }
   async listarPorPromotor(promotorId: Id): Promise<Proyecto[]> {
     return [...this.guardados.values()].filter((p) => p.promotorId === promotorId);
+  }
+}
+
+/**
+ * Fake del PdfPort: no genera un PDF de verdad (eso necesita navegador), pero
+ * guarda con qué datos lo pidieron, que es lo que interesa comprobar.
+ */
+export class PdfPortFalso implements PdfPort {
+  ultimaLlamada: DatosDelPdf | null = null;
+
+  async generar(datos: DatosDelPdf): Promise<Blob> {
+    this.ultimaLlamada = datos;
+    return new Blob(["pdf-de-mentira"], { type: "application/pdf" });
   }
 }
 
