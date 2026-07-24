@@ -59,17 +59,20 @@ export class GenerarPdfDelInforme {
       return fallo(["Este informe ya no existe."]);
     }
 
-    const proyecto = await this.proyectos.obtenerPorId(informe.proyectoId);
+    // La obra y el perfil no dependen entre sí: se piden a la vez.
+    const [proyecto, coordinador] = await Promise.all([
+      this.proyectos.obtenerPorId(informe.proyectoId),
+      this.coordinadores.obtener(),
+    ]);
     if (!proyecto) {
       return fallo(["La obra de este informe ya no existe."]);
     }
-
-    const coordinador = await this.coordinadores.obtener();
     if (!coordinador) {
       return fallo([FALTA_EL_PERFIL]);
     }
 
-    // El promotor puede faltar (si se borró): el PDF lo indica en vez de mentir.
+    // El promotor sí depende de la obra (va por su promotorId). Puede faltar si
+    // se borró: el PDF lo indica en vez de mentir.
     const promotor = await this.promotores.obtenerPorId(proyecto.promotorId);
 
     const pdf = await this.pdf.generar({ informe, proyecto, promotor, coordinador });

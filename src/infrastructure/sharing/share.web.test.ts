@@ -92,11 +92,18 @@ describe("WebShareAdapter", () => {
   });
 
   describe("descargar", () => {
-    it("libera la memoria del archivo temporal", () => {
+    it("no libera el archivo temporal al instante (Safari/iOS cancelaría la descarga)", () => {
+      vi.useFakeTimers();
       adaptador.descargar(PDF, NOMBRE);
 
       expect(URL.createObjectURL).toHaveBeenCalled();
+      // Justo después del clic, el archivo sigue disponible.
+      expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+
+      // Pasado el margen, se libera la memoria.
+      vi.runAllTimers();
       expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:falsa");
+      vi.useRealTimers();
     });
   });
 });
