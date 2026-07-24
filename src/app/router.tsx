@@ -7,7 +7,8 @@ import { ObrasPage } from '@/ui/pages/ObrasPage'
 import { ObraFormPage } from '@/ui/pages/ObraFormPage'
 import { CrearInformePage } from '@/ui/pages/informe/CrearInformePage'
 import { InformeWizardPage } from '@/ui/pages/informe/InformeWizardPage'
-import { casosDeUso } from '@/app/composition-root'
+import { EntregarInformePage } from '@/ui/pages/informe/EntregarInformePage'
+import { casosDeUso, sharePort } from '@/app/composition-root'
 import { OPCIONES_ROUTER } from '@/app/opciones-router'
 
 // Enrutado de la app (composition root). Cada ruta -> una pantalla de ui/pages.
@@ -75,6 +76,16 @@ export const router = createBrowserRouter([
       <InformeWizardPage
         obtenerInforme={casosDeUso.obtenerInforme}
         guardarInforme={casosDeUso.guardarInforme}
+      />
+    ),
+  },
+  {
+    path: '/informes/:id/entregar',
+    element: (
+      <EntregarInformePage
+        finalizarInforme={casosDeUso.finalizarInforme}
+        generarPdfDelInforme={casosDeUso.generarPdfDelInforme}
+        compartir={sharePort}
       />
     ),
   },
