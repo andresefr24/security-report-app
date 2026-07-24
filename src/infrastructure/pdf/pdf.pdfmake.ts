@@ -11,7 +11,11 @@
 // peso al paquete y hay que resolver que funcione sin conexión: queda para el M5
 // (el hito de pulido y offline). Desviación consciente, anotada en el PR.
 
-import { type Content, type TDocumentDefinitions } from "pdfmake/interfaces";
+import {
+  type Content,
+  type TDocumentDefinitions,
+  type TVirtualFileSystem,
+} from "pdfmake/interfaces";
 import { type PdfPort, type DatosDelPdf } from "@/domain/ports/pdf-port";
 import { construirDocumento, type BloqueDocumento } from "@/infrastructure/pdf/construir-documento";
 
@@ -19,17 +23,32 @@ import { construirDocumento, type BloqueDocumento } from "@/infrastructure/pdf/c
 // DEMANDA: así el arranque de la app en el móvil no lo arrastra. Queda en su
 // propio trozo, que el service worker precachea igual (funciona sin conexión).
 // Se carga una sola vez y se reutiliza.
-let cargaDePdfMake: Promise<typeof import("pdfmake/build/pdfmake")> | null = null;
+type ApiPdfMake = typeof import("pdfmake/build/pdfmake");
 
-function cargarPdfMake(): Promise<typeof import("pdfmake/build/pdfmake")> {
+/**
+ * pdfmake y sus fuentes se publican en formato UMD (el antiguo). Según cómo los
+ * empaquete Vite, la API real puede llegar dentro de `default` en vez de en el
+ * propio módulo. Nos quedamos con la que exista: sin esto, `addVirtualFileSystem`
+ * no está definida y generar el PDF revienta.
+ */
+function apiReal<T>(modulo: T | { default?: T }): T {
+  const conDefault = modulo as { default?: T };
+  return conDefault.default ?? (modulo as T);
+}
+
+let cargaDePdfMake: Promise<ApiPdfMake> | null = null;
+
+function cargarPdfMake(): Promise<ApiPdfMake> {
   if (!cargaDePdfMake) {
     cargaDePdfMake = (async () => {
-      const [pdfMake, fuentes] = await Promise.all([
+      const [moduloPdfMake, moduloFuentes] = await Promise.all([
         import("pdfmake/build/pdfmake"),
         import("pdfmake/build/vfs_fonts"),
       ]);
+      const pdfMake = apiReal<ApiPdfMake>(moduloPdfMake);
+      const fuentes = apiReal<TVirtualFileSystem>(moduloFuentes);
       // pdfmake necesita sus fuentes empaquetadas ("sistema de archivos virtual").
-      pdfMake.addVirtualFileSystem(fuentes.default);
+      pdfMake.addVirtualFileSystem(fuentes);
       return pdfMake;
     })();
   }
