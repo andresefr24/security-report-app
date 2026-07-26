@@ -23,6 +23,25 @@ export default defineConfig({
       devOptions: { enabled: true },
       // El apple-touch-icon (iOS) y demás estáticos de public/ se incluyen solos.
       includeAssets: ['apple-touch-icon.png'],
+      workbox: {
+        // pdfmake y sus fuentes (~1,8 MB) NO van en el precache: instalar la app
+        // no debe descargar de golpe algo que solo hace falta al generar un PDF.
+        // Así el esqueleto queda ligero y carga al instante sin conexión.
+        globIgnores: ['**/pdfmake-*.js', '**/vfs_fonts-*.js'],
+        // En su lugar, se cachean la PRIMERA vez que se genera un PDF; desde
+        // entonces el PDF también funciona sin conexión. Son archivos con hash
+        // (inmutables), así que CacheFirst es lo idóneo.
+        runtimeCaching: [
+          {
+            urlPattern: /\/assets\/(pdfmake|vfs_fonts)-[^/]+\.js$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'pdf-bajo-demanda',
+              expiration: { maxEntries: 4 },
+            },
+          },
+        ],
+      },
       manifest: {
         name: 'Informes de seguridad',
         short_name: 'Informes',
