@@ -21,6 +21,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       // Permite probar la PWA también con `npm run dev` (no solo en el build).
       devOptions: { enabled: true },
+      // El apple-touch-icon (iOS) y demás estáticos de public/ se incluyen solos.
+      includeAssets: ['apple-touch-icon.png'],
       manifest: {
         name: 'Informes de seguridad',
         short_name: 'Informes',
@@ -32,15 +34,15 @@ export default defineConfig({
         // Azul institucional de marca (design-system).
         theme_color: '#1D4ED8',
         background_color: '#FFFFFF',
-        // Icono PROVISIONAL de M0. Los PNG definitivos (192/512 y maskable)
-        // se añaden en M5.
+        // Iconos PROVISIONALES (M5): azul con "IS", generados por
+        // scripts/generar-iconos.mjs. Se cambian cuando haya marca definitiva.
         icons: [
-          {
-            src: 'icon-placeholder.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
-            purpose: 'any',
-          },
+          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          // 'any' para el icono normal y 'maskable' para que Android le aplique
+          // su forma sin recortar el contenido.
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
     }),
