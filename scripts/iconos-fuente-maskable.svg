@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Versión MASKABLE: el mismo icono pero con el texto más pequeño, dentro de
+       la "zona segura" (el 80% central) para que Android no lo recorte al
+       aplicarle su forma (círculo, cuadrado redondeado, etc.). -->
+  <rect width="512" height="512" fill="#1D4ED8"/>
+  <text x="256" y="256" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif"
+        font-size="170" font-weight="700" text-anchor="middle"
+        dominant-baseline="central" letter-spacing="4">IS</text>
+</svg>
