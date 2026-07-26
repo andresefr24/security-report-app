@@ -46,7 +46,6 @@ export function AsistenteInforme({
   const [paso, setPaso] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [guardadoA, setGuardadoA] = useState<string | null>(null);
-  const [enLinea, setEnLinea] = useState(() => navigator.onLine);
 
   // Retomar: cargamos el borrador antes de pintar los pasos.
   useEffect(() => {
@@ -60,17 +59,6 @@ export function AsistenteInforme({
       activo = false;
     };
   }, [informeId, obtenerInforme]);
-
-  // Estado de conexión: la banda "Sin conexión" aparece cuando no hay red.
-  useEffect(() => {
-    const alCambiar = () => setEnLinea(navigator.onLine);
-    window.addEventListener("online", alCambiar);
-    window.addEventListener("offline", alCambiar);
-    return () => {
-      window.removeEventListener("online", alCambiar);
-      window.removeEventListener("offline", alCambiar);
-    };
-  }, []);
 
   if (noEncontrado) {
     return (
@@ -127,12 +115,6 @@ export function AsistenteInforme({
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-8 space-y-6">
-      {!enLinea && (
-        <p className="rounded-md bg-secondary px-4 py-2 text-[16px] text-muted-foreground">
-          Sin conexión — se guarda en el dispositivo.
-        </p>
-      )}
-
       <header className="space-y-2">
         <div className="flex items-baseline justify-between">
           <p className="text-[16px] font-semibold text-muted-foreground">
