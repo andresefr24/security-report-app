@@ -11,8 +11,12 @@ import { TabBar } from "@/ui/components/tab-bar";
 export function LayoutConNav() {
   return (
     <>
-      {/* pb-24: hueco para que la barra fija no tape el final del contenido. */}
-      <div className="pb-24">
+      {/*
+        Hueco para que la barra fija no tape el contenido:
+        - móvil: barra abajo -> padding inferior (pb-24).
+        - escritorio: barra lateral izquierda (w-56) -> margen izquierdo (md:pl-56, sin pb).
+      */}
+      <div className="pb-24 md:pb-0 md:pl-56">
         <Outlet />
       </div>
       <TabBar />
