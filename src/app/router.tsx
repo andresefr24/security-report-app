@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { LayoutConNav } from '@/ui/components/layout-con-nav'
 import { PerfilPage } from '@/ui/pages/PerfilPage'
 import { PromotoresPage } from '@/ui/pages/PromotoresPage'
 import { PromotorFormPage } from '@/ui/pages/PromotorFormPage'
@@ -12,22 +13,39 @@ import { OPCIONES_ROUTER } from '@/app/opciones-router'
 
 // Enrutado de la app (composition root). Cada ruta -> una pantalla de ui/pages.
 // A cada pantalla le pasamos los casos de uso ya cableados (composition-root.ts).
-// '/' sigue siendo la pantalla de prueba de marca del M0; la navegación real
-// (tab bar) llega en hitos posteriores.
+//
+// Dos grupos de rutas:
+//  - SECCIONES (Obras, Promotores, Perfil): anidadas bajo LayoutConNav, que les
+//    pone la barra de navegación inferior para saltar entre secciones.
+//  - FLUJOS profundos (altas, wizard, entrega): a pantalla completa, sin barra.
 export const router = createBrowserRouter([
   {
-    // La app abre en Obras (la pantalla de trabajo principal). La navegación
-    // completa —tab bar del design-system— llega en un hito posterior.
+    // La app abre en Obras (la pantalla de trabajo principal).
     path: '/',
     element: <Navigate to="/obras" replace />,
   },
   {
-    path: '/perfil',
-    element: <PerfilPage configurarPerfil={casosDeUso.configurarPerfil} />,
-  },
-  {
-    path: '/promotores',
-    element: <PromotoresPage listarPromotores={casosDeUso.listarPromotores} />,
+    // Layout con barra de navegación: envuelve las tres secciones.
+    element: <LayoutConNav />,
+    children: [
+      {
+        path: '/obras',
+        element: (
+          <ObrasPage
+            listarProyectos={casosDeUso.listarProyectos}
+            listarInformes={casosDeUso.listarInformes}
+          />
+        ),
+      },
+      {
+        path: '/promotores',
+        element: <PromotoresPage listarPromotores={casosDeUso.listarPromotores} />,
+      },
+      {
+        path: '/perfil',
+        element: <PerfilPage configurarPerfil={casosDeUso.configurarPerfil} />,
+      },
+    ],
   },
   // React Router v6 ordena por especificidad (un segmento fijo como 'nuevo' gana
   // al dinámico ':id'), así que el orden en que se declaren da igual.
@@ -46,15 +64,6 @@ export const router = createBrowserRouter([
       <PromotorFormPage
         altaPromotor={casosDeUso.altaPromotor}
         editarPromotor={casosDeUso.editarPromotor}
-      />
-    ),
-  },
-  {
-    path: '/obras',
-    element: (
-      <ObrasPage
-        listarProyectos={casosDeUso.listarProyectos}
-        listarInformes={casosDeUso.listarInformes}
       />
     ),
   },
