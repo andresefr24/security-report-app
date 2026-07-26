@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { AsistenteInforme, type PasoWizard } from "@/ui/components/asistente-informe";
 import { GuardarInforme } from "@/application/use-cases/guardar-informe";
 import { ObtenerInforme } from "@/application/use-cases/obtener-informe";
@@ -84,18 +84,6 @@ describe("AsistenteInforme", () => {
     await vi.waitFor(() => expect(alFinalizar).toHaveBeenCalledOnce());
   });
 
-  it("muestra la banda de sin conexión cuando se pierde la red", async () => {
-    montar();
-    await screen.findByLabelText("contenido");
-
-    act(() => {
-      Object.defineProperty(navigator, "onLine", { value: false, configurable: true });
-      window.dispatchEvent(new Event("offline"));
-    });
-
-    expect(await screen.findByText(/Sin conexión/i)).toBeInTheDocument();
-
-    // Restauramos para no afectar a otros tests.
-    Object.defineProperty(navigator, "onLine", { value: true, configurable: true });
-  });
+  // La banda "Sin conexión" ya no vive en el wizard: es global (ver
+  // banda-sin-conexion.test.tsx).
 });

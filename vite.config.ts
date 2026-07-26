@@ -21,6 +21,27 @@ export default defineConfig({
       registerType: 'autoUpdate',
       // Permite probar la PWA también con `npm run dev` (no solo en el build).
       devOptions: { enabled: true },
+      // El apple-touch-icon (iOS) y demás estáticos de public/ se incluyen solos.
+      includeAssets: ['apple-touch-icon.png'],
+      workbox: {
+        // pdfmake y sus fuentes (~1,8 MB) NO van en el precache: instalar la app
+        // no debe descargar de golpe algo que solo hace falta al generar un PDF.
+        // Así el esqueleto queda ligero y carga al instante sin conexión.
+        globIgnores: ['**/pdfmake-*.js', '**/vfs_fonts-*.js'],
+        // En su lugar, se cachean la PRIMERA vez que se genera un PDF; desde
+        // entonces el PDF también funciona sin conexión. Son archivos con hash
+        // (inmutables), así que CacheFirst es lo idóneo.
+        runtimeCaching: [
+          {
+            urlPattern: /\/assets\/(pdfmake|vfs_fonts)-[^/]+\.js$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'pdf-bajo-demanda',
+              expiration: { maxEntries: 4 },
+            },
+          },
+        ],
+      },
       manifest: {
         name: 'Informes de seguridad',
         short_name: 'Informes',
@@ -32,15 +53,15 @@ export default defineConfig({
         // Azul institucional de marca (design-system).
         theme_color: '#1D4ED8',
         background_color: '#FFFFFF',
-        // Icono PROVISIONAL de M0. Los PNG definitivos (192/512 y maskable)
-        // se añaden en M5.
+        // Iconos PROVISIONALES (M5): azul con "IS", generados por
+        // scripts/generar-iconos.mjs. Se cambian cuando haya marca definitiva.
         icons: [
-          {
-            src: 'icon-placeholder.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
-            purpose: 'any',
-          },
+          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          // 'any' para el icono normal y 'maskable' para que Android le aplique
+          // su forma sin recortar el contenido.
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
     }),
@@ -53,5 +74,7 @@ export default defineConfig({
     globals: true,
     // Carga los matchers de jest-dom (toBeInTheDocument, etc.).
     setupFiles: './src/test/setup.ts',
+    // Los e2e (carpeta e2e/) los corre Playwright, no Vitest.
+    exclude: ['e2e/**', 'node_modules/**'],
   },
 })

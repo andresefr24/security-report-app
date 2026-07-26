@@ -8,7 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@fontsource/ibm-plex-sans": "^5.2.8",
@@ -30,6 +31,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^26.1.1",
@@ -41,6 +43,7 @@
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^27.0.1",
     "postcss": "^8.5.16",
+    "sharp": "^0.35.3",
     "tailwindcss": "^3.4.19",
     "typescript": "~5.6.3",
     "vite": "^6.0.5",
