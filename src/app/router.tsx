@@ -1,5 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom'
-import { InicioPage } from '@/ui/pages/InicioPage'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { PerfilPage } from '@/ui/pages/PerfilPage'
 import { PromotoresPage } from '@/ui/pages/PromotoresPage'
 import { PromotorFormPage } from '@/ui/pages/PromotorFormPage'
@@ -17,8 +16,10 @@ import { OPCIONES_ROUTER } from '@/app/opciones-router'
 // (tab bar) llega en hitos posteriores.
 export const router = createBrowserRouter([
   {
+    // La app abre en Obras (la pantalla de trabajo principal). La navegación
+    // completa —tab bar del design-system— llega en un hito posterior.
     path: '/',
-    element: <InicioPage />,
+    element: <Navigate to="/obras" replace />,
   },
   {
     path: '/perfil',
