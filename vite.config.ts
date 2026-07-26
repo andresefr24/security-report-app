@@ -74,5 +74,7 @@ export default defineConfig({
     globals: true,
     // Carga los matchers de jest-dom (toBeInTheDocument, etc.).
     setupFiles: './src/test/setup.ts',
+    // Los e2e (carpeta e2e/) los corre Playwright, no Vitest.
+    exclude: ['e2e/**', 'node_modules/**'],
   },
 })
