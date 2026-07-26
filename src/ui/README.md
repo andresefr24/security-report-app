@@ -4,7 +4,7 @@ Componentes y pantallas. Todo el texto en **español llano** y accesible para
 presbicia (tipografía grande, alto contraste, áreas táctiles ≥48px).
 
 **Qué va dentro:**
-- `pages/`: pantallas completas asociadas a una ruta (ej. `InicioPage`).
+- `pages/`: pantallas completas asociadas a una ruta (ej. `PerfilPage`).
 - `components/`: piezas reutilizables (incluye los componentes de shadcn/ui en
   `components/`, según `components.json`).
 - `hooks/`: hooks de React propios.

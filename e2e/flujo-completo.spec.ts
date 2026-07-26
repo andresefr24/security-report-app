@@ -1,4 +1,4 @@
-import { test, expect, type Page, type Locator } from "@playwright/test";
+import { test, expect, type Locator } from "@playwright/test";
 
 // Prueba de extremo a extremo del recorrido completo del incremento 1.1:
 // perfil → promotor → obra → informe (5 pasos, firmando de verdad) → PDF listo.
@@ -15,7 +15,7 @@ import { test, expect, type Page, type Locator } from "@playwright/test";
  * ventana), así que los disparamos tal cual, en vez de depender de cómo el
  * navegador traduce el ratón de Playwright.
  */
-async function firmar(_page: Page, canvas: Locator) {
+async function firmar(canvas: Locator) {
   await canvas.evaluate((cv: HTMLCanvasElement) => {
     const r = cv.getBoundingClientRect();
     const evento = (tipo: string, x: number, y: number, buttons: number) =>
@@ -44,7 +44,7 @@ test("un coordinador crea un informe de punta a punta y llega al PDF", async ({ 
   await page.goto("/perfil");
   await page.getByLabel(/Nombre y apellidos/i).fill("Ana García López");
   await page.getByLabel(/registro de la CAM/i).fill("3306");
-  await firmar(page, page.getByLabel(/Zona para dibujar la firma/i));
+  await firmar(page.getByLabel(/Zona para dibujar la firma/i));
   await page.getByRole("button", { name: "Guardar" }).click();
   await expect(page.getByText(/Guardado en el dispositivo/i)).toBeVisible();
 
@@ -79,7 +79,7 @@ test("un coordinador crea un informe de punta a punta y llega al PDF", async ({ 
 
   // 6) Firma del coordinador (obligatoria para cerrar).
   await page.getByLabel(/Nombre de quien firma/i).fill("Ana García López");
-  await firmar(page, page.getByLabel(/Zona para dibujar la firma/i));
+  await firmar(page.getByLabel(/Zona para dibujar la firma/i));
 
   // 7) Finalizar → pantalla de entrega con el PDF listo.
   await page.getByRole("button", { name: "Finalizar" }).click();
