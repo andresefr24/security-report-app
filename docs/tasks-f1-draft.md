@@ -8,6 +8,9 @@ tags: [tasks, plan]
 
 # Tareas F1 — M0 a M9
 
+> ⚠️ **Modelo del informe actualizado a v2 (ver [[decisions#d9-informe-v2]] y [[entity-informe]], 2026-08-11):** situación + actividades (fotos con comentario opcional), firmas coordinador + recibido, sin paso de "Incumplimientos" ni regla de firma de subcontrata. Lo que esta página describa del modelo viejo se realineará al ejecutar.
+
+
 Esta es tu hoja de ruta de la Fase 1, Josune. Cada hito es un trozo de trabajo que puedes terminar y dar por hecho antes de pasar al siguiente. Léelo sin agobio: no hace falta entenderlo todo de una; cuando vayas a por un hito, lees **solo su sección** y trabajas con tu Claude paso a paso (ver [[onboarding-josune#configura-tu-claude]]).
 
 **Cómo leer el estado de cada hito:**
