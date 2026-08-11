@@ -1,7 +1,7 @@
 ---
 title: Decisions
 type: rolling
-updated: 2026-06-20
+updated: 2026-08-11
 validated: true
 tags: [decision, architecture]
 ---
@@ -9,6 +9,22 @@ tags: [decision, architecture]
 # Decisions
 
 Append-only log of architecture and product decisions, newest first. Each entry: the decision, the reasoning, and the trade-off accepted.
+
+## D9 — Modelo del informe v2 (situación + actividades) y persistencia como hito aparte {#d9-informe-v2}
+
+**Date:** 2026-08-11. **Status:** decided (aprobado por Andrés; pendiente el visto bueno de Josune sobre la ejecución).
+
+Con los **8 informes reales** (formato TPF/Getinsa "G13a-SSFE") se cierra Q2 y se rehace el modelo del informe. Parte de la propuesta de Josune (`docs/propuesta-informe-estructura-real.md`) + 4 afinados.
+
+- **Modelo v2:** Informe = cabecera + resumen de la semana (opc.) + **situación** + **actividades[]** + firmas. Cada actividad = descripción + fotos (comentario **opcional**). Una incidencia es una actividad más.
+- **Afinado 1 — `tipo` opcional en la actividad** (`normal|incidencia`), invisible por defecto: conserva la señal estructurada para F2/analítica sin complicar la UI.
+- **Afinado 2 — `receptor` ("recibido por") vive en el Informe** (cambia por visita); **`contratista` en la Obra** (estable).
+- **Afinado 3 — PDF guiado por plantilla/config**, no maqueta incrustada: calca el informe real pero parametrizable, para no acoplarnos a un solo organismo.
+- **Afinado 4 — persistencia "tipo backend" como hito aparte, DESPUÉS del cambio de modelo.** Los puertos ya son async con inyección de dependencias y fakes → estamos al ~70%. Faltan 4 costuras: capa DTO/mapper, almacén de imágenes separado (`MediaStore`, fotos por id), read-models de lista, y contrato explícito (ids en cliente, ISO, `schemaVersion`). No mezclar con el cambio de modelo.
+- **Se elimina** el paso "Incumplimientos", el campo `contenido`, y la regla "la subcontrata con incumplimiento firma". Firmas = coordinador (obligatoria) + recibido (opcional).
+- **Producto:** F1 es hoy la herramienta del coordinador y así se valida; se mantiene abierta la evolución a sistema de evidencia para el promotor ([[decisions#d2-customer-tension-open]]). Por eso no se tira la estructura de datos.
+
+**Reasoning:** el modelo v2 calca la realidad (adopción) y los afinados preservan opcionalidad estratégica, rendimiento y el salto a backend a coste bajo. **Trade-off:** rehace M3/M4 (ya en `main`); sin migración porque F1 es local y aún sin datos reales — última ventana barata para cambiar el modelo. Radiografía de ejecución: [[informe-v2-radiografia]]. Fuente viva del modelo: [[entity-informe]].
 
 ## D8 — Gate de revisión por stakeholders antes de ejecutar; prototipos en GitHub Pages {#d8-prototype-review-gate}
 

@@ -1,7 +1,7 @@
 ---
 title: Stakeholder questions
 type: rolling
-updated: 2026-06-20
+updated: 2026-08-11
 validated: true
 tags: [open-question, stakeholder]
 ---
@@ -18,7 +18,7 @@ El informe mensual, ¿es un **resumen agregado** de los diarios/semanales, o un 
 
 ### Q2 — Campos reales del informe de visita {#q2-campos-informe}
 
-Set de secciones y orden de campos del informe — no existe modelo oficial, depende de la plantilla real del coordinador. Top prioridad; bloquea el formulario y el PDF. Ver [[entity-informe#open]]. Se resuelve con el informe real que el stakeholder enviará por WhatsApp.
+✅ **Resuelta (2026-08-11).** Llegaron **8 informes reales** (TPF/Getinsa "G13a-SSFE"). Modelo v2 confirmado en [[entity-informe]] y [[decisions#d9-informe-v2]].
 
 ### Q3 — Formulario de obra nueva {#q3-alta-obra}
 
@@ -34,4 +34,4 @@ Campos exactos del promotor requeridos en la cabecera del informe y en el alta d
 
 ## Resueltas
 
-_(vacío — al confirmar una, muévela aquí con la fecha y el destino de la respuesta.)_
+- **Q2 — Campos del informe** → resuelta 2026-08-11 con los 8 informes reales → [[entity-informe]] / [[decisions#d9-informe-v2]].
