@@ -1,14 +1,16 @@
 ---
 title: Propuesta — Estructura real del informe (feedback del stakeholder)
 type: proposal
-updated: 2026-08-11
-validated: false
-tags: [informe, propuesta, revisión, Q2]
+updated: 2026-08-12
+validated: true
+tags: [informe, propuesta, aprobada, Q2, d9]
 ---
 
 # Propuesta de cambios — Estructura real del informe
 
-> **Para revisión de Andrés antes de escribir código.** Recoge el feedback del stakeholder (que por fin nos pasó **8 informes reales** de referencia) y las decisiones ya acordadas con Josune. No se toca código hasta el OK. Rama: `feat/informe-estructura-real`.
+> ✅ **Aprobada por Andrés el 2026-08-11** y formalizada en [[decisions#d9-informe-v2]]. La propuesta se aceptó casi entera, con **4 afinados** (recogidos abajo, §4b) y con las fases de ejecución pactadas con Josune el 2026-08-12 (§8).
+>
+> **Este documento es el registro de cómo se llegó hasta aquí.** La **fuente viva** del modelo es [[entity-informe]]; el mapa de ejecución, [[informe-v2-radiografia]]. Si algo aquí choca con esos dos, mandan ellos. Recoge el feedback del stakeholder (que por fin nos pasó **8 informes reales** de referencia). Rama: `feat/informe-estructura-real`.
 
 ## 1. Contexto
 
@@ -52,19 +54,34 @@ La unidad que se repite es **actividad**. Una actividad puede ser trabajo normal
 | 4 | Cada actividad lleva **solo descripción** (texto) + fotos, tal cual los informes reales (sin título aparte). |
 | 5 | Los **campos de cabecera nuevos** (contratista, receptor) **se añaden en esta vuelta**, porque el objetivo es que el PDF sea visualmente igual al real. |
 
+## 4b. Los 4 afinados de Andrés (aprobación, D9)
+
+| # | Afinado | Por qué |
+|---|---|---|
+| 1 | Cada actividad gana **`tipo?: normal \| incidencia`**, opcional e **invisible en la UI**. | Se mantiene "una incidencia es una actividad más", pero no se tira la señal estructurada: mañana se podrán contar/analizar sin rehacer el modelo. |
+| 2 | **`receptor` ("recibido por") vive en el Informe**, no en la obra. En la obra solo **`contratista`**. | El receptor cambia en cada visita; el contratista es estable. Meter un dato volátil en una entidad estable se paga después. Corrige la decisión 5 de arriba. |
+| 3 | El PDF se genera desde una **plantilla/config parametrizable**, no con la maqueta incrustada. | Calcamos el informe real, pero sin casarnos con un solo organismo. |
+| 4 | La **persistencia "tipo backend" es un hito aparte y POSTERIOR** al cambio de modelo. | Son 4 costuras (capa DTO/mapper, `MediaStore` de imágenes por id, read-models de lista, contrato explícito con `schemaVersion`). No se mezclan dos cambios grandes a la vez. |
+
+### Decisiones de ejecución tomadas con Josune (2026-08-12)
+
+- **Las fotos siguen guardándose _inline_** en el informe durante este rework (`Foto.imagen` en dataURL, como hoy); solo se renombra `descripcion` → `comentario`. El salto a `imagenId` + almacén de medios llega **entero** en el hito de persistencia. Hacer medio `MediaStore` ahora sería lo peor de las dos opciones. *(Nota: [[entity-informe]] ya describe el estado final con `imagenId`; durante estas fases la implementación va un paso por detrás, a propósito.)*
+- **Los 8 informes reales NO entran en el repositorio**: contienen nombres, empresas y firmas de personas reales. Se quedan en el equipo de Josune y en el repo solo vive la **ficha de maqueta** (§5b), que describe la estructura visual sin datos personales.
+
 ## 5. Impacto por capa
 
 ### Dominio (`domain/informe/`)
 - **`Informe`**: sustituir `contenido` + `fotos[]` + `incumplimientos[]` por:
   - `resumenSemana?: string`
   - `situacion?: string`
-  - `actividades: Actividad[]` — `Actividad = { id, descripcion, fotos: Foto[] }`
-- **`Foto`**: ya tiene `descripcion?` → se reutiliza como el **comentario** de la foto.
+  - `actividades: Actividad[]` — `Actividad = { id, descripcion, tipo?, fotos: Foto[] }` *(afinado 1)*
+  - `receptor?` — el "recibido por" de esa visita *(afinado 2)*
+- **`Foto`**: ya tiene `descripcion?` → se renombra a **`comentario?`** y sigue siendo **opcional** (nunca bloquea finalizar). La imagen sigue **inline** en esta vuelta.
 - **Firmas**: `FirmaInforme` pasa a roles `coordinador` | `recibido`. Se **elimina** `firmantes.ts` (`firmantesRequeridos`) y el campo `subcontrata`/`refId` ligado a incumplimientos.
 - **Completitud** (`completitud.ts`): finalizar exige **situación rellena + al menos una actividad (con descripción) + firma del coordinador**. (Antes: contenido + firma.)
 
 ### Datos de la obra (`domain/proyecto/`)
-- Añadir a `Proyecto` (aparecen en la cabecera y son estables por obra): **`contratista?`**, **`receptorNombre?`**, **`receptorEmpresa?`**.
+- Añadir a `Proyecto` solo lo estable por obra: **`contratista?`**. El **receptor va en el Informe** (afinado 2), no aquí.
 - La `Identificación / Nº de informe` y `Tipo: INFORMATIVO` se generan/plantillan en el PDF (no hace falta capturarlos a mano; propongo un nº basado en la fecha).
 
 ### Wizard (`ui/pages/informe/`)
@@ -76,6 +93,11 @@ La unidad que se repite es **actividad**. Una actividad puede ser trabajo normal
 ### PDF (`infrastructure/pdf/`)
 - **Maquetar como los informes reales**: cabecera en tabla (obra, promotor, contratista, identificación, fecha, emisor, receptor), secciones con título en mayúsculas ("SITUACIÓN DE LA ACTUACIÓN", "DESCRIPCIÓN DE LA ACTIVIDAD"), **2 fotos por fila**, comentario en negrita debajo de cada foto, y pie con la firma del coordinador (+ IRSST) y el "Recibido por".
 - `construir-documento.ts` (la función pura y testeada) se reescribe para el nuevo modelo; el adaptador pdfmake gana el layout de 2 columnas.
+- Los rótulos y el orden de las secciones salen de una **plantilla/config** (afinado 3), no escritos a fuego dentro de la función. La maqueta concreta a calcar está en §5b.
+
+## 5b. Ficha de maqueta del PDF real
+
+Los informes de referencia no viven en el repo (§4b). Su estructura visual —la que hay que calcar en el PDF— se documenta aparte, sin datos personales, en **[[maqueta-informe-real]]**. Esa ficha es la entrada de la fase 6.
 
 ## 6. Lo que se ELIMINA (para que conste)
 
@@ -88,22 +110,28 @@ La unidad que se repite es **actividad**. Una actividad puede ser trabajo normal
 
 Perfil, promotores, alta de obra (salvo los 3 campos nuevos de cabecera), la mecánica de generar PDF con pdfmake y compartir (Web Share + descarga), el offline, la navegación y el despliegue en Vercel. Los puertos y la arquitectura hexagonal se mantienen.
 
-## 8. Plan de trabajo (cuando Andrés apruebe)
+## 8. Fases de ejecución (pactadas el 2026-08-12)
 
-1. **KB**: actualizar `docs/entity-informe.md` con la estructura confirmada y guardar los informes de referencia.
-2. **Fáciles**: fotos de galería + comentarios en fotos.
-3. **Dominio**: nuevo modelo (situación + actividades con fotos), completitud, quitar incumplimientos/firmantes, firmas nuevas → con tests.
-4. **Datos de obra**: contratista + receptor.
-5. **Wizard**: reestructurar a 3 pasos.
-6. **PDF**: maquetar igual que los informes reales (2 fotos por fila, comentarios, cabecera).
-7. **e2e**: actualizar el recorrido completo al nuevo flujo.
+Una PR pequeña por fase, en este orden. No se arranca una fase sin que Josune vea la anterior.
+
+| # | Fase | Qué toca |
+|---|---|---|
+| 1 | **KB y referencia** | Este documento al día + la ficha de maqueta ([[maqueta-informe-real]]). Sin código de app. |
+| 2 | **Lo fácil de fotos** | Permitir galería (quitar `capture="environment"`) + comentario por foto. |
+| 3 | **Dominio** | Modelo v2 en `Informe` (`situacion`, `actividades[]`, `resumenSemana?`, `receptor?`), fuera `contenido`/`incumplimientos`, borrar `firmantes.ts`, reescribir `completitud.ts` y sus tests. |
+| 4 | **Datos de la obra** | `contratista?` en `Proyecto` y en el alta de obra. |
+| 5 | **Asistente** | De 5 pasos a 3 (Datos → Situación y actividades → Firmas). Nace el bloque "actividad" con sus fotos dentro. La fase más grande. |
+| 6 | **PDF** | Reescribir `construir-documento.ts` con plantilla parametrizable, calcando [[maqueta-informe-real]]. |
+| 7 | **Flujo completo** | Actualizar el e2e y el test de flujo al camino nuevo. |
+
+Después, como hito propio: la **persistencia "tipo backend"** (afinado 4).
 
 ## 9. Notas y riesgos
 
 - **Es un cambio grande sobre M3/M4 (ya en `main`).** Reescribe el modelo del informe y el wizard. Al ser F1 **local-only** y sin datos reales todavía, **no hay migración** que preocupe: los borradores viejos en un dispositivo de pruebas se pueden descartar.
 - **Fidelidad visual**: el objetivo es que el PDF se parezca al real. La tipografía IBM Plex Serif sigue pendiente (nice-to-have); el maquetado (estructura, 2 fotos por fila, cabecera) sí entra aquí.
-- **Alcance de la cabecera**: `contratista`/`receptor` se añaden a la obra. Si Andrés prefiere capturarlos por informe (cambian de una semana a otra), es un ajuste menor.
+- ~~**Alcance de la cabecera**: `contratista`/`receptor` se añaden a la obra.~~ → Resuelto por el afinado 2: contratista en la obra, receptor en el informe.
 
 ---
 
-**¿Visto bueno, Andrés?** En cuanto lo apruebes, arrancamos por la KB y vamos pieza a pieza como siempre.
+**Aprobada** ([[decisions#d9-informe-v2]]). Ejecución en marcha por las fases de §8.
