@@ -26,7 +26,8 @@ export const ROLES_FIRMANTE = ["coordinador", "contratista", "subcontrata"] as c
 export const esquemaFoto = z.object({
   id: z.string(),
   imagen: textoObligatorio("La foto no puede estar vacía."),
-  descripcion: z.string().optional(),
+  /** El texto que acompaña a la foto bajo ella en el PDF. Siempre opcional. */
+  comentario: z.string().optional(),
 });
 
 /** Alguien que acompaña al coordinador en la visita y recibe instrucciones. */

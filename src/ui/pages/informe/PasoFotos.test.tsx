@@ -36,19 +36,47 @@ describe("PasoFotos", () => {
       target: { files: [archivo] },
     });
 
-    const imagen = await screen.findByAltText<HTMLImageElement>("Foto de la visita");
+    const imagen = await screen.findByAltText<HTMLImageElement>("Foto 1 de la visita");
     expect(imagen.src).toContain("COMPRIMIDA");
   });
 
-  it("borra una foto de la rejilla", async () => {
+  it("deja elegir foto de la galería, no solo hacerla con la cámara", () => {
+    render(<Arnes inicial={base} />);
+
+    // Con el atributo `capture` el móvil abre la cámara directamente y no da
+    // acceso al carrete. El stakeholder pidió poder subir fotos ya hechas.
+    expect(screen.getByLabelText("Seleccionar foto")).not.toHaveAttribute("capture");
+  });
+
+  it("guarda el comentario que se escribe bajo una foto", () => {
     render(
-      <Arnes
-        inicial={{ ...base, fotos: [{ id: "f1", imagen: "data:image/png;base64,AAAA" }] }}
-      />,
+      <Arnes inicial={{ ...base, fotos: [{ id: "f1", imagen: "data:image/png;base64,AAAA" }] }} />,
     );
 
-    expect(screen.getByAltText("Foto de la visita")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Borrar" }));
-    expect(screen.queryByAltText("Foto de la visita")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/Comentario de la foto 1/i), {
+      target: { value: "Extintor y batefuego junto al grupo electrógeno." },
+    });
+
+    expect(screen.getByLabelText<HTMLTextAreaElement>(/Comentario de la foto 1/i).value).toBe(
+      "Extintor y batefuego junto al grupo electrógeno.",
+    );
+  });
+
+  it("el comentario de la foto es opcional: arranca vacío", () => {
+    render(
+      <Arnes inicial={{ ...base, fotos: [{ id: "f1", imagen: "data:image/png;base64,AAAA" }] }} />,
+    );
+
+    expect(screen.getByLabelText<HTMLTextAreaElement>(/Comentario de la foto 1/i).value).toBe("");
+  });
+
+  it("borra una foto de la lista", () => {
+    render(
+      <Arnes inicial={{ ...base, fotos: [{ id: "f1", imagen: "data:image/png;base64,AAAA" }] }} />,
+    );
+
+    expect(screen.getByAltText("Foto 1 de la visita")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Borrar foto 1" }));
+    expect(screen.queryByAltText("Foto 1 de la visita")).not.toBeInTheDocument();
   });
 });

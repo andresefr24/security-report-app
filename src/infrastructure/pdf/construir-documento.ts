@@ -117,7 +117,7 @@ export function construirDocumento({
   if (fotos.length > 0) {
     bloques.push({ tipo: "subtitulo", texto: "Fotografías" });
     for (const foto of fotos) {
-      bloques.push({ tipo: "imagen", imagen: foto.imagen, pie: foto.descripcion });
+      bloques.push({ tipo: "imagen", imagen: foto.imagen, pie: foto.comentario });
     }
   }
 

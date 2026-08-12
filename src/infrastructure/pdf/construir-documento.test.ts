@@ -92,6 +92,25 @@ describe("construirDocumento", () => {
     expect(imagenes[0]).toMatchObject({ imagen: "data:image/png;base64,FOTO" });
   });
 
+  it("pone el comentario de la foto como pie de la imagen", () => {
+    const { bloques } = construirDocumento(
+      datosDelPdf({
+        fotos: [
+          {
+            id: "f1",
+            imagen: "data:image/png;base64,FOTO",
+            comentario: "Extintor y batefuego junto al grupo electrógeno.",
+          },
+        ],
+      }),
+    );
+
+    const imagenes = bloques.filter((b) => b.tipo === "imagen");
+    expect(imagenes[0]).toMatchObject({
+      pie: "Extintor y batefuego junto al grupo electrógeno.",
+    });
+  });
+
   it("embebe las firmas con su nombre y su papel", () => {
     const { bloques } = construirDocumento(
       datosDelPdf({
