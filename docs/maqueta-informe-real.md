@@ -177,7 +177,7 @@ Enviado por e-mail a:
 
 Recogidas para decidir antes de las fases 3 y 6 — ver el hilo con Josune del 2026-08-12:
 
-1. **La "situación" no es única del informe: se repite por actividad.** En el modelo v2 el informe tiene una `situacion` y las actividades solo `descripcion`. En los informes reales, cada bloque abre con `SITUACIÓN DE LA ACTUACIÓN: <ubicación>` y opcionalmente `DESCRIPCIÓN DE LA ACTIVIDAD: <texto>`. Es decir, **la ubicación es un campo de la actividad**.
+1. ✅ **Resuelta (2026-08-12) — la "situación" no es única del informe: se repite por actividad.** En los informes reales cada bloque abre con `SITUACIÓN DE LA ACTUACIÓN: <ubicación>` y opcionalmente `DESCRIPCIÓN DE LA ACTIVIDAD: <texto>`, y se repite por cada punto visitado. Decisión: `Actividad` gana **`ubicacion?`**; el informe conserva **`situacion?`** como **opcional**; **finalizar exige ≥1 actividad con descripción + firma del coordinador**. Pendiente de trasladárselo a Andrés: relaja la regla de [[decisions#d9-informe-v2|D9]].
 2. **Los tipos de bloque son más de dos.** El afinado 1 propone `normal | incidencia`; la realidad usa OPS, nota positiva, pendiente de visita anterior, instrucción obligatoria…
 3. **La lista de distribución se imprime en el PDF** ("Enviado por e-mail a"). El dominio ya tiene destinatarios en la obra; falta decidir si entran en la fase 6.
 4. **Campos de cabecera que la app no captura:** identificación de documento, tipo (`INFORMATIVO`), código de servicio, ubicación de la obra.

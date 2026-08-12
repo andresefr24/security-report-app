@@ -20,11 +20,18 @@ import {
 export type EstadoInforme = (typeof ESTADOS_INFORME)[number];
 export type RolFirmante = (typeof ROLES_FIRMANTE)[number];
 
-/** Una foto adjunta al informe: imagen reducida (dataURL) con id para borrarla. */
+/**
+ * Una foto adjunta al informe: imagen reducida (dataURL) con id para borrarla.
+ *
+ * El `comentario` es el texto que va DEBAJO de la foto en el PDF, como en los
+ * informes reales ("Se comprueba la disponibilidad de medios de primera
+ * intervención…"). Es opcional a propósito: muchas fotos no lo llevan y nunca
+ * debe bloquear el cierre del informe (ver maqueta-informe-real en docs/).
+ */
 export interface Foto {
   id: Id;
   imagen: string;
-  descripcion?: string;
+  comentario?: string;
 }
 
 /** Alguien que atiende la visita y recibe instrucciones. */
