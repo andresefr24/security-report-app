@@ -56,11 +56,14 @@ export function EntregarInformePage({
     if (!id || yaLanzado.current) return;
     yaLanzado.current = true;
 
-    let activo = true;
+    // OJO, aquí NO va el típico "cancelar al desmontar": junto al guard de arriba
+    // colgaba la pantalla en dev. StrictMode monta, limpia y vuelve a montar; la
+    // limpieza cancelaba el único cierre en marcha y el segundo montaje ya no
+    // lanzaba otro por el guard, así que "Preparando el informe…" no se quitaba
+    // nunca. El guard ya garantiza que esto pasa una sola vez.
     (async () => {
       try {
         const cierre = await finalizarInforme.ejecutar(id);
-        if (!activo) return;
         if (!cierre.ok) {
           setProblemas(cierre.errores);
           setIncompleto(true);
@@ -68,7 +71,6 @@ export function EntregarInformePage({
         }
 
         const generado = await generarPdfDelInforme.ejecutar(id);
-        if (!activo) return;
         if (!generado.ok) {
           setProblemas(generado.errores);
           return;
@@ -84,15 +86,12 @@ export function EntregarInformePage({
         // Si algo revienta (p. ej. la librería del PDF), lo decimos en vez de
         // dejar la pantalla esperando para siempre.
         console.error("No se pudo preparar el informe:", error);
-        if (activo) setProblemas(["No se pudo preparar el informe. Inténtalo de nuevo."]);
+        setProblemas(["No se pudo preparar el informe. Inténtalo de nuevo."]);
       } finally {
         // Pase lo que pase, dejamos de "estar trabajando".
-        if (activo) setTrabajando(false);
+        setTrabajando(false);
       }
     })();
-    return () => {
-      activo = false;
-    };
   }, [id, finalizarInforme, generarPdfDelInforme]);
 
   // Liberamos la memoria del PDF al salir de la pantalla.

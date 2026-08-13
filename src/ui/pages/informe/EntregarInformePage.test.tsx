@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { StrictMode } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { EntregarInformePage } from "@/ui/pages/informe/EntregarInformePage";
@@ -83,7 +84,11 @@ describe("EntregarInformePage", () => {
     return borrador.valor.id;
   }
 
-  function montar(informeId: Id, compartir: SharePort) {
+  /**
+   * `estricto` monta dentro de <StrictMode>, que es como arranca la app en
+   * desarrollo: monta, limpia y vuelve a montar.
+   */
+  function montar(informeId: Id, compartir: SharePort, { estricto = false } = {}) {
     const router = createMemoryRouter(
       [
         {
@@ -110,8 +115,22 @@ describe("EntregarInformePage", () => {
       ],
       { initialEntries: [`/informes/${informeId}/entregar`], future: FUTURE_ROUTER },
     );
-    return render(<RouterProvider router={router} future={FUTURE_PROVIDER} />);
+    const app = <RouterProvider router={router} future={FUTURE_PROVIDER} />;
+    return render(estricto ? <StrictMode>{app}</StrictMode> : app);
   }
+
+  it("prepara el informe también en desarrollo, con el doble montaje de StrictMode", async () => {
+    const informeId = await unInforme({
+      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
+      firmas: [FIRMA_COORDINADOR],
+    });
+
+    montar(informeId, new SharePortFalso(), { estricto: true });
+
+    // Si se queda en "Preparando el informe…" es que el trabajo terminó pero
+    // nadie lo recogió (pasó de verdad: solo se veía con `npm run dev`).
+    expect(await screen.findByText("Informe listo")).toBeInTheDocument();
+  });
 
   it("cierra el informe y muestra el PDF listo para compartir", async () => {
     const informeId = await unInforme({
