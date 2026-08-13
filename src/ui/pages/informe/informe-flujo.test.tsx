@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { CrearInformePage } from "@/ui/pages/informe/CrearInformePage";
@@ -15,6 +15,12 @@ import {
   ProyectoRepositoryEnMemoria,
   PromotorRepositoryEnMemoria,
 } from "@/test/fakes";
+
+// El último paso monta el campo de firma, que usa <canvas> (no va en jsdom).
+// Aquí probamos el recorrido del asistente, no el trazo: lo sustituimos.
+vi.mock("@/ui/components/campo-firma", () => ({
+  CampoFirma: () => <div>campo de firma</div>,
+}));
 
 describe("Flujo del informe (crear borrador → wizard)", () => {
   let informes: InformeRepositoryEnMemoria;
@@ -91,6 +97,26 @@ describe("Flujo del informe (crear borrador → wizard)", () => {
     const guardado = [...informes.guardados.values()][0];
     expect(guardado.receptor?.nombre).toBe("Luis Jefe");
     expect(guardado.estado).toBe("borrador");
+  });
+
+  it("escribe una actividad en el paso 2 y la autoguarda", async () => {
+    const obraId = await unaObra();
+    montar(`/obras/${obraId}/informes/nuevo`);
+    await screen.findByText("Paso 1 de 3");
+
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+    await screen.findByText("Paso 2 de 3");
+    expect(screen.getByText("Situación y actividades")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Añadir actividad" }));
+    fireEvent.change(screen.getByLabelText(/Qué pasó/i), {
+      target: { value: "Limpieza de calzada con barredora." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+    await screen.findByText("Paso 3 de 3");
+
+    const guardado = [...informes.guardados.values()][0];
+    expect(guardado.actividades?.[0].descripcion).toBe("Limpieza de calzada con barredora.");
   });
 
   it("muestra un error si la obra no existe", async () => {

@@ -30,14 +30,20 @@ describe("LocalForageInformeRepository", () => {
   it("guarda un informe con sus fotos y firmas y lo recupera", async () => {
     const informe = informeDePrueba({
       situacion: "Visita sin incidencias.",
-      fotos: [{ id: "f1", imagen: "data:image/png;base64,AAAA" }],
+      actividades: [
+        {
+          id: "a1",
+          descripcion: "Desbroce de márgenes.",
+          fotos: [{ id: "f1", imagen: "data:image/png;base64,AAAA" }],
+        },
+      ],
       firmas: [{ nombre: "Ana", rol: "coordinador", firma: "data:image/png;base64,BBBB" }],
     });
     await repo.guardar(informe);
 
     const recuperado = await repo.obtenerPorId(informe.id);
     expect(recuperado?.situacion).toBe("Visita sin incidencias.");
-    expect(recuperado?.fotos?.[0].imagen).toBe("data:image/png;base64,AAAA");
+    expect(recuperado?.actividades?.[0].fotos?.[0].imagen).toBe("data:image/png;base64,AAAA");
     expect(recuperado?.firmas?.[0].rol).toBe("coordinador");
   });
 

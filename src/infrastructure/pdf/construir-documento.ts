@@ -127,15 +127,6 @@ export function construirDocumento({
     }
   }
 
-  // --- Fotos ---
-  const fotos = informe.fotos ?? [];
-  if (fotos.length > 0) {
-    bloques.push({ tipo: "subtitulo", texto: "Fotografías" });
-    for (const foto of fotos) {
-      bloques.push({ tipo: "imagen", imagen: foto.imagen, pie: foto.comentario });
-    }
-  }
-
   // --- Firmas ---
   const firmas = informe.firmas ?? [];
   if (firmas.length > 0) {
