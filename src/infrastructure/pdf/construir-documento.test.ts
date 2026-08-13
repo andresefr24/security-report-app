@@ -1,13 +1,16 @@
 import { describe, it, expect } from "vitest";
 import { construirDocumento, type BloqueDocumento } from "@/infrastructure/pdf/construir-documento";
 import { crearInforme, type DatosInforme } from "@/domain/informe/informe";
-import { crearProyecto } from "@/domain/proyecto/proyecto";
+import { crearProyecto, type DatosProyecto } from "@/domain/proyecto/proyecto";
 import { crearPromotor } from "@/domain/promotor/promotor";
 import { crearCoordinador } from "@/domain/coordinador/coordinador";
 import { type DatosDelPdf } from "@/domain/ports/pdf-port";
 
 /** Monta los cuatro ingredientes del PDF, con lo mínimo válido. */
-function datosDelPdf(cambiosInforme: Partial<DatosInforme> = {}): DatosDelPdf {
+function datosDelPdf(
+  cambiosInforme: Partial<DatosInforme> = {},
+  cambiosProyecto: Partial<DatosProyecto> = {},
+): DatosDelPdf {
   const informe = crearInforme({
     proyectoId: "obra-1",
     fechaHora: "2026-07-01T09:30",
@@ -20,6 +23,7 @@ function datosDelPdf(cambiosInforme: Partial<DatosInforme> = {}): DatosDelPdf {
     descripcion: "Centro cívico Los Molinos",
     promotorId: "promotor-1",
     frecuenciaVisita: "semanal",
+    ...cambiosProyecto,
   });
   const promotor = crearPromotor({ id: "promotor-1", nombreRazonSocial: "Canal de Isabel II" });
   const coordinador = crearCoordinador({
@@ -59,6 +63,12 @@ describe("construirDocumento", () => {
     expect(texto).toContain("OB-2026-014");
     expect(texto).toContain("Centro cívico Los Molinos");
     expect(texto).toContain("Canal de Isabel II");
+  });
+
+  it("lleva el contratista de la obra en la cabecera", () => {
+    const { bloques } = construirDocumento(datosDelPdf({}, { contratista: "API Movilidad" }));
+
+    expect(textoDe(bloques)).toContain("Contratista: API Movilidad");
   });
 
   it("lleva el nº de registro IRSST del coordinador (lo que da validez legal)", () => {
