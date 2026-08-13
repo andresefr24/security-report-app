@@ -38,6 +38,10 @@ export class LocalForageInformeRepository implements InformeRepository {
     return informes.sort((a, b) => b.fechaHora.localeCompare(a.fechaHora));
   }
 
+  async borrar(id: Id): Promise<void> {
+    await this.caja.removeItem(id);
+  }
+
   /** Re-valida lo leído: si está corrupto, devuelve null en vez de colarlo. */
   private revalidar(guardado: DatosInforme): Informe | null {
     const resultado = crearInforme(guardado);

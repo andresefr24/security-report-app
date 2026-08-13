@@ -15,6 +15,7 @@ import { CrearBorradorInforme } from "@/application/use-cases/crear-borrador-inf
 import { GuardarInforme } from "@/application/use-cases/guardar-informe";
 import { ObtenerInforme } from "@/application/use-cases/obtener-informe";
 import { ListarInformes } from "@/application/use-cases/listar-informes";
+import { BorrarInforme } from "@/application/use-cases/borrar-informe";
 import { FinalizarInforme } from "@/application/use-cases/finalizar-informe";
 import { GenerarPdfDelInforme } from "@/application/use-cases/generar-pdf-del-informe";
 import { PdfMakeAdapter } from "@/infrastructure/pdf/pdf.pdfmake";
@@ -49,6 +50,7 @@ export const casosDeUso = {
   guardarInforme: new GuardarInforme(informeRepository),
   obtenerInforme: new ObtenerInforme(informeRepository),
   listarInformes: new ListarInformes(informeRepository),
+  borrarInforme: new BorrarInforme(informeRepository),
   finalizarInforme: new FinalizarInforme(informeRepository),
   // El PDF reúne informe + obra + promotor + perfil del coordinador.
   generarPdfDelInforme: new GenerarPdfDelInforme(
