@@ -118,10 +118,11 @@ describe("crearProyecto", () => {
     }
   });
 
-  it("acepta los campos opcionales (descripción, plazo y presupuesto)", () => {
+  it("acepta los campos opcionales (descripción, contratista, plazo y presupuesto)", () => {
     const resultado = crearProyecto(
       datosValidos({
         descripcion: "Centro cívico deportivo Los Molinos",
+        contratista: "API Movilidad",
         fechaInicio: "2026-09-01",
         fechaFin: "2027-03-31",
         presupuesto: "1.250.000 €",
@@ -132,6 +133,7 @@ describe("crearProyecto", () => {
     if (resultado.ok) {
       expect(resultado.valor.fechaInicio).toBe("2026-09-01");
       expect(resultado.valor.presupuesto).toBe("1.250.000 €");
+      expect(resultado.valor.contratista).toBe("API Movilidad");
     }
   });
 });

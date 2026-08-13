@@ -62,6 +62,9 @@ export function construirDocumento({
     etiqueta: "Promotor",
     valor: promotor?.nombreRazonSocial ?? "No consta",
   });
+  if (proyecto.contratista) {
+    bloques.push({ tipo: "dato", etiqueta: "Contratista", valor: proyecto.contratista });
+  }
   bloques.push({
     tipo: "dato",
     etiqueta: "Fecha y hora de la visita",
