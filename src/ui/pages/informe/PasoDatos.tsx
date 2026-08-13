@@ -1,27 +1,26 @@
 // Paso 1 del wizard — Datos de la visita.
 //
 // Módulo independiente: recibe el informe y una forma de actualizarlo (PropsPaso),
-// y solo se ocupa de SUS campos. La fecha/hora viene puesta del borrador y aquí
-// se puede corregir; las personas que atienden la visita se añaden y quitan.
+// y solo se ocupa de SUS campos: la fecha/hora (que viene puesta del borrador y
+// aquí se puede corregir) y quién recibe el informe en obra.
 //
-// No valida por su cuenta: el guardado del wizard valida contra el dominio (una
-// persona sin nombre, por ejemplo, no dejará avanzar).
+// El RECEPTOR sustituye a la antigua lista de "personas que atienden la visita":
+// en los 8 informes reales solo aparece una persona receptora, con su empresa, en
+// la cabecera del documento. Vive en el informe y no en la obra porque cambia en
+// cada visita (docs/decisions.md#d9-informe-v2, afinado 2).
+//
+// No valida por su cuenta: el guardado del wizard valida contra el dominio.
 
 import { type PropsPaso } from "@/ui/components/asistente-informe";
-import { type PersonaAtiende } from "@/domain/informe/informe";
-import { nuevoId } from "@/domain/shared/id";
-import { Card } from "@/ui/components/card";
+import { type Receptor } from "@/domain/informe/informe";
 import { Input } from "@/ui/components/input";
 import { Label } from "@/ui/components/label";
-import { Button } from "@/ui/components/button";
 
 export function PasoDatos({ informe, actualizar }: PropsPaso) {
-  const personas = informe.personasAtienden ?? [];
+  const receptor = informe.receptor ?? {};
 
-  function cambiarPersona(indice: number, parcial: Partial<PersonaAtiende>) {
-    actualizar({
-      personasAtienden: personas.map((p, i) => (i === indice ? { ...p, ...parcial } : p)),
-    });
+  function cambiarReceptor(parcial: Partial<Receptor>) {
+    actualizar({ receptor: { ...receptor, ...parcial } });
   }
 
   return (
@@ -41,57 +40,36 @@ export function PasoDatos({ informe, actualizar }: PropsPaso) {
 
       <div className="space-y-3">
         <div className="space-y-1">
-          <Label className="text-[16px] font-semibold">Personas que atienden la visita</Label>
+          <Label className="text-[16px] font-semibold">Quién recibe el informe</Label>
           <p className="text-[15px] text-muted-foreground">
-            Quién te acompaña y recibe las instrucciones.
+            La persona de la obra que te atiende y recibe las instrucciones. Puedes
+            dejarlo en blanco.
           </p>
         </div>
 
-        {personas.map((persona, indice) => (
-          <Card key={persona.id ?? indice} className="space-y-3 p-4">
-            <div className="space-y-1.5">
-              <Label htmlFor={`persona-${indice}-nombre`} className="text-[16px] font-semibold">
-                Nombre
-              </Label>
-              <Input
-                id={`persona-${indice}-nombre`}
-                value={persona.nombre}
-                onChange={(e) => cambiarPersona(indice, { nombre: e.target.value })}
-                className="h-[52px] text-[18px]"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor={`persona-${indice}-cargo`} className="text-[16px] font-semibold">
-                Cargo
-              </Label>
-              <Input
-                id={`persona-${indice}-cargo`}
-                value={persona.cargo ?? ""}
-                onChange={(e) => cambiarPersona(indice, { cargo: e.target.value })}
-                className="h-[52px] text-[18px]"
-              />
-            </div>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => actualizar({ personasAtienden: personas.filter((_, i) => i !== indice) })}
-              className="h-[52px] w-full text-[18px]"
-            >
-              Quitar persona
-            </Button>
-          </Card>
-        ))}
+        <div className="space-y-1.5">
+          <Label htmlFor="receptor-nombre" className="text-[16px] font-semibold">
+            Nombre
+          </Label>
+          <Input
+            id="receptor-nombre"
+            value={receptor.nombre ?? ""}
+            onChange={(e) => cambiarReceptor({ nombre: e.target.value })}
+            className="h-[52px] text-[18px]"
+          />
+        </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() =>
-            actualizar({ personasAtienden: [...personas, { id: nuevoId(), nombre: "" }] })
-          }
-          className="h-[52px] w-full text-[18px]"
-        >
-          Añadir persona
-        </Button>
+        <div className="space-y-1.5">
+          <Label htmlFor="receptor-empresa" className="text-[16px] font-semibold">
+            Empresa o entidad
+          </Label>
+          <Input
+            id="receptor-empresa"
+            value={receptor.empresa ?? ""}
+            onChange={(e) => cambiarReceptor({ empresa: e.target.value })}
+            className="h-[52px] text-[18px]"
+          />
+        </div>
       </div>
     </div>
   );

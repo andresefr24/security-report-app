@@ -11,7 +11,7 @@ function datosDelPdf(cambiosInforme: Partial<DatosInforme> = {}): DatosDelPdf {
   const informe = crearInforme({
     proyectoId: "obra-1",
     fechaHora: "2026-07-01T09:30",
-    contenido: "Visita sin incidencias reseñables.",
+    actividades: [{ id: "a1", descripcion: "Visita sin incidencias reseñables." }],
     ...cambiosInforme,
   });
   const proyecto = crearProyecto({
@@ -76,10 +76,50 @@ describe("construirDocumento", () => {
     expect(textoDe(bloques)).toContain("1 de julio de 2026");
   });
 
-  it("lleva el contenido del informe", () => {
+  it("lleva la descripción de cada actividad", () => {
     const { bloques } = construirDocumento(datosDelPdf());
 
     expect(textoDe(bloques)).toContain("Visita sin incidencias reseñables.");
+  });
+
+  it("encabeza la actividad con su ubicación, como los informes reales", () => {
+    const { bloques } = construirDocumento(
+      datosDelPdf({
+        actividades: [
+          {
+            id: "a1",
+            ubicacion: "(M-103) PK 03+500 - Glorieta de Cobeña",
+            descripcion: "Colocación de chapa metálica.",
+          },
+        ],
+      }),
+    );
+
+    expect(textoDe(bloques)).toContain("(M-103) PK 03+500 - Glorieta de Cobeña");
+  });
+
+  it("lleva el resumen de la semana y la situación cuando los hay", () => {
+    const { bloques } = construirDocumento(
+      datosDelPdf({
+        resumenSemana: "Semana del 03 al 07 de agosto de 2026.",
+        situacion: "La obra avanza según programación.",
+      }),
+    );
+
+    const texto = textoDe(bloques);
+    expect(texto).toContain("Semana del 03 al 07 de agosto de 2026.");
+    expect(texto).toContain("La obra avanza según programación.");
+  });
+
+  it("nombra a quien recibe el informe", () => {
+    const { bloques } = construirDocumento(
+      datosDelPdf({ receptor: { nombre: "Luis Jefe", empresa: "Constructora SL" } }),
+    );
+
+    const texto = textoDe(bloques);
+    expect(texto).toContain("Recibido por");
+    expect(texto).toContain("Luis Jefe");
+    expect(texto).toContain("Constructora SL");
   });
 
   it("embebe las fotos", () => {
@@ -116,12 +156,7 @@ describe("construirDocumento", () => {
       datosDelPdf({
         firmas: [
           { nombre: "Ana", rol: "coordinador", firma: "data:image/png;base64,FIRMA" },
-          {
-            nombre: "Rep. Ferralla",
-            rol: "subcontrata",
-            subcontrata: "Ferralla SL",
-            firma: "data:image/png;base64,FIRMA2",
-          },
+          { nombre: "Luis Jefe", rol: "recibido", firma: "data:image/png;base64,FIRMA2" },
         ],
       }),
     );
@@ -130,26 +165,16 @@ describe("construirDocumento", () => {
     expect(firmas).toHaveLength(2);
     const texto = textoDe(bloques);
     expect(texto).toContain("Coordinador de seguridad y salud");
-    // La firma de subcontrata dice de qué subcontrata es.
-    expect(texto).toContain("Ferralla SL");
+    expect(texto).toContain("Recibido por");
   });
 
-  it("lista los incumplimientos por subcontrata", () => {
-    const { bloques } = construirDocumento(
-      datosDelPdf({
-        incumplimientos: [{ id: "i1", subcontrata: "Ferralla SL", descripcion: "Sin arnés." }],
-      }),
-    );
-
-    expect(textoDe(bloques)).toContain("Ferralla SL: Sin arnés.");
-  });
-
-  it("omite las secciones que no aplican (sin fotos, sin incumplimientos)", () => {
+  it("omite las secciones que no aplican (sin fotos, sin resumen, sin receptor)", () => {
     const { bloques } = construirDocumento(datosDelPdf());
     const texto = textoDe(bloques);
 
     expect(texto).not.toContain("Fotografías");
-    expect(texto).not.toContain("Incumplimientos detectados");
+    expect(texto).not.toContain("Calendario de visitas");
+    expect(texto).not.toContain("Recibido por");
   });
 
   it("dice 'No consta' si el promotor ya no está, en vez de mentir", () => {

@@ -29,21 +29,32 @@ describe("PasoDatos", () => {
     expect(fecha.value).toBe("2026-07-02T10:00");
   });
 
-  it("añade una persona que atiende la visita y la deja editar", () => {
+  it("recoge quién recibe el informe: nombre y empresa", () => {
     render(<Arnes inicial={base} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /Añadir persona/i }));
-
-    const nombre = screen.getByLabelText<HTMLInputElement>(/Nombre/i);
+    const nombre = screen.getByLabelText<HTMLInputElement>(/^Nombre$/i);
     fireEvent.change(nombre, { target: { value: "Luis Jefe" } });
     expect(nombre.value).toBe("Luis Jefe");
+
+    const empresa = screen.getByLabelText<HTMLInputElement>(/Empresa o entidad/i);
+    fireEvent.change(empresa, { target: { value: "Constructora SL" } });
+    expect(empresa.value).toBe("Constructora SL");
   });
 
-  it("quita una persona de la lista", () => {
-    render(<Arnes inicial={{ ...base, personasAtienden: [{ nombre: "Luis Jefe" }] }} />);
+  it("muestra el receptor ya guardado", () => {
+    render(
+      <Arnes
+        inicial={{ ...base, receptor: { nombre: "Luis Jefe", empresa: "Constructora SL" } }}
+      />,
+    );
 
     expect(screen.getByDisplayValue("Luis Jefe")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Quitar persona/i }));
-    expect(screen.queryByDisplayValue("Luis Jefe")).not.toBeInTheDocument();
+    expect(screen.getByDisplayValue("Constructora SL")).toBeInTheDocument();
+  });
+
+  it("deja el receptor en blanco: nunca es obligatorio", () => {
+    render(<Arnes inicial={base} />);
+
+    expect(screen.getByLabelText<HTMLInputElement>(/^Nombre$/i).value).toBe("");
   });
 });
