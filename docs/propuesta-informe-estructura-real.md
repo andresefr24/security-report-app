@@ -115,17 +115,27 @@ Perfil, promotores, alta de obra (salvo los 3 campos nuevos de cabecera), la mec
 
 Una PR pequeña por fase, en este orden. No se arranca una fase sin que Josune vea la anterior.
 
-| # | Fase | Qué toca |
-|---|---|---|
-| 1 | **KB y referencia** | Este documento al día + la ficha de maqueta ([[maqueta-informe-real]]). Sin código de app. |
-| 2 | **Lo fácil de fotos** | Permitir galería (quitar `capture="environment"`) + comentario por foto. |
-| 3 | **Dominio** | Modelo v2 en `Informe` (`situacion`, `actividades[]`, `resumenSemana?`, `receptor?`), fuera `contenido`/`incumplimientos`, borrar `firmantes.ts`, reescribir `completitud.ts` y sus tests. |
-| 4 | **Datos de la obra** | `contratista?` en `Proyecto` y en el alta de obra. |
-| 5 | **Asistente** | De 5 pasos a 3 (Datos → Situación y actividades → Firmas). Nace el bloque "actividad" con sus fotos dentro. La fase más grande. |
-| 6 | **PDF** | Reescribir `construir-documento.ts` con plantilla parametrizable, calcando [[maqueta-informe-real]]. |
-| 7 | **Flujo completo** | Actualizar el e2e y el test de flujo al camino nuevo. |
+| # | Fase | Qué toca | Estado |
+|---|---|---|---|
+| 1 | **KB y referencia** | Este documento al día + la ficha de maqueta ([[maqueta-informe-real]]). Sin código de app. | ✅ `6dcc6a5` |
+| 2 | **Lo fácil de fotos** | Permitir galería (quitar `capture="environment"`) + comentario por foto. | ✅ `5d4c9b6` |
+| 3 | **Dominio** | Modelo v2 en `Informe`, fuera `contenido`/`incumplimientos`, borrar `firmantes.ts`, reescribir `completitud.ts` y sus tests. | ✅ `d458f04` |
+| 4 | **Datos de la obra** | `contratista?` en `Proyecto` y en el alta de obra. | ✅ `5df1565` |
+| 5 | **Asistente** | De 5 pasos a 3 (Datos → Situación y actividades → Firmas). Las fotos pasan a vivir dentro de cada actividad. | ✅ `f23ff34` |
+| 6 | **PDF** | Plantilla parametrizable (`plantilla-informe.ts`) calcando [[maqueta-informe-real]]: cabecera en tabla, rótulos en mayúsculas, 2 fotos por fila, recuadro de firmas. | ✅ `b68f37f` |
+| 7 | **Flujo completo** | e2e y test de flujo por el camino nuevo. | ✅ `50c438c` |
+
+Rework **terminado** el 2026-08-12: 202 tests de unidad/componente y el e2e en verde.
 
 Después, como hito propio: la **persistencia "tipo backend"** (afinado 4).
+
+## 10. Lo que queda anotado para más adelante
+
+- **Logotipos en la cabecera del PDF.** La celda está reservada y vacía; faltan los archivos de imagen.
+- **El formato B (visita puntual, `G13-SSFE`).** Es otra constante de plantilla, con su párrafo legal fijo y sus rótulos (OPS, nota positiva, pendiente de visita anterior). Ver [[maqueta-informe-real]] §4.
+- **Anotar las fotos** (los círculos y flechas rojas que el coordinador dibuja a mano hoy). Fuera de F1.
+- **Los tipos de actividad reales** son más de dos: el `tipo` del modelo se quedó en `normal|incidencia` como dice D9, e invisible en pantalla.
+- **IBM Plex Serif** en el PDF, que sigue pendiente desde el M4.
 
 ## 9. Notas y riesgos
 
