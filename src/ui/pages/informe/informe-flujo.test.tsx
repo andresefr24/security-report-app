@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { StrictMode } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { CrearInformePage } from "@/ui/pages/informe/CrearInformePage";
@@ -45,7 +46,12 @@ describe("Flujo del informe (crear borrador → wizard)", () => {
     return obra.valor.id;
   }
 
-  function montar(rutaInicial: string) {
+  /**
+   * `estricto` monta dentro de <StrictMode>, que en desarrollo hace lo que hace
+   * React de verdad al arrancar la app: montar, limpiar y volver a montar. Sin
+   * esto no se ve el cuelgue de la pantalla puente.
+   */
+  function montar(rutaInicial: string, { estricto = false } = {}) {
     const router = createMemoryRouter(
       [
         {
@@ -69,8 +75,21 @@ describe("Flujo del informe (crear borrador → wizard)", () => {
       ],
       { initialEntries: [rutaInicial], future: FUTURE_ROUTER },
     );
-    return render(<RouterProvider router={router} future={FUTURE_PROVIDER} />);
+    const app = <RouterProvider router={router} future={FUTURE_PROVIDER} />;
+    return render(estricto ? <StrictMode>{app}</StrictMode> : app);
   }
+
+  it("abre el wizard también en desarrollo, con el doble montaje de StrictMode", async () => {
+    const obraId = await unaObra();
+
+    montar(`/obras/${obraId}/informes/nuevo`, { estricto: true });
+
+    // Si la pantalla puente se queda en "Creando el informe…" es que el borrador
+    // se creó pero nadie navegó (pasó de verdad: se veía solo con `npm run dev`).
+    expect(await screen.findByText("Paso 1 de 3")).toBeInTheDocument();
+    // Y un solo borrador, no dos: el guard sigue haciendo su trabajo.
+    expect(informes.guardados.size).toBe(1);
+  });
 
   it("crea el borrador y abre el wizard en el paso 1", async () => {
     const obraId = await unaObra();
