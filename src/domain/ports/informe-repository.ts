@@ -16,4 +16,7 @@ export interface InformeRepository {
 
   /** Devuelve los informes de una obra. */
   listarPorProyecto(proyectoId: Id): Promise<Informe[]>;
+
+  /** Borra el informe con ese id. Si no existe, no pasa nada. */
+  borrar(id: Id): Promise<void>;
 }

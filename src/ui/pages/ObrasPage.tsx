@@ -15,6 +15,7 @@ import {
   type ObraConPromotor,
 } from "@/application/use-cases/listar-proyectos";
 import { type ListarInformes } from "@/application/use-cases/listar-informes";
+import { type BorrarInforme } from "@/application/use-cases/borrar-informe";
 import { type Informe } from "@/domain/informe/informe";
 import { type Id } from "@/domain/shared/id";
 import { Button } from "@/ui/components/button";
@@ -36,12 +37,27 @@ function fechaLegible(fechaHora: string): string {
 export interface ObrasPageProps {
   listarProyectos: ListarProyectos;
   listarInformes: ListarInformes;
+  borrarInforme: BorrarInforme;
 }
 
-export function ObrasPage({ listarProyectos, listarInformes }: ObrasPageProps) {
+export function ObrasPage({ listarProyectos, listarInformes, borrarInforme }: ObrasPageProps) {
   const [obras, setObras] = useState<ObraConPromotor[]>([]);
   const [informesPorObra, setInformesPorObra] = useState<Record<Id, Informe[]>>({});
   const [cargando, setCargando] = useState(true);
+  // Qué borrador está esperando confirmación. Borrar es irreversible, así que se
+  // hace en dos toques: "Borrar" y luego "Sí, borrar". Sin ventanas del
+  // navegador, que en el móvil salen diminutas.
+  const [porConfirmar, setPorConfirmar] = useState<Id | null>(null);
+
+  async function confirmarBorrado(obraId: Id, informeId: Id) {
+    const resultado = await borrarInforme.ejecutar(informeId);
+    setPorConfirmar(null);
+    if (!resultado.ok) return;
+    setInformesPorObra((actual) => ({
+      ...actual,
+      [obraId]: (actual[obraId] ?? []).filter((i) => i.id !== informeId),
+    }));
+  }
 
   useEffect(() => {
     let activo = true;
@@ -111,7 +127,7 @@ export function ObrasPage({ listarProyectos, listarInformes }: ObrasPageProps) {
                       <p className="text-[16px] font-semibold">Informes de esta obra</p>
                       <ul className="space-y-2">
                         {informesPorObra[proyecto.id].map((informe) => (
-                          <li key={informe.id}>
+                          <li key={informe.id} className="space-y-2">
                             <Button
                               asChild
                               variant="outline"
@@ -122,6 +138,40 @@ export function ObrasPage({ listarProyectos, listarInformes }: ObrasPageProps) {
                                 {informe.estado === "borrador" && " · Borrador"}
                               </Link>
                             </Button>
+
+                            {/* Solo los borradores se pueden tirar: uno cerrado
+                                está firmado y es evidencia de la visita. */}
+                            {informe.estado === "borrador" &&
+                              (porConfirmar === informe.id ? (
+                                <div className="space-y-2 rounded-md bg-secondary p-3">
+                                  <p className="text-[16px]">
+                                    ¿Seguro que quieres borrar este borrador? No se puede
+                                    deshacer.
+                                  </p>
+                                  <Button
+                                    variant="secondary"
+                                    onClick={() => confirmarBorrado(proyecto.id, informe.id)}
+                                    className="h-[52px] w-full text-[18px]"
+                                  >
+                                    Sí, borrar el borrador
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => setPorConfirmar(null)}
+                                    className="h-[52px] w-full text-[18px]"
+                                  >
+                                    No, dejarlo
+                                  </Button>
+                                </div>
+                              ) : (
+                                <Button
+                                  variant="secondary"
+                                  onClick={() => setPorConfirmar(informe.id)}
+                                  className="h-[52px] w-full text-[18px]"
+                                >
+                                  Borrar borrador del {fechaLegible(informe.fechaHora)}
+                                </Button>
+                              ))}
                           </li>
                         ))}
                       </ul>
