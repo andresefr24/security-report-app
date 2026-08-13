@@ -132,9 +132,17 @@ describe("construirDocumento", () => {
     expect(texto).toContain("Constructora SL");
   });
 
-  it("embebe las fotos", () => {
+  it("embebe las fotos de cada actividad", () => {
     const { bloques } = construirDocumento(
-      datosDelPdf({ fotos: [{ id: "f1", imagen: "data:image/png;base64,FOTO" }] }),
+      datosDelPdf({
+        actividades: [
+          {
+            id: "a1",
+            descripcion: "Desbroce.",
+            fotos: [{ id: "f1", imagen: "data:image/png;base64,FOTO" }],
+          },
+        ],
+      }),
     );
 
     const imagenes = bloques.filter((b) => b.tipo === "imagen");
@@ -145,11 +153,17 @@ describe("construirDocumento", () => {
   it("pone el comentario de la foto como pie de la imagen", () => {
     const { bloques } = construirDocumento(
       datosDelPdf({
-        fotos: [
+        actividades: [
           {
-            id: "f1",
-            imagen: "data:image/png;base64,FOTO",
-            comentario: "Extintor y batefuego junto al grupo electrógeno.",
+            id: "a1",
+            descripcion: "Desbroce.",
+            fotos: [
+              {
+                id: "f1",
+                imagen: "data:image/png;base64,FOTO",
+                comentario: "Extintor y batefuego junto al grupo electrógeno.",
+              },
+            ],
           },
         ],
       }),
@@ -178,13 +192,14 @@ describe("construirDocumento", () => {
     expect(texto).toContain("Recibido por");
   });
 
-  it("omite las secciones que no aplican (sin fotos, sin resumen, sin receptor)", () => {
+  it("omite las secciones que no aplican (sin resumen, sin situación, sin receptor)", () => {
     const { bloques } = construirDocumento(datosDelPdf());
     const texto = textoDe(bloques);
 
-    expect(texto).not.toContain("Fotografías");
     expect(texto).not.toContain("Calendario de visitas");
+    expect(texto).not.toContain("Situación de la obra");
     expect(texto).not.toContain("Recibido por");
+    expect(bloques.filter((b) => b.tipo === "imagen")).toHaveLength(0);
   });
 
   it("dice 'No consta' si el promotor ya no está, en vez de mentir", () => {

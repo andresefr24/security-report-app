@@ -83,8 +83,6 @@ export interface DatosInforme {
   actividades?: Actividad[];
   receptor?: Receptor;
   firmas?: FirmaInforme[];
-  /** PROVISIONAL: fotos sueltas, hasta que el asistente las meta en la actividad. */
-  fotos?: Foto[];
 }
 
 /**

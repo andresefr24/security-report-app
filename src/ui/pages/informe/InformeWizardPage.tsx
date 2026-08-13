@@ -3,22 +3,21 @@
 // Es el punto donde se juntan el contenedor (AsistenteInforme) y los módulos de
 // cada paso. Recibe los casos de uso por props (del composition root).
 //
-// EN OBRAS (modelo v2): los pasos "Contenido" e "Incumplimientos" ya no existen.
-// En la fase siguiente el paso "Fotos" se disuelve dentro de un paso nuevo
-// "Situación y actividades", y el asistente se queda en los 3 pasos definitivos:
-// Datos de la visita → Situación y actividades → Firmas.
+// Modelo v2: 3 pasos. Los de "Fotos", "Contenido" e "Incumplimientos" se fundieron
+// en "Situación y actividades", porque las fotos cuelgan de cada actividad y una
+// incidencia es una actividad más. Ver docs/decisions.md#d9-informe-v2.
 
 import { useParams, useNavigate } from "react-router-dom";
 import { AsistenteInforme, type PasoWizard } from "@/ui/components/asistente-informe";
 import { type ObtenerInforme } from "@/application/use-cases/obtener-informe";
 import { type GuardarInforme } from "@/application/use-cases/guardar-informe";
 import { PasoDatos } from "@/ui/pages/informe/PasoDatos";
-import { PasoFotos } from "@/ui/pages/informe/PasoFotos";
+import { PasoActividades } from "@/ui/pages/informe/PasoActividades";
 import { PasoFirmas } from "@/ui/pages/informe/PasoFirmas";
 
 const PASOS: PasoWizard[] = [
   { titulo: "Datos de la visita", contenido: (props) => <PasoDatos {...props} /> },
-  { titulo: "Fotos", contenido: (props) => <PasoFotos {...props} /> },
+  { titulo: "Situación y actividades", contenido: (props) => <PasoActividades {...props} /> },
   { titulo: "Firmas", contenido: (props) => <PasoFirmas {...props} /> },
 ];
 

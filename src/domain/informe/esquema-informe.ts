@@ -91,11 +91,4 @@ export const esquemaInforme = z.object({
   actividades: z.array(esquemaActividad).optional(),
   receptor: esquemaReceptor.optional(),
   firmas: z.array(esquemaFirmaInforme).optional(),
-
-  /**
-   * PROVISIONAL — fotos sueltas del informe, sin actividad. Sobreviven mientras
-   * el asistente sigue teniendo su paso "Fotos"; desaparecen en la fase del
-   * asistente, cuando las fotos pasen a vivir dentro de cada actividad.
-   */
-  fotos: z.array(esquemaFoto).optional(),
 });
