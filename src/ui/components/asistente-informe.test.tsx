@@ -6,15 +6,15 @@ import { ObtenerInforme } from "@/application/use-cases/obtener-informe";
 import { crearBorrador } from "@/domain/informe/informe";
 import { InformeRepositoryEnMemoria } from "@/test/fakes";
 
-// Dos pasos de prueba: el primero escribe en `contenido`, el segundo es estático.
+// Dos pasos de prueba: el primero escribe en `situacion`, el segundo es estático.
 const pasos: PasoWizard[] = [
   {
-    titulo: "Contenido",
+    titulo: "Situación",
     contenido: ({ informe, actualizar }) => (
       <input
-        aria-label="contenido"
-        value={informe.contenido ?? ""}
-        onChange={(e) => actualizar({ contenido: e.target.value })}
+        aria-label="situación"
+        value={informe.situacion ?? ""}
+        onChange={(e) => actualizar({ situacion: e.target.value })}
       />
     ),
   },
@@ -54,26 +54,26 @@ describe("AsistenteInforme", () => {
     montar();
 
     expect(await screen.findByText("Paso 1 de 2")).toBeInTheDocument();
-    expect(screen.getByText("Contenido")).toBeInTheDocument();
+    expect(screen.getByText("Situación")).toBeInTheDocument();
   });
 
   it("autoguarda y avanza al pulsar Siguiente", async () => {
     montar();
-    await screen.findByLabelText("contenido");
+    await screen.findByLabelText("situación");
 
-    fireEvent.change(screen.getByLabelText("contenido"), {
+    fireEvent.change(screen.getByLabelText("situación"), {
       target: { value: "Visita sin incidencias." },
     });
     fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
 
     expect(await screen.findByText("Paso 2 de 2")).toBeInTheDocument();
     // Se guardó de verdad en el repositorio.
-    expect(informes.guardados.get(idInforme)?.contenido).toBe("Visita sin incidencias.");
+    expect(informes.guardados.get(idInforme)?.situacion).toBe("Visita sin incidencias.");
   });
 
   it("llama a alFinalizar en el último paso", async () => {
     montar();
-    await screen.findByLabelText("contenido");
+    await screen.findByLabelText("situación");
 
     fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
     await screen.findByText("Paso 2 de 2");

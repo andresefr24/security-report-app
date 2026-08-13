@@ -15,10 +15,12 @@ import {
   esquemaInforme,
   type ESTADOS_INFORME,
   type ROLES_FIRMANTE,
+  type TIPOS_ACTIVIDAD,
 } from "@/domain/informe/esquema-informe";
 
 export type EstadoInforme = (typeof ESTADOS_INFORME)[number];
 export type RolFirmante = (typeof ROLES_FIRMANTE)[number];
+export type TipoActividad = (typeof TIPOS_ACTIVIDAD)[number];
 
 /**
  * Una foto adjunta al informe: imagen reducida (dataURL) con id para borrarla.
@@ -34,35 +36,35 @@ export interface Foto {
   comentario?: string;
 }
 
-/** Alguien que atiende la visita y recibe instrucciones. */
-export interface PersonaAtiende {
-  /** Id estable: ancla su firma aunque cambie el nombre o haya nombres repetidos. */
-  id?: Id;
-  nombre: string;
-  cargo?: string;
-}
-
-/** Un incumplimiento detectado, imputado a una subcontrata. */
-export interface Incumplimiento {
+/**
+ * Una actividad del informe: la pieza que se repite. Es el bloque que en los
+ * informes reales abre con "SITUACIÓN DE LA ACTUACIÓN: <dónde>" y "DESCRIPCIÓN
+ * DE LA ACTIVIDAD: <qué>", seguido de sus fotos.
+ *
+ * Una incidencia NO es un caso especial: es una actividad más. Solo se marca con
+ * `tipo` para poder contarlas el día de mañana.
+ */
+export interface Actividad {
   id: Id;
-  subcontrata: string;
-  descripcion: string;
+  /** Dónde ocurre: "(M-300) PK 31+400 – ZONA 4 - ESTE". */
+  ubicacion?: string;
+  descripcion?: string;
+  tipo?: TipoActividad;
+  fotos?: Foto[];
 }
 
-/** Una firma recogida en el dispositivo. */
+/** Quien recibe el informe en obra. Cambia en cada visita; nunca bloquea. */
+export interface Receptor {
+  nombre?: string;
+  empresa?: string;
+}
+
+/** Una firma recogida en el dispositivo: la del coordinador o la de quien recibe. */
 export interface FirmaInforme {
   nombre: string;
   rol: RolFirmante;
   /** Trazo de la firma como imagen dataURL. */
   firma: string;
-  /** Para las firmas de subcontrata, el nombre de la subcontrata (para mostrar). */
-  subcontrata?: string;
-  /**
-   * Id del elemento al que pertenece la firma (la persona que atiende o el
-   * incumplimiento de la subcontrata). Ancla la firma por id, no por nombre, así
-   * renombrar o repetir nombres no la pierde ni la confunde.
-   */
-  refId?: Id;
 }
 
 /**
@@ -74,11 +76,15 @@ export interface DatosInforme {
   proyectoId: Id;
   fechaHora?: string;
   estado?: EstadoInforme;
-  personasAtienden?: PersonaAtiende[];
-  fotos?: Foto[];
-  contenido?: string;
-  incumplimientos?: Incumplimiento[];
+  /** El "Semana del X al Y…" que encabeza los informes semanales. */
+  resumenSemana?: string;
+  /** Estado general de la obra. Opcional: los informes semanales no lo usan. */
+  situacion?: string;
+  actividades?: Actividad[];
+  receptor?: Receptor;
   firmas?: FirmaInforme[];
+  /** PROVISIONAL: fotos sueltas, hasta que el asistente las meta en la actividad. */
+  fotos?: Foto[];
 }
 
 /**

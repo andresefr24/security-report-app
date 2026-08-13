@@ -1,13 +1,15 @@
-// Paso 5 del wizard — Firmas.
+// Paso del wizard — Firmas.
 //
-// Muestra una "ranura" de firma por cada firmante:
-//  - el coordinador (siempre),
-//  - cada persona que atiende la visita (paso 1), por la contrata,
-//  - cada subcontrata con incumplimiento (regla del dominio, firmantesRequeridos).
+// Modelo v2: solo hay dos firmas posibles, como en los 8 informes reales.
+//  - La del COORDINADOR, obligatoria: es su prueba de presencia.
+//  - La de QUIEN RECIBE el informe en obra, opcional: puede no haber nadie ese día.
 //
-// Decisión del M3: avisamos de las firmas obligatorias que falten, pero NO
-// bloqueamos "Finalizar" — el informe se cierra como borrador y la exigencia
-// dura de "todo firmado" va con el PDF (M4).
+// Desapareció la regla "cada subcontrata con incumplimiento tiene que firmar"
+// (y con ella firmantesRequeridos): no existe en ningún informe real.
+// Ver docs/decisions.md#d9-informe-v2.
+//
+// Decisión que se mantiene del M3: avisamos de la firma obligatoria si falta, pero
+// NO bloqueamos "Finalizar" desde aquí — de eso se encarga completitud.ts al cerrar.
 //
 // Truco importante: las firmas a medias se guardan en estado LOCAL; en el informe
 // (que se autoguarda) solo escribimos las firmas COMPLETAS (nombre + trazo), para
@@ -16,105 +18,64 @@
 import { useState } from "react";
 import { type PropsPaso } from "@/ui/components/asistente-informe";
 import { type FirmaInforme, type RolFirmante } from "@/domain/informe/informe";
-import { firmantesRequeridos } from "@/domain/informe/firmantes";
 import { CampoFirma } from "@/ui/components/campo-firma";
 import { Card } from "@/ui/components/card";
 import { Input } from "@/ui/components/input";
 import { Label } from "@/ui/components/label";
 
 interface Ranura {
-  /** Clave estable de la ranura, basada en ids (no en nombres). */
-  clave: string;
+  rol: RolFirmante;
   etiqueta: string;
   /** Texto corto para el aviso de firmas que faltan. */
   resumen: string;
-  rol: RolFirmante;
-  subcontrata?: string;
-  /** Id del elemento (persona o incumplimiento) al que se ancla la firma. */
-  refId?: string;
-  /** Para las personas que atienden: su nombre ya viene del paso 1 (no se teclea). */
-  nombreFijo?: string;
-  /** ¿Es una firma legalmente obligatoria (coordinador o subcontrata)? */
   obligatoria: boolean;
 }
 
-/** Clave con la que una firma guardada se asocia a su ranura (por id, no por nombre). */
-function claveDeFirma(firma: FirmaInforme): string {
-  if (firma.rol === "coordinador") return "coordinador";
-  if (firma.rol === "subcontrata") return `sub:${firma.refId ?? ""}`;
-  return `atiende:${firma.refId ?? firma.nombre}`;
-}
+const RANURAS: Ranura[] = [
+  {
+    rol: "coordinador",
+    etiqueta: "Firma del coordinador",
+    resumen: "el coordinador",
+    obligatoria: true,
+  },
+  {
+    rol: "recibido",
+    etiqueta: "Recibido por (opcional)",
+    resumen: "quien recibe el informe",
+    obligatoria: false,
+  },
+];
 
 export function PasoFirmas({ informe, actualizar }: PropsPaso) {
-  const requeridos = firmantesRequeridos(informe);
-  const personas = informe.personasAtienden ?? [];
-
-  const ranuras: Ranura[] = [
-    ...requeridos.map<Ranura>((req) =>
-      req.rol === "coordinador"
-        ? {
-            clave: "coordinador",
-            etiqueta: "Firma del coordinador",
-            resumen: "el coordinador",
-            rol: "coordinador",
-            obligatoria: true,
-          }
-        : {
-            clave: `sub:${req.incumplimientoId}`,
-            etiqueta: `Firma de la subcontrata ${req.subcontrata}`,
-            resumen: `la subcontrata ${req.subcontrata}`,
-            rol: "subcontrata",
-            subcontrata: req.subcontrata,
-            refId: req.incumplimientoId,
-            obligatoria: true,
-          },
-    ),
-    ...personas
-      .filter((p) => p.nombre.trim())
-      .map<Ranura>((p) => ({
-        clave: `atiende:${p.id ?? p.nombre}`,
-        etiqueta: `Firma de ${p.nombre} (atiende la visita)`,
-        resumen: p.nombre,
-        rol: "contratista",
-        refId: p.id,
-        nombreFijo: p.nombre,
-        obligatoria: false,
-      })),
-  ];
-
   // Estado local: la firma en curso de cada ranura (nombre + trazo).
   const [local, setLocal] = useState<Record<string, { nombre: string; firma: string }>>(() => {
     const inicial: Record<string, { nombre: string; firma: string }> = {};
-    for (const f of informe.firmas ?? []) inicial[claveDeFirma(f)] = { nombre: f.nombre, firma: f.firma };
+    for (const f of informe.firmas ?? []) inicial[f.rol] = { nombre: f.nombre, firma: f.firma };
+    // Si el receptor ya se escribió en el paso de datos, su nombre viene puesto.
+    const receptor = informe.receptor?.nombre?.trim();
+    if (receptor && !inicial.recibido) inicial.recibido = { nombre: receptor, firma: "" };
     return inicial;
   });
 
-  function actualizarRanura(ranura: Ranura, cambios: Partial<{ nombre: string; firma: string }>) {
-    const actual = local[ranura.clave] ?? { nombre: ranura.nombreFijo ?? "", firma: "" };
-    const siguiente = { ...local, [ranura.clave]: { ...actual, ...cambios } };
+  function actualizarRanura(rol: RolFirmante, cambios: Partial<{ nombre: string; firma: string }>) {
+    const actual = local[rol] ?? { nombre: "", firma: "" };
+    const siguiente = { ...local, [rol]: { ...actual, ...cambios } };
     setLocal(siguiente);
 
     // En el informe solo van las firmas COMPLETAS (nombre + trazo).
-    const completas: FirmaInforme[] = ranuras
-      .filter((r) => {
-        const v = siguiente[r.clave];
-        return v && v.nombre.trim() && v.firma;
-      })
-      .map((r) => {
-        const v = siguiente[r.clave];
-        return {
-          nombre: v.nombre.trim(),
-          rol: r.rol,
-          firma: v.firma,
-          subcontrata: r.subcontrata,
-          refId: r.refId,
-        };
-      });
+    const completas: FirmaInforme[] = RANURAS.filter((r) => {
+      const v = siguiente[r.rol];
+      return v && v.nombre.trim() && v.firma;
+    }).map((r) => ({
+      nombre: siguiente[r.rol].nombre.trim(),
+      rol: r.rol,
+      firma: siguiente[r.rol].firma,
+    }));
     actualizar({ firmas: completas });
   }
 
-  const faltan = ranuras.filter(
-    (r) => r.obligatoria && !(local[r.clave]?.nombre.trim() && local[r.clave]?.firma),
+  const faltan = RANURAS.filter(
+    (r) => r.obligatoria && !(local[r.rol]?.nombre.trim() && local[r.rol]?.firma),
   );
 
   return (
@@ -126,29 +87,27 @@ export function PasoFirmas({ informe, actualizar }: PropsPaso) {
         </p>
       )}
 
-      {ranuras.map((ranura) => {
-        const valor = local[ranura.clave] ?? { nombre: ranura.nombreFijo ?? "", firma: "" };
+      {RANURAS.map((ranura) => {
+        const valor = local[ranura.rol] ?? { nombre: "", firma: "" };
         return (
-          <Card key={ranura.clave} className="space-y-3 p-4">
+          <Card key={ranura.rol} className="space-y-3 p-4">
             <p className="text-[18px] font-semibold">{ranura.etiqueta}</p>
 
-            {!ranura.nombreFijo && (
-              <div className="space-y-1.5">
-                <Label htmlFor={`firma-${ranura.clave}-nombre`} className="text-[16px] font-semibold">
-                  Nombre de quien firma
-                </Label>
-                <Input
-                  id={`firma-${ranura.clave}-nombre`}
-                  value={valor.nombre}
-                  onChange={(e) => actualizarRanura(ranura, { nombre: e.target.value })}
-                  className="h-[52px] text-[18px]"
-                />
-              </div>
-            )}
+            <div className="space-y-1.5">
+              <Label htmlFor={`firma-${ranura.rol}-nombre`} className="text-[16px] font-semibold">
+                Nombre de quien firma
+              </Label>
+              <Input
+                id={`firma-${ranura.rol}-nombre`}
+                value={valor.nombre}
+                onChange={(e) => actualizarRanura(ranura.rol, { nombre: e.target.value })}
+                className="h-[52px] text-[18px]"
+              />
+            </div>
 
             <CampoFirma
               valor={valor.firma || undefined}
-              onChange={(firma) => actualizarRanura(ranura, { firma: firma ?? "" })}
+              onChange={(firma) => actualizarRanura(ranura.rol, { firma: firma ?? "" })}
             />
           </Card>
         );

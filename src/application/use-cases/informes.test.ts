@@ -66,13 +66,13 @@ describe("Casos de uso de informes", () => {
 
       const guardado = await new GuardarInforme(informes).ejecutar({
         ...borrador.valor,
-        contenido: "Visita sin incidencias.",
+        situacion: "Visita sin incidencias.",
       });
 
       expect(guardado.ok).toBe(true);
       // No se duplica: sigue siendo el mismo informe, actualizado.
       expect(informes.guardados.size).toBe(1);
-      expect(informes.guardados.get(borrador.valor.id)?.contenido).toBe("Visita sin incidencias.");
+      expect(informes.guardados.get(borrador.valor.id)?.situacion).toBe("Visita sin incidencias.");
     });
 
     it("no guarda si los datos son inválidos (una firma sin trazo)", async () => {
@@ -102,11 +102,11 @@ describe("Casos de uso de informes", () => {
       if (!borrador.ok) throw new Error("el borrador debería crearse");
       await new GuardarInforme(informes).ejecutar({
         ...borrador.valor,
-        contenido: "A medias…",
+        situacion: "A medias…",
       });
 
       const recuperado = await new ObtenerInforme(informes).ejecutar(borrador.valor.id);
-      expect(recuperado?.contenido).toBe("A medias…");
+      expect(recuperado?.situacion).toBe("A medias…");
     });
   });
 });

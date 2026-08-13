@@ -115,7 +115,7 @@ describe("EntregarInformePage", () => {
 
   it("cierra el informe y muestra el PDF listo para compartir", async () => {
     const informeId = await unInforme({
-      contenido: "Visita sin incidencias.",
+      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
 
@@ -127,7 +127,7 @@ describe("EntregarInformePage", () => {
   });
 
   it("avisa de lo que falta y deja volver al informe, sin cerrarlo", async () => {
-    const informeId = await unInforme({ contenido: "Sin firmar" });
+    const informeId = await unInforme({ actividades: [{ id: "a1", descripcion: "Sin firmar" }] });
 
     montar(informeId, new SharePortFalso());
 
@@ -141,7 +141,7 @@ describe("EntregarInformePage", () => {
 
   it("comparte el PDF con el nombre del archivo", async () => {
     const informeId = await unInforme({
-      contenido: "Visita sin incidencias.",
+      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
     const compartir = new SharePortFalso();
@@ -156,7 +156,7 @@ describe("EntregarInformePage", () => {
 
   it("oculta el botón de compartir si el dispositivo no puede (caso iOS)", async () => {
     const informeId = await unInforme({
-      contenido: "Visita sin incidencias.",
+      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
 
@@ -170,7 +170,7 @@ describe("EntregarInformePage", () => {
 
   it("avisa si no se pudo compartir y se descargó en su lugar", async () => {
     const informeId = await unInforme({
-      contenido: "Visita sin incidencias.",
+      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
 
@@ -183,7 +183,7 @@ describe("EntregarInformePage", () => {
 
   it("muestra los destinatarios de la obra y avisa de que la app no envía correos", async () => {
     const informeId = await unInforme({
-      contenido: "Visita sin incidencias.",
+      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
 
@@ -196,7 +196,7 @@ describe("EntregarInformePage", () => {
 
   it("no genera el PDF si el coordinador no tiene perfil, y le lleva a rellenarlo", async () => {
     const informeId = await unInforme({
-      contenido: "Visita sin incidencias.",
+      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
     coordinadores.guardado = null;

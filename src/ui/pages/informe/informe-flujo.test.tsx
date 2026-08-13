@@ -71,31 +71,25 @@ describe("Flujo del informe (crear borrador → wizard)", () => {
 
     montar(`/obras/${obraId}/informes/nuevo`);
 
-    expect(await screen.findByText("Paso 1 de 5")).toBeInTheDocument();
+    expect(await screen.findByText("Paso 1 de 3")).toBeInTheDocument();
     expect(screen.getByText("Datos de la visita")).toBeInTheDocument();
     // El borrador quedó guardado.
     expect(informes.guardados.size).toBe(1);
   });
 
-  it("recorre los pasos y autoguarda el contenido escrito", async () => {
+  it("recorre los pasos y autoguarda lo escrito", async () => {
     const obraId = await unaObra();
     montar(`/obras/${obraId}/informes/nuevo`);
-    await screen.findByText("Paso 1 de 5");
+    await screen.findByText("Paso 1 de 3");
 
-    // Paso 1 → 2 → 3 (Contenido)
-    fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
-    await screen.findByText("Paso 2 de 5");
-    fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
-    await screen.findByText("Paso 3 de 5");
-
-    fireEvent.change(screen.getByLabelText(/Contenido del informe/i), {
-      target: { value: "Visita sin incidencias." },
+    fireEvent.change(screen.getByLabelText(/^Nombre$/i), {
+      target: { value: "Luis Jefe" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
-    await screen.findByText("Paso 4 de 5");
+    await screen.findByText("Paso 2 de 3");
 
     const guardado = [...informes.guardados.values()][0];
-    expect(guardado.contenido).toBe("Visita sin incidencias.");
+    expect(guardado.receptor?.nombre).toBe("Luis Jefe");
     expect(guardado.estado).toBe("borrador");
   });
 

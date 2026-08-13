@@ -16,8 +16,7 @@ import { type RolFirmante } from "@/domain/informe/informe";
 /** Cómo se nombra cada rol en el documento (en español llano). */
 const ETIQUETAS_ROL: Record<RolFirmante, string> = {
   coordinador: "Coordinador de seguridad y salud",
-  contratista: "Por la contrata",
-  subcontrata: "Por la subcontrata",
+  recibido: "Recibido por",
 };
 
 /** Una parte del documento. La receta es una lista de estas. */
@@ -84,31 +83,44 @@ export function construirDocumento({
     bloques.push({ tipo: "dato", etiqueta: "Empresa", valor: coordinador.contacto.empresa });
   }
 
-  // --- Quién atiende la visita ---
-  const personas = informe.personasAtienden ?? [];
-  if (personas.length > 0) {
-    bloques.push({ tipo: "subtitulo", texto: "Personas que atienden la visita" });
-    for (const persona of personas) {
-      bloques.push({
-        tipo: "parrafo",
-        texto: persona.cargo ? `${persona.nombre} — ${persona.cargo}` : persona.nombre,
-      });
-    }
+  // --- Quién recibe el informe ---
+  const receptor = informe.receptor;
+  if (receptor?.nombre || receptor?.empresa) {
+    bloques.push({ tipo: "subtitulo", texto: "Recibido por" });
+    bloques.push({
+      tipo: "parrafo",
+      texto: [receptor.nombre, receptor.empresa].filter(Boolean).join(" — "),
+    });
   }
 
-  // --- El cuerpo del informe ---
-  bloques.push({ tipo: "subtitulo", texto: "Desarrollo de la visita" });
-  bloques.push({ tipo: "parrafo", texto: informe.contenido ?? "" });
+  // --- El cuerpo del informe: resumen, situación y actividades ---
+  //
+  // PROVISIONAL: esta maqueta es la del modelo viejo adaptada al v2, para que el
+  // PDF siga saliendo mientras se reescribe. La maqueta buena (cabecera en tabla,
+  // rótulos en mayúsculas, 2 fotos por fila) llega con la plantilla en su fase.
+  // Ver docs/maqueta-informe-real.md.
+  if (informe.resumenSemana) {
+    bloques.push({ tipo: "subtitulo", texto: "Calendario de visitas y trabajos" });
+    bloques.push({ tipo: "parrafo", texto: informe.resumenSemana });
+  }
 
-  // --- Incumplimientos ---
-  const incumplimientos = informe.incumplimientos ?? [];
-  if (incumplimientos.length > 0) {
-    bloques.push({ tipo: "subtitulo", texto: "Incumplimientos detectados" });
-    for (const incumplimiento of incumplimientos) {
-      bloques.push({
-        tipo: "parrafo",
-        texto: `${incumplimiento.subcontrata}: ${incumplimiento.descripcion}`,
-      });
+  if (informe.situacion) {
+    bloques.push({ tipo: "subtitulo", texto: "Situación de la obra" });
+    bloques.push({ tipo: "parrafo", texto: informe.situacion });
+  }
+
+  for (const actividad of informe.actividades ?? []) {
+    bloques.push({
+      tipo: "subtitulo",
+      texto: actividad.ubicacion
+        ? `Actividad — ${actividad.ubicacion}`
+        : "Descripción de la actividad",
+    });
+    if (actividad.descripcion) {
+      bloques.push({ tipo: "parrafo", texto: actividad.descripcion });
+    }
+    for (const foto of actividad.fotos ?? []) {
+      bloques.push({ tipo: "imagen", imagen: foto.imagen, pie: foto.comentario });
     }
   }
 
@@ -129,7 +141,7 @@ export function construirDocumento({
       bloques.push({
         tipo: "firma",
         imagen: firma.firma,
-        nombre: firma.subcontrata ? `${firma.nombre} (${firma.subcontrata})` : firma.nombre,
+        nombre: firma.nombre,
         rolEtiqueta: ETIQUETAS_ROL[firma.rol],
       });
     }

@@ -8,18 +8,20 @@ const FIRMA_COORDINADOR = {
   firma: "data:image/png;base64,AAAA",
 };
 
-/** Un informe listo para cerrarse: contenido + firma del coordinador. */
+/** Un informe listo para cerrarse: una actividad descrita + firma del coordinador. */
 function informeListo(cambios: Partial<DatosInforme> = {}): DatosInforme {
   return {
     proyectoId: "obra-1",
-    contenido: "Visita sin incidencias reseñables.",
+    actividades: [
+      { id: "a1", descripcion: "Limpieza de calzada con barredora." },
+    ],
     firmas: [FIRMA_COORDINADOR],
     ...cambios,
   };
 }
 
 describe("loQueFaltaParaFinalizar", () => {
-  it("no falta nada cuando hay contenido y firma del coordinador", () => {
+  it("no falta nada cuando hay una actividad descrita y firma del coordinador", () => {
     expect(loQueFaltaParaFinalizar(informeListo())).toEqual([]);
   });
 
@@ -27,14 +29,22 @@ describe("loQueFaltaParaFinalizar", () => {
     const falta = loQueFaltaParaFinalizar({ proyectoId: "obra-1" });
 
     expect(falta).toHaveLength(2);
-    expect(falta.join(" ")).toContain("contenido");
+    expect(falta.join(" ")).toContain("actividad");
     expect(falta.join(" ")).toContain("firma del coordinador");
   });
 
-  it("exige el contenido del informe", () => {
-    expect(loQueFaltaParaFinalizar(informeListo({ contenido: "   " }))).toEqual([
-      "Falta escribir el contenido del informe.",
+  it("exige al menos una actividad", () => {
+    expect(loQueFaltaParaFinalizar(informeListo({ actividades: [] }))).toEqual([
+      "Falta describir al menos una actividad.",
     ]);
+  });
+
+  it("no le vale una actividad vacía: tiene que estar descrita", () => {
+    const falta = loQueFaltaParaFinalizar(
+      informeListo({ actividades: [{ id: "a1", descripcion: "   " }] }),
+    );
+
+    expect(falta).toEqual(["Falta describir al menos una actividad."]);
   });
 
   it("exige la firma del coordinador", () => {
@@ -43,21 +53,22 @@ describe("loQueFaltaParaFinalizar", () => {
     expect(falta).toEqual(["Falta la firma del coordinador."]);
   });
 
-  it("NO exige la firma de una subcontrata con incumplimiento (no debe bloquear el cierre)", () => {
-    const falta = loQueFaltaParaFinalizar(
-      informeListo({
-        incumplimientos: [{ id: "i1", subcontrata: "Ferralla SL", descripcion: "Sin arnés." }],
-        // Solo firma el coordinador: la subcontrata no estaba para firmar.
-        firmas: [FIRMA_COORDINADOR],
-      }),
-    );
-
-    expect(falta).toEqual([]);
+  it("NO exige la firma de quien recibe (puede no haber nadie ese día)", () => {
+    expect(loQueFaltaParaFinalizar(informeListo({ firmas: [FIRMA_COORDINADOR] }))).toEqual([]);
   });
 
-  it("NO exige fotos ni personas que atienden", () => {
+  it("NO exige la situación general: los informes semanales no la usan", () => {
+    expect(loQueFaltaParaFinalizar(informeListo({ situacion: undefined }))).toEqual([]);
+  });
+
+  it("NO exige fotos, comentarios de foto ni receptor", () => {
     expect(
-      loQueFaltaParaFinalizar(informeListo({ fotos: [], personasAtienden: [] })),
+      loQueFaltaParaFinalizar(
+        informeListo({
+          actividades: [{ id: "a1", descripcion: "Desbroce mecánico.", fotos: [] }],
+          receptor: undefined,
+        }),
+      ),
     ).toEqual([]);
   });
 });
