@@ -1,0 +1,52 @@
+name: CI
+
+# Valida cada push y cada pull request: type-check + build + tests unitarios/componentes,
+# y en un job aparte los tests de extremo a extremo (Playwright). Así "¿pasa?" deja de ser
+# una pregunta de fe y no depende del entorno de nadie.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-y-tests:
+    name: Build + tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Type-check + build
+        run: npm run build
+      - name: Tests unitarios y de componentes
+        run: npm test
+
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Instalar navegadores de Playwright
+        run: npx playwright install --with-deps
+      - name: Recorrido completo (e2e)
+        run: npm run e2e
+      - name: Guardar el informe de Playwright si algo falla
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

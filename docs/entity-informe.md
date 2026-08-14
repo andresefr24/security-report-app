@@ -26,7 +26,7 @@ Cabecera + cuerpo de situación y actividades + firmas:
 
 ## Reglas {#recipients-and-signatures} {#signatures}
 
-- **Finalizar exige:** situación rellena + al menos una actividad con descripción + firma del coordinador. (El comentario de foto y el receptor nunca bloquean.)
+- **Finalizar exige:** al menos una actividad con descripción + firma del coordinador. La **situación es opcional** (los informes semanales reales —los más frecuentes— no tienen ese campo; validado contra los 8 informes reales, ver `maqueta-informe-real.md`). El comentario de foto y el receptor tampoco bloquean.
 - **`receptor` en el Informe** (cambia por visita); **`contratista` en la Obra** (estable) — [[entity-proyecto]].
 - **Se elimina** la regla "la subcontrata con incumplimiento firma" y el paso "Incumplimientos": no aparecen en los informes reales.
 - El **nº IRSST del coordinador** va en el bloque de firma (prueba legal) — [[entity-coordinador#registry]].
