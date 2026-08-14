@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { StrictMode } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { CrearInformePage } from "@/ui/pages/informe/CrearInformePage";
@@ -15,6 +16,12 @@ import {
   ProyectoRepositoryEnMemoria,
   PromotorRepositoryEnMemoria,
 } from "@/test/fakes";
+
+// El último paso monta el campo de firma, que usa <canvas> (no va en jsdom).
+// Aquí probamos el recorrido del asistente, no el trazo: lo sustituimos.
+vi.mock("@/ui/components/campo-firma", () => ({
+  CampoFirma: () => <div>campo de firma</div>,
+}));
 
 describe("Flujo del informe (crear borrador → wizard)", () => {
   let informes: InformeRepositoryEnMemoria;
@@ -39,7 +46,12 @@ describe("Flujo del informe (crear borrador → wizard)", () => {
     return obra.valor.id;
   }
 
-  function montar(rutaInicial: string) {
+  /**
+   * `estricto` monta dentro de <StrictMode>, que en desarrollo hace lo que hace
+   * React de verdad al arrancar la app: montar, limpiar y volver a montar. Sin
+   * esto no se ve el cuelgue de la pantalla puente.
+   */
+  function montar(rutaInicial: string, { estricto = false } = {}) {
     const router = createMemoryRouter(
       [
         {
@@ -63,40 +75,67 @@ describe("Flujo del informe (crear borrador → wizard)", () => {
       ],
       { initialEntries: [rutaInicial], future: FUTURE_ROUTER },
     );
-    return render(<RouterProvider router={router} future={FUTURE_PROVIDER} />);
+    const app = <RouterProvider router={router} future={FUTURE_PROVIDER} />;
+    return render(estricto ? <StrictMode>{app}</StrictMode> : app);
   }
+
+  it("abre el wizard también en desarrollo, con el doble montaje de StrictMode", async () => {
+    const obraId = await unaObra();
+
+    montar(`/obras/${obraId}/informes/nuevo`, { estricto: true });
+
+    // Si la pantalla puente se queda en "Creando el informe…" es que el borrador
+    // se creó pero nadie navegó (pasó de verdad: se veía solo con `npm run dev`).
+    expect(await screen.findByText("Paso 1 de 3")).toBeInTheDocument();
+    // Y un solo borrador, no dos: el guard sigue haciendo su trabajo.
+    expect(informes.guardados.size).toBe(1);
+  });
 
   it("crea el borrador y abre el wizard en el paso 1", async () => {
     const obraId = await unaObra();
 
     montar(`/obras/${obraId}/informes/nuevo`);
 
-    expect(await screen.findByText("Paso 1 de 5")).toBeInTheDocument();
+    expect(await screen.findByText("Paso 1 de 3")).toBeInTheDocument();
     expect(screen.getByText("Datos de la visita")).toBeInTheDocument();
     // El borrador quedó guardado.
     expect(informes.guardados.size).toBe(1);
   });
 
-  it("recorre los pasos y autoguarda el contenido escrito", async () => {
+  it("recorre los pasos y autoguarda lo escrito", async () => {
     const obraId = await unaObra();
     montar(`/obras/${obraId}/informes/nuevo`);
-    await screen.findByText("Paso 1 de 5");
+    await screen.findByText("Paso 1 de 3");
 
-    // Paso 1 → 2 → 3 (Contenido)
-    fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
-    await screen.findByText("Paso 2 de 5");
-    fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
-    await screen.findByText("Paso 3 de 5");
-
-    fireEvent.change(screen.getByLabelText(/Contenido del informe/i), {
-      target: { value: "Visita sin incidencias." },
+    fireEvent.change(screen.getByLabelText(/^Nombre$/i), {
+      target: { value: "Luis Jefe" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
-    await screen.findByText("Paso 4 de 5");
+    await screen.findByText("Paso 2 de 3");
 
     const guardado = [...informes.guardados.values()][0];
-    expect(guardado.contenido).toBe("Visita sin incidencias.");
+    expect(guardado.receptor?.nombre).toBe("Luis Jefe");
     expect(guardado.estado).toBe("borrador");
+  });
+
+  it("escribe una actividad en el paso 2 y la autoguarda", async () => {
+    const obraId = await unaObra();
+    montar(`/obras/${obraId}/informes/nuevo`);
+    await screen.findByText("Paso 1 de 3");
+
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+    await screen.findByText("Paso 2 de 3");
+    expect(screen.getByText("Situación y actividades")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Añadir actividad" }));
+    fireEvent.change(screen.getByLabelText(/Qué pasó/i), {
+      target: { value: "Limpieza de calzada con barredora." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+    await screen.findByText("Paso 3 de 3");
+
+    const guardado = [...informes.guardados.values()][0];
+    expect(guardado.actividades?.[0].descripcion).toBe("Limpieza de calzada con barredora.");
   });
 
   it("muestra un error si la obra no existe", async () => {

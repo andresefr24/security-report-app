@@ -87,6 +87,24 @@ describe("ObraFormPage", () => {
     expect(guardada).not.toHaveProperty("nombreRazonSocial");
   });
 
+  it("guarda el contratista, que va en la cabecera de los informes", async () => {
+    const promotorId = await unPromotor();
+    montar(proyectos, promotores);
+
+    const selector = await screen.findByLabelText(/Promotor/i);
+    fireEvent.change(selector, { target: { value: promotorId } });
+    fireEvent.change(screen.getByLabelText(/Código de obra/i), {
+      target: { value: "OB-2026-014" },
+    });
+    fireEvent.change(screen.getByLabelText(/^Contratista$/i), {
+      target: { value: "API Movilidad" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+
+    expect(await screen.findByText("Listado de obras")).toBeInTheDocument();
+    expect([...proyectos.guardados.values()][0].contratista).toBe("API Movilidad");
+  });
+
   it("añade un destinatario a la lista de distribución y lo guarda con su rol", async () => {
     const promotorId = await unPromotor();
     montar(proyectos, promotores);

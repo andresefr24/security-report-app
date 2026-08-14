@@ -34,6 +34,7 @@ export const router = createBrowserRouter([
           <ObrasPage
             listarProyectos={casosDeUso.listarProyectos}
             listarInformes={casosDeUso.listarInformes}
+            borrarInforme={casosDeUso.borrarInforme}
           />
         ),
       },

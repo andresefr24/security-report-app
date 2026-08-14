@@ -8,6 +8,9 @@ tags: [domain, model]
 
 # Domain model
 
+> ⚠️ **Modelo del informe actualizado a v2 (ver [[decisions#d9-informe-v2]] y [[entity-informe]], 2026-08-11):** situación + actividades (fotos con comentario opcional), firmas coordinador + recibido, sin paso de "Incumplimientos" ni regla de firma de subcontrata. Lo que esta página describa del modelo viejo se realineará al ejecutar.
+
+
 > `validated: false` — distilled from the 2026-06-16 meeting + public research (RD 1627/1997, colegio templates, SIAC). Confirm against the stakeholder's real report and the SIAC form before treating as settled. See [[legal-context]] for sources.
 
 The four core entities and how they relate. Detail per entity lives in the `entity-*` files; this file holds the overview, the relationships, and cross-entity rules.
