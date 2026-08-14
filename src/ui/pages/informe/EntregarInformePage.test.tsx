@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { StrictMode } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { EntregarInformePage } from "@/ui/pages/informe/EntregarInformePage";
@@ -83,7 +84,11 @@ describe("EntregarInformePage", () => {
     return borrador.valor.id;
   }
 
-  function montar(informeId: Id, compartir: SharePort) {
+  /**
+   * `estricto` monta dentro de <StrictMode>, que es como arranca la app en
+   * desarrollo: monta, limpia y vuelve a montar.
+   */
+  function montar(informeId: Id, compartir: SharePort, { estricto = false } = {}) {
     const router = createMemoryRouter(
       [
         {
@@ -110,12 +115,26 @@ describe("EntregarInformePage", () => {
       ],
       { initialEntries: [`/informes/${informeId}/entregar`], future: FUTURE_ROUTER },
     );
-    return render(<RouterProvider router={router} future={FUTURE_PROVIDER} />);
+    const app = <RouterProvider router={router} future={FUTURE_PROVIDER} />;
+    return render(estricto ? <StrictMode>{app}</StrictMode> : app);
   }
+
+  it("prepara el informe también en desarrollo, con el doble montaje de StrictMode", async () => {
+    const informeId = await unInforme({
+      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
+      firmas: [FIRMA_COORDINADOR],
+    });
+
+    montar(informeId, new SharePortFalso(), { estricto: true });
+
+    // Si se queda en "Preparando el informe…" es que el trabajo terminó pero
+    // nadie lo recogió (pasó de verdad: solo se veía con `npm run dev`).
+    expect(await screen.findByText("Informe listo")).toBeInTheDocument();
+  });
 
   it("cierra el informe y muestra el PDF listo para compartir", async () => {
     const informeId = await unInforme({
-      contenido: "Visita sin incidencias.",
+      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
 
@@ -127,7 +146,7 @@ describe("EntregarInformePage", () => {
   });
 
   it("avisa de lo que falta y deja volver al informe, sin cerrarlo", async () => {
-    const informeId = await unInforme({ contenido: "Sin firmar" });
+    const informeId = await unInforme({ actividades: [{ id: "a1", descripcion: "Sin firmar" }] });
 
     montar(informeId, new SharePortFalso());
 
@@ -141,7 +160,7 @@ describe("EntregarInformePage", () => {
 
   it("comparte el PDF con el nombre del archivo", async () => {
     const informeId = await unInforme({
-      contenido: "Visita sin incidencias.",
+      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
     const compartir = new SharePortFalso();
@@ -156,7 +175,7 @@ describe("EntregarInformePage", () => {
 
   it("oculta el botón de compartir si el dispositivo no puede (caso iOS)", async () => {
     const informeId = await unInforme({
-      contenido: "Visita sin incidencias.",
+      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
 
@@ -170,7 +189,7 @@ describe("EntregarInformePage", () => {
 
   it("avisa si no se pudo compartir y se descargó en su lugar", async () => {
     const informeId = await unInforme({
-      contenido: "Visita sin incidencias.",
+      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
 
@@ -183,7 +202,7 @@ describe("EntregarInformePage", () => {
 
   it("muestra los destinatarios de la obra y avisa de que la app no envía correos", async () => {
     const informeId = await unInforme({
-      contenido: "Visita sin incidencias.",
+      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
 
@@ -196,7 +215,7 @@ describe("EntregarInformePage", () => {
 
   it("no genera el PDF si el coordinador no tiene perfil, y le lleva a rellenarlo", async () => {
     const informeId = await unInforme({
-      contenido: "Visita sin incidencias.",
+      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
     coordinadores.guardado = null;

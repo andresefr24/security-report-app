@@ -1,13 +1,13 @@
 import { test, expect, type Locator } from "@playwright/test";
 
 // Prueba de extremo a extremo del recorrido completo del incremento 1.1:
-// perfil → promotor → obra → informe (5 pasos, firmando de verdad) → PDF listo.
+// perfil → promotor → obra → informe (3 pasos, firmando de verdad) → PDF listo.
 //
 // A diferencia de los tests de componente, aquí corre la app REAL en el
 // navegador: IndexedDB de verdad, y la firma se dibuja con el ratón sobre el
 // canvas (lo que jsdom no puede). Se navega por URL porque la barra de
-// navegación (tab bar) es de un hito posterior. Se salta el paso de fotos
-// (no es obligatorio para cerrar y la compresión con Web Worker da guerra en CI).
+// navegación (tab bar) es de un hito posterior. No se suben fotos: no hacen
+// falta para cerrar el informe y la compresión con Web Worker da guerra en CI.
 
 /**
  * Dibuja un trazo sobre un canvas de firma. signature_pad escucha eventos de
@@ -54,34 +54,35 @@ test("un coordinador crea un informe de punta a punta y llega al PDF", async ({ 
   await page.getByRole("button", { name: "Guardar" }).click();
   await expect(page.getByText("Canal de Isabel II")).toBeVisible();
 
-  // 3) Obra (eligiendo ese promotor).
+  // 3) Obra (eligiendo ese promotor), con su contratista para la cabecera.
   await page.goto("/obras/nueva");
   await page.getByLabel(/Promotor/i).selectOption({ label: "Canal de Isabel II" });
   await page.getByLabel(/Código de obra/i).fill("OB-2026-014");
+  await page.getByLabel(/^Contratista$/).fill("API Movilidad");
   await page.getByRole("button", { name: "Guardar" }).click();
   await expect(page.getByText("OB-2026-014")).toBeVisible();
 
   // 4) Nuevo informe de esa obra → abre el wizard.
   await page.getByRole("link", { name: "Nuevo informe" }).click();
-  await expect(page.getByText("Paso 1 de 5")).toBeVisible();
+  await expect(page.getByText("Paso 1 de 3")).toBeVisible();
 
-  // 5) Recorremos los pasos. Datos → Fotos → Contenido.
-  await page.getByRole("button", { name: "Siguiente" }).click(); // datos
-  await expect(page.getByText("Paso 2 de 5")).toBeVisible();
-  await page.getByRole("button", { name: "Siguiente" }).click(); // fotos (se salta)
-  await expect(page.getByText("Paso 3 de 5")).toBeVisible();
+  // 5) Paso 1: quién recibe el informe (opcional, pero es lo normal).
+  await page.getByLabel(/^Nombre$/).fill("Luis Jefe de Obra");
+  await page.getByRole("button", { name: "Siguiente" }).click();
 
-  await page.getByLabel(/Contenido del informe/i).fill("Visita sin incidencias reseñables.");
-  await page.getByRole("button", { name: "Siguiente" }).click(); // contenido
-  await expect(page.getByText("Paso 4 de 5")).toBeVisible();
-  await page.getByRole("button", { name: "Siguiente" }).click(); // incumplimientos
-  await expect(page.getByText("Paso 5 de 5")).toBeVisible();
+  // 6) Paso 2: la actividad. Sin al menos una descrita no se puede cerrar.
+  await expect(page.getByText("Paso 2 de 3")).toBeVisible();
+  await page.getByRole("button", { name: "Añadir actividad" }).click();
+  await page.getByLabel(/Dónde/i).fill("(M-103) PK 03+500");
+  await page.getByLabel(/Qué pasó/i).fill("Visita sin incidencias reseñables.");
+  await page.getByRole("button", { name: "Siguiente" }).click();
+  await expect(page.getByText("Paso 3 de 3")).toBeVisible();
 
-  // 6) Firma del coordinador (obligatoria para cerrar).
-  await page.getByLabel(/Nombre de quien firma/i).fill("Ana García López");
-  await firmar(page.getByLabel(/Zona para dibujar la firma/i));
+  // 7) Firma del coordinador, la primera ranura (la de "recibido" es opcional).
+  await page.getByLabel(/Nombre de quien firma/i).first().fill("Ana García López");
+  await firmar(page.getByLabel(/Zona para dibujar la firma/i).first());
 
-  // 7) Finalizar → pantalla de entrega con el PDF listo.
+  // 8) Finalizar → pantalla de entrega con el PDF listo.
   await page.getByRole("button", { name: "Finalizar" }).click();
   await expect(page.getByRole("heading", { name: "Informe listo" })).toBeVisible({
     timeout: 30_000,

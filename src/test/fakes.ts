@@ -86,4 +86,7 @@ export class InformeRepositoryEnMemoria implements InformeRepository {
   async listarPorProyecto(proyectoId: Id): Promise<Informe[]> {
     return [...this.guardados.values()].filter((i) => i.proyectoId === proyectoId);
   }
+  async borrar(id: Id): Promise<void> {
+    this.guardados.delete(id);
+  }
 }

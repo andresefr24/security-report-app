@@ -8,6 +8,9 @@ tags: [domain, ux, flow]
 
 # Flows
 
+> ⚠️ **Modelo del informe actualizado a v2 (ver [[decisions#d9-informe-v2]] y [[entity-informe]], 2026-08-11):** situación + actividades (fotos con comentario opcional), firmas coordinador + recibido, sin paso de "Incumplimientos" ni regla de firma de subcontrata. Lo que esta página describa del modelo viejo se realineará al ejecutar.
+
+
 > `validated: false` — first sketch from the meeting; refine into wireframes once the stakeholder's example report and the SIAC screens arrive.
 
 The phase-1 flows, in order: set up the profile, register a promotor, create a proyecto, then produce reports inside it. All operated solely by the [[entity-coordinador|coordinator]]. Registration is a **local profile — no account, no login, no auth** ([[active-context]]).

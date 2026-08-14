@@ -1,14 +1,23 @@
 ---
 title: Active context
 type: rolling
-updated: 2026-06-20
+updated: 2026-08-11
 validated: true
 tags: [product, status]
 ---
 
 # Active context
 
-Last updated: 2026-06-20
+Last updated: 2026-08-11
+
+## Al día (2026-08-11)
+
+- **El esqueleto está construido y en `main`:** M0–M5 (perfil → promotores/obras → informe → PDF → compartir) + **MI** (despliegue continuo en Vercel). La app funciona de punta a punta, se instala y va offline.
+- **Prototipos revisados** con los stakeholders; el stakeholder envió por fin **8 informes reales** (TPF/Getinsa "G13a-SSFE") → **Q2 cerrado**.
+- **Aprobado el modelo del informe v2** ([[decisions#d9-informe-v2]]): situación + actividades con fotos (comentario opcional), firmas coordinador + recibido, PDF por plantilla; persistencia "tipo backend" como hito aparte. Fuente viva: [[entity-informe]]. Radiografía para Josune: [[informe-v2-radiografia]].
+- **Siguiente:** Josune revisa la radiografía + el mensaje de visto bueno; con su OK, planteamos las **fases de ejecución** (rework del informe v2 primero, hito de persistencia después). Local y sin datos reales → sin migración: última ventana barata para cambiar el modelo.
+
+> Las secciones de abajo son registro histórico (junio 2026).
 
 ## Where we are
 

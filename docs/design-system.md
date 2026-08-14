@@ -8,6 +8,9 @@ tags: [design, normative, frontend]
 
 # Design system — F1
 
+> ⚠️ **Modelo del informe actualizado a v2 (ver [[decisions#d9-informe-v2]] y [[entity-informe]], 2026-08-11):** situación + actividades (fotos con comentario opcional), firmas coordinador + recibido, sin paso de "Incumplimientos" ni regla de firma de subcontrata. Lo que esta página describa del modelo viejo se realineará al ejecutar.
+
+
 Normativo de diseño para F1, destilado de la entrega de Claude design (2026-06-20). Léelo antes de construir UI. Las piezas originales (sistema de diseño, prototipos móvil/tablet/escritorio, flujo voz e IA, handoff) viven en `security-report-app/design/*.dc.html`. Sobre **shadcn/ui · React · Tailwind · Radix**, afinado para uso a pie de obra y presbicia. Ver [[tech-plan-f1]], [[decisions#d7-design-system-adopted]].
 
 ## Personalidad

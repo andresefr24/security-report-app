@@ -41,6 +41,12 @@ export const esquemaProyecto = z.object({
    */
   promotorId: textoObligatorio("Seleccione el promotor de la obra."),
   descripcion: z.string().optional(),
+  /**
+   * La empresa contratista de la obra. Va en la cabecera de todos los informes
+   * reales, y vive AQUÍ (y no en el informe) porque es estable: no cambia de una
+   * visita a otra. Ver decisions#d9-informe-v2, afinado 2.
+   */
+  contratista: z.string().optional(),
   // Fechas como texto AAAA-MM-DD: es lo que da un <input type="date"> y evita
   // líos de zonas horarias. Provisional.
   fechaInicio: z.string().optional(),

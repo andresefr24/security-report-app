@@ -58,7 +58,7 @@ describe("GenerarPdfDelInforme", () => {
     await new GuardarInforme(informes).ejecutar({
       ...borrador.valor,
       fechaHora: "2026-07-01T09:30",
-      contenido: "Visita sin incidencias.",
+      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
     });
     return borrador.valor.id;
   }

@@ -1,17 +1,20 @@
 import { describe, it, expect } from "vitest";
 import { construirDocumento, type BloqueDocumento } from "@/infrastructure/pdf/construir-documento";
 import { crearInforme, type DatosInforme } from "@/domain/informe/informe";
-import { crearProyecto } from "@/domain/proyecto/proyecto";
+import { crearProyecto, type DatosProyecto } from "@/domain/proyecto/proyecto";
 import { crearPromotor } from "@/domain/promotor/promotor";
 import { crearCoordinador } from "@/domain/coordinador/coordinador";
 import { type DatosDelPdf } from "@/domain/ports/pdf-port";
 
 /** Monta los cuatro ingredientes del PDF, con lo mínimo válido. */
-function datosDelPdf(cambiosInforme: Partial<DatosInforme> = {}): DatosDelPdf {
+function datosDelPdf(
+  cambiosInforme: Partial<DatosInforme> = {},
+  cambiosProyecto: Partial<DatosProyecto> = {},
+): DatosDelPdf {
   const informe = crearInforme({
     proyectoId: "obra-1",
     fechaHora: "2026-07-01T09:30",
-    contenido: "Visita sin incidencias reseñables.",
+    actividades: [{ id: "a1", descripcion: "Visita sin incidencias reseñables." }],
     ...cambiosInforme,
   });
   const proyecto = crearProyecto({
@@ -20,6 +23,7 @@ function datosDelPdf(cambiosInforme: Partial<DatosInforme> = {}): DatosDelPdf {
     descripcion: "Centro cívico Los Molinos",
     promotorId: "promotor-1",
     frecuenciaVisita: "semanal",
+    ...cambiosProyecto,
   });
   const promotor = crearPromotor({ id: "promotor-1", nombreRazonSocial: "Canal de Isabel II" });
   const coordinador = crearCoordinador({
@@ -43,100 +47,235 @@ function datosDelPdf(cambiosInforme: Partial<DatosInforme> = {}): DatosDelPdf {
 function textoDe(bloques: BloqueDocumento[]): string {
   return bloques
     .map((b) => {
-      if (b.tipo === "dato") return `${b.etiqueta}: ${b.valor}`;
-      if (b.tipo === "firma") return `${b.rolEtiqueta} ${b.nombre}`;
-      if (b.tipo === "imagen") return b.pie ?? "";
-      return b.texto;
+      switch (b.tipo) {
+        case "cabecera":
+          return b.filas
+            .map((f) => `${f.etiqueta} ${f.valor} ${f.etiqueta2 ?? ""} ${f.valor2 ?? ""}`)
+            .join("\n");
+        case "rotulo":
+          return b.lineas.join("\n");
+        case "parrafo":
+          return b.texto;
+        case "filaFotos":
+          return b.fotos.map((f) => f.comentario ?? "").join("\n");
+        case "firmas":
+          return [b.izquierda, b.derecha]
+            .filter((f) => f !== undefined)
+            .map((f) => `${f.titulo} ${f.lineas.join(" ")}`)
+            .join("\n");
+        case "distribucion":
+          return `${b.titulo} ${b.destinatarios.join(" ")}`;
+      }
     })
     .join("\n");
 }
 
 describe("construirDocumento", () => {
-  it("lleva los datos de la obra y del promotor", () => {
-    const { bloques } = construirDocumento(datosDelPdf());
-    const texto = textoDe(bloques);
+  describe("cabecera", () => {
+    it("lleva la obra, el promotor y la fecha con los rótulos del informe real", () => {
+      const { bloques } = construirDocumento(datosDelPdf());
+      const texto = textoDe(bloques);
 
-    expect(texto).toContain("OB-2026-014");
-    expect(texto).toContain("Centro cívico Los Molinos");
-    expect(texto).toContain("Canal de Isabel II");
+      expect(texto).toContain("Obra: OB-2026-014");
+      expect(texto).toContain("Entidad Promotora: Canal de Isabel II");
+      expect(texto).toContain("Fecha:");
+      expect(texto).toContain("01/07/2026");
+    });
+
+    it("lleva el contratista de la obra", () => {
+      const { bloques } = construirDocumento(datosDelPdf({}, { contratista: "API Movilidad" }));
+
+      expect(textoDe(bloques)).toContain("Contratista: API Movilidad");
+    });
+
+    it("toma el emisor del perfil del coordinador, nunca de la plantilla", () => {
+      const { bloques } = construirDocumento(datosDelPdf());
+      const texto = textoDe(bloques);
+
+      expect(texto).toContain("Emisor: Ana García López");
+      expect(texto).toContain("TPS Ingeniería");
+    });
+
+    it("nombra a quien recibe el informe, con su empresa", () => {
+      const { bloques } = construirDocumento(
+        datosDelPdf({ receptor: { nombre: "Luis Jefe", empresa: "Constructora SL" } }),
+      );
+      const texto = textoDe(bloques);
+
+      expect(texto).toContain("Receptor: Luis Jefe");
+      expect(texto).toContain("Constructora SL");
+    });
+
+    it("deriva el nº de documento de la fecha, sin pedírselo al coordinador", () => {
+      const { bloques } = construirDocumento(datosDelPdf());
+
+      expect(textoDe(bloques)).toContain("20260701");
+    });
+
+    it("dice 'No consta' si el promotor ya no está, en vez de mentir", () => {
+      const datos = { ...datosDelPdf(), promotor: null };
+
+      expect(textoDe(construirDocumento(datos).bloques)).toContain("No consta");
+    });
   });
 
-  it("lleva el nº de registro IRSST del coordinador (lo que da validez legal)", () => {
-    const { bloques } = construirDocumento(datosDelPdf());
-    const texto = textoDe(bloques);
+  describe("cuerpo", () => {
+    it("encabeza cada actividad con los rótulos del informe real", () => {
+      const { bloques } = construirDocumento(
+        datosDelPdf({
+          actividades: [
+            {
+              id: "a1",
+              ubicacion: "(M-103) PK 03+500 - Glorieta de Cobeña",
+              descripcion: "Colocación de chapa metálica.",
+            },
+          ],
+        }),
+      );
+      const texto = textoDe(bloques);
 
-    expect(texto).toContain("Ana García López");
-    expect(texto).toContain("IRSST");
-    expect(texto).toContain("3306");
+      expect(texto).toContain("SITUACIÓN DE LA ACTUACIÓN: (M-103) PK 03+500 - Glorieta de Cobeña");
+      expect(texto).toContain("DESCRIPCIÓN DE LA ACTIVIDAD: Colocación de chapa metálica.");
+    });
+
+    it("pinta una sección por cada actividad", () => {
+      const { bloques } = construirDocumento(
+        datosDelPdf({
+          actividades: [
+            { id: "a1", descripcion: "Desbroce mecánico." },
+            { id: "a2", descripcion: "Limpieza de calzada." },
+          ],
+        }),
+      );
+
+      expect(bloques.filter((b) => b.tipo === "rotulo")).toHaveLength(2);
+    });
+
+    it("lleva el calendario de la semana cuando lo hay", () => {
+      const { bloques } = construirDocumento(
+        datosDelPdf({ resumenSemana: "Semana del 03 al 07 de agosto de 2026." }),
+      );
+      const texto = textoDe(bloques);
+
+      expect(texto).toContain("CALENDARIO DE VISITAS Y TRABAJOS EN EJECUCIÓN");
+      expect(texto).toContain("Semana del 03 al 07 de agosto de 2026.");
+    });
+
+    it("omite el calendario y la situación general si están vacíos", () => {
+      const texto = textoDe(construirDocumento(datosDelPdf()).bloques);
+
+      expect(texto).not.toContain("CALENDARIO DE VISITAS");
+      expect(texto).not.toContain("SITUACIÓN DE LA OBRA");
+    });
   });
 
-  it("muestra la fecha de la visita en formato legible", () => {
-    const { bloques } = construirDocumento(datosDelPdf());
+  describe("fotos", () => {
+    function conFotos(cuantas: number): BloqueDocumento[] {
+      return construirDocumento(
+        datosDelPdf({
+          actividades: [
+            {
+              id: "a1",
+              descripcion: "Desbroce.",
+              fotos: Array.from({ length: cuantas }, (_, i) => ({
+                id: `f${i}`,
+                imagen: `data:image/png;base64,FOTO${i}`,
+              })),
+            },
+          ],
+        }),
+      ).bloques;
+    }
 
-    expect(textoDe(bloques)).toContain("1 de julio de 2026");
+    it("agrupa las fotos de dos en dos, como pidió el stakeholder", () => {
+      const filas = conFotos(3).filter((b) => b.tipo === "filaFotos");
+
+      expect(filas).toHaveLength(2);
+      expect(filas[0].fotos).toHaveLength(2);
+      expect(filas[1].fotos).toHaveLength(1);
+    });
+
+    it("lleva el comentario de cada foto", () => {
+      const { bloques } = construirDocumento(
+        datosDelPdf({
+          actividades: [
+            {
+              id: "a1",
+              descripcion: "Desbroce.",
+              fotos: [
+                {
+                  id: "f1",
+                  imagen: "data:image/png;base64,FOTO",
+                  comentario: "Extintor y batefuego junto al grupo electrógeno.",
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
+      expect(textoDe(bloques)).toContain("Extintor y batefuego junto al grupo electrógeno.");
+    });
+
+    it("una actividad sin fotos no genera ninguna fila", () => {
+      expect(conFotos(0).filter((b) => b.tipo === "filaFotos")).toHaveLength(0);
+    });
   });
 
-  it("lleva el contenido del informe", () => {
-    const { bloques } = construirDocumento(datosDelPdf());
+  describe("firmas y distribución", () => {
+    it("pone la firma del coordinador con su nº IRSST (lo que da validez legal)", () => {
+      const { bloques } = construirDocumento(
+        datosDelPdf({
+          firmas: [
+            { nombre: "Ana García López", rol: "coordinador", firma: "data:image/png;base64,F" },
+          ],
+        }),
+      );
 
-    expect(textoDe(bloques)).toContain("Visita sin incidencias reseñables.");
-  });
+      const firmas = bloques.find((b) => b.tipo === "firmas");
+      expect(firmas?.izquierda.imagen).toBe("data:image/png;base64,F");
+      expect(firmas?.izquierda.lineas.join(" ")).toContain("IRSST 3306");
+      expect(firmas?.izquierda.lineas.join(" ")).toContain("Fdo. Ana García López");
+    });
 
-  it("embebe las fotos", () => {
-    const { bloques } = construirDocumento(
-      datosDelPdf({ fotos: [{ id: "f1", imagen: "data:image/png;base64,FOTO" }] }),
-    );
+    it("deja el recuadro de 'recibido por' aunque nadie lo haya firmado", () => {
+      const { bloques } = construirDocumento(datosDelPdf());
 
-    const imagenes = bloques.filter((b) => b.tipo === "imagen");
-    expect(imagenes).toHaveLength(1);
-    expect(imagenes[0]).toMatchObject({ imagen: "data:image/png;base64,FOTO" });
-  });
+      const firmas = bloques.find((b) => b.tipo === "firmas");
+      expect(firmas?.derecha?.titulo).toBe("Recibido por:");
+      expect(firmas?.derecha?.imagen).toBeUndefined();
+    });
 
-  it("embebe las firmas con su nombre y su papel", () => {
-    const { bloques } = construirDocumento(
-      datosDelPdf({
-        firmas: [
-          { nombre: "Ana", rol: "coordinador", firma: "data:image/png;base64,FIRMA" },
+    it("lista a quién se le envía, tomándolo de la obra", () => {
+      const { bloques } = construirDocumento(
+        datosDelPdf(
+          {},
           {
-            nombre: "Rep. Ferralla",
-            rol: "subcontrata",
-            subcontrata: "Ferralla SL",
-            firma: "data:image/png;base64,FIRMA2",
+            listaDistribucion: [
+              { nombre: "Carlos Díaz", correo: "carlos@ejemplo.es", rol: "contratista" },
+            ],
           },
-        ],
-      }),
-    );
+        ),
+      );
+      const texto = textoDe(bloques);
 
-    const firmas = bloques.filter((b) => b.tipo === "firma");
-    expect(firmas).toHaveLength(2);
-    const texto = textoDe(bloques);
-    expect(texto).toContain("Coordinador de seguridad y salud");
-    // La firma de subcontrata dice de qué subcontrata es.
-    expect(texto).toContain("Ferralla SL");
+      expect(texto).toContain("Enviado por e-mail a:");
+      expect(texto).toContain("Carlos Díaz — carlos@ejemplo.es");
+    });
+
+    it("omite la distribución si la obra no tiene destinatarios", () => {
+      const { bloques } = construirDocumento(datosDelPdf());
+
+      expect(bloques.filter((b) => b.tipo === "distribucion")).toHaveLength(0);
+    });
   });
 
-  it("lista los incumplimientos por subcontrata", () => {
-    const { bloques } = construirDocumento(
-      datosDelPdf({
-        incumplimientos: [{ id: "i1", subcontrata: "Ferralla SL", descripcion: "Sin arnés." }],
-      }),
-    );
+  it("repite la banda de cabecera y la referencia del pie en todas las páginas", () => {
+    const { cabeceraPagina, referenciaPie } = construirDocumento(datosDelPdf());
 
-    expect(textoDe(bloques)).toContain("Ferralla SL: Sin arnés.");
-  });
-
-  it("omite las secciones que no aplican (sin fotos, sin incumplimientos)", () => {
-    const { bloques } = construirDocumento(datosDelPdf());
-    const texto = textoDe(bloques);
-
-    expect(texto).not.toContain("Fotografías");
-    expect(texto).not.toContain("Incumplimientos detectados");
-  });
-
-  it("dice 'No consta' si el promotor ya no está, en vez de mentir", () => {
-    const datos = { ...datosDelPdf(), promotor: null };
-
-    expect(textoDe(construirDocumento(datos).bloques)).toContain("No consta");
+    expect(cabeceraPagina.titulo.join(" ")).toContain("INFORME SEMANAL DE VISITAS");
+    expect(cabeceraPagina.formato.join(" ")).toContain("G13a- SSFE");
+    expect(referenciaPie).toContain("R-IGO-SS-0001");
   });
 
   it("el título identifica la obra y la fecha (sirve para el nombre del archivo)", () => {

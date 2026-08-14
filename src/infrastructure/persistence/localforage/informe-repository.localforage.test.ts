@@ -29,25 +29,31 @@ describe("LocalForageInformeRepository", () => {
 
   it("guarda un informe con sus fotos y firmas y lo recupera", async () => {
     const informe = informeDePrueba({
-      contenido: "Visita sin incidencias.",
-      fotos: [{ id: "f1", imagen: "data:image/png;base64,AAAA" }],
+      situacion: "Visita sin incidencias.",
+      actividades: [
+        {
+          id: "a1",
+          descripcion: "Desbroce de márgenes.",
+          fotos: [{ id: "f1", imagen: "data:image/png;base64,AAAA" }],
+        },
+      ],
       firmas: [{ nombre: "Ana", rol: "coordinador", firma: "data:image/png;base64,BBBB" }],
     });
     await repo.guardar(informe);
 
     const recuperado = await repo.obtenerPorId(informe.id);
-    expect(recuperado?.contenido).toBe("Visita sin incidencias.");
-    expect(recuperado?.fotos?.[0].imagen).toBe("data:image/png;base64,AAAA");
+    expect(recuperado?.situacion).toBe("Visita sin incidencias.");
+    expect(recuperado?.actividades?.[0].fotos?.[0].imagen).toBe("data:image/png;base64,AAAA");
     expect(recuperado?.firmas?.[0].rol).toBe("coordinador");
   });
 
   it("guardar con el mismo id reemplaza (autoguardado del wizard)", async () => {
-    const informe = informeDePrueba({ contenido: "Primer borrador" });
+    const informe = informeDePrueba({ situacion: "Primer borrador" });
     await repo.guardar(informe);
-    await repo.guardar({ ...informe, contenido: "Segundo borrador" } as Informe);
+    await repo.guardar({ ...informe, situacion: "Segundo borrador" } as Informe);
 
     const recuperado = await repo.obtenerPorId(informe.id);
-    expect(recuperado?.contenido).toBe("Segundo borrador");
+    expect(recuperado?.situacion).toBe("Segundo borrador");
   });
 
   it("lista solo los informes de la obra indicada, del más reciente al más antiguo", async () => {

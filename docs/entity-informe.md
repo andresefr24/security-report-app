@@ -1,57 +1,45 @@
 ---
 title: Entity — Informe de visita
 type: strategic
-updated: 2026-06-16
-validated: false
+updated: 2026-08-11
+validated: true
 tags: [domain, entity]
 ---
 
 # Entity — Informe de visita
 
-> `validated: false` — **the single most important file to validate.** No official model of the acta/informe de visita exists (colegios publish blank templates); the field set depends entirely on the stakeholder's real report. Confirm before building the form.
+> `validated: true` — modelo **v2** confirmado con los **8 informes reales** del stakeholder (formato TPF/Getinsa "G13a-SSFE") y aprobado en [[decisions#d9-informe-v2]]. Sustituye al modelo provisional anterior (contenido + incumplimientos). Radiografía de ejecución: [[informe-v2-radiografia]].
 
-The **informe de visita a obra**: the daily (or weekly) report the coordinator produces per visit. The unit of work the product exists to create. It documents that the coordinator checked the contractors' compliance with the Plan de Seguridad y Salud, records orders/incidents/non-compliances, and serves as legal evidence of presence.
+El **informe de visita a obra** es la unidad de trabajo del producto: el documento (semanal o por visita) con el que el coordinador deja constancia de su presencia y de lo revisado. Es evidencia legal. Lo escribe y firma el coordinador; los demás solo lo reciben.
 
-## What it documents (purpose)
+## Estructura (modelo v2)
 
-Per colegio guidance and RD 1627/1997, the visit verifies that the contractors' own control of the planned preventive measures is working — collective protections, access control, machinery, and that concurrent firms don't create interfering risks. The report should lean preventive (review of the contractor's verification means) rather than purely reactive (listing spotted deficiencies), and it identifies the people who accompanied the coordinator and received instructions.
+Cabecera + cuerpo de situación y actividades + firmas:
 
-## Attributes (provisional)
+- **Cabecera:** obra ([[entity-proyecto]]), promotor, **contratista**, identificación/nº (se plantilla en el PDF), fecha/hora, emisor (coordinador, con su nº IRSST) y **receptor** ("recibido por").
+- **`resumenSemana?`** (opcional): el "Semana del X al Y…".
+- **`situacion`**: estado general de la actuación.
+- **`actividades[]`** (1..N, se añaden libremente): la unidad que se repite. `Actividad = { id, descripcion, tipo?, fotos: Foto[] }`.
+  - `tipo?` (opcional, invisible por defecto): `normal | incidencia`. Una incidencia **no es un caso especial**: es una actividad más; el `tipo` solo permite marcarla para contarla/analizarla en el futuro sin complicar la pantalla.
+  - `Foto = { id, imagenId, comentario? }`. El **comentario es opcional**. La imagen se guarda **aparte** (almacén de medios) y se referencia por id — no dentro del documento del informe.
+- **Firmas:** `coordinador` (**obligatoria**) + `recibido` (**opcional**). El promotor no firma.
 
-| Field | Notes |
-|---|---|
-| Obra | Link to [[entity-proyecto]]. |
-| Fecha y hora de la visita | SIAC adds GPS geolocation + timestamp; consider capturing location in-app. See [[reference-siac]]. |
-| Coordinador | Author; signature block carries the CAM registry number ([[entity-coordinador#registry]]). |
-| Observaciones / cumplimientos | Free text, AI-assisted. The body of the report. |
-| Incumplimientos detectados | Per affected firm; triggers subcontractor inclusion + signature. |
-| Órdenes / instrucciones impartidas | What the coordinator directed, and to whom. |
-| Personas que atienden la visita | Who accompanied him and received instructions. |
-| Fotos | Attached, size-reduced on capture. See [[#photos]]. |
-| Firmas | See [[#recipients-and-signatures]]. |
+## Reglas {#recipients-and-signatures} {#signatures}
 
-**OPEN:** exact sections and field order — depends on the stakeholder's template and the SIAC form. See [[#open]].
+- **Finalizar exige:** al menos una actividad con descripción + firma del coordinador. La **situación es opcional** (los informes semanales reales —los más frecuentes— no tienen ese campo; validado contra los 8 informes reales, ver `maqueta-informe-real.md`). El comentario de foto y el receptor tampoco bloquean.
+- **`receptor` en el Informe** (cambia por visita); **`contratista` en la Obra** (estable) — [[entity-proyecto]].
+- **Se elimina** la regla "la subcontrata con incumplimiento firma" y el paso "Incumplimientos": no aparecen en los informes reales.
+- El **nº IRSST del coordinador** va en el bloque de firma (prueba legal) — [[entity-coordinador#registry]].
 
-## AI-assisted filling
+## PDF
 
-The differentiator: the coordinator describes the visit (chat or guided form) and the AI composes the report in the expected format. Expected to need real trial-and-error tuning and good context (the organism's format, plus do/don't examples). Validated by dual independent audit — see [[working-preferences#validation-discipline-project-specific]]. OpenAI account already exists.
+Calca visualmente los informes reales (cabecera en tabla, títulos en mayúsculas, **2 fotos por fila**, comentario en negrita bajo cada foto, firma del coordinador + "recibido por" al pie), pero se genera desde una **plantilla/config parametrizable**, no una maqueta incrustada. Ver [[decisions#d9-informe-v2]], [[design-system]].
 
-## Recipients and signatures {#recipients-and-signatures} {#signatures}
+## Ciclo de vida {#ai-assisted-filling}
 
-- **Recipients:** the obra's [[entity-proyecto#distribution-list|distribution list]]. Sent by email on finalize; the coordinator keeps his own copy. (Today he emails it to himself, then forwards — the product collapses that.)
-- **Who signs:** the **coordinator** always, and **whoever attends the visit** for the main contractor (jefe de obra / jefe de producción / encargado). **Subcontractors sign only when flagged for non-compliance** that day. The **promotor never signs** — he only receives.
-- **How:** finger-drawn signature captured on the device's touchscreen (tablet preferred, phone works), like signing for a parcel delivery.
+Crear borrador (solo obra + fecha) → rellenar (situación + actividades, autoguardado) → firmar → generar PDF → compartir (Web Share / descarga). En F1 la copia durable es el PDF emitido, no la app ([[decisions#d1-local-only-pwa]]). El resumen mensual y la voz+IA (que rellenará situación/actividades) llegan después.
 
-## Photos {#photos}
+## Huecos menores {#open}
 
-Photos are attached to the report and reduced in size on capture — replacing today's manual iPhone → WhatsApp → Android shrink trick. Note images count as sensitive data for the future legal/RGPD review ([[legal-context#open-questions]]).
-
-## Lifecycle and retention
-
-Created per visit → filled (AI-assisted) → signed → emailed to the distribution list. The coordinator must retain reports for years as legal evidence; in phase 1 the durable copy is the emailed file, not the app (no historical archive — see [[decisions#d1-local-only-pwa]]). A monthly summary is later assembled from the daily/weekly reports (future feature, [[roadmap]]).
-
-## Open questions {#open}
-
-- The real section/field list and layout — top priority to confirm.
-- Whether geolocation/timestamp (SIAC-style) should be captured and shown.
-- Whether the report needs a sequential number per obra.
+- ¿La firma necesita geolocalización + sello de tiempo para valer como evidencia? Los 8 informes reales no lo muestran; tentativamente **no** — confirmar en [[stakeholder-questions#q5-geo]].
+- ¿Nº de informe secuencial por obra o derivado de la fecha? Propuesta: derivado de la fecha, se plantilla en el PDF.

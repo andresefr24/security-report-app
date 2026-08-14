@@ -23,9 +23,15 @@ export function CrearInformePage({ crearBorradorInforme }: CrearInformePageProps
   useEffect(() => {
     if (!obraId || yaLanzado.current) return;
     yaLanzado.current = true;
-    let activo = true;
+
+    // OJO, aquí NO va el típico "cancelar al desmontar" (una bandera que la
+    // limpieza pone a false). Con el guard de arriba se convertía en un cuelgue:
+    // en dev, StrictMode monta → limpia → vuelve a montar; la limpieza cancelaba
+    // la única creación en marcha y el segundo montaje ya no lanzaba otra por el
+    // guard, así que la pantalla se quedaba en "Creando el informe…" para
+    // siempre. Como el guard ya garantiza una sola creación, aquí se navega
+    // siempre que termine.
     crearBorradorInforme.ejecutar(obraId).then((resultado) => {
-      if (!activo) return;
       if (resultado.ok) {
         // replace: así el botón "atrás" no vuelve a esta pantalla puente.
         navegar(`/informes/${resultado.valor.id}`, { replace: true });
@@ -33,9 +39,6 @@ export function CrearInformePage({ crearBorradorInforme }: CrearInformePageProps
         setError(resultado.errores.join(" "));
       }
     });
-    return () => {
-      activo = false;
-    };
   }, [obraId, crearBorradorInforme, navegar]);
 
   return (

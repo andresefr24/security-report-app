@@ -40,6 +40,8 @@ export interface DatosProyecto {
   /** Id del promotor dueño de la obra. Referencia, no copia. */
   promotorId: Id;
   descripcion?: string;
+  /** La empresa contratista. Estable por obra; sale en la cabecera del informe. */
+  contratista?: string;
   /** Formato AAAA-MM-DD. */
   fechaInicio?: string;
   /** Formato AAAA-MM-DD. */
