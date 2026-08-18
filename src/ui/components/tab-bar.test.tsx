@@ -20,12 +20,19 @@ function montarEn(ruta: string) {
 }
 
 describe("TabBar / LayoutConNav", () => {
-  it("muestra las cuatro secciones en una pantalla de sección", () => {
+  it("muestra las tres secciones en una pantalla de sección", () => {
     montarEn("/obras");
     const nav = screen.getByRole("navigation", { name: /navegación principal/i });
-    for (const etiqueta of ["Obras", "Promotores", "Nuevo", "Perfil"]) {
+    for (const etiqueta of ["Obras", "Promotores", "Perfil"]) {
       expect(nav).toHaveTextContent(etiqueta);
     }
+  });
+
+  it("ya no ofrece el atajo '+ Nuevo': las obras se crean desde Obras", () => {
+    montarEn("/obras");
+    const nav = screen.getByRole("navigation", { name: /navegación principal/i });
+
+    expect(nav).not.toHaveTextContent("Nuevo");
   });
 
   it("cada sección enlaza a su ruta (incluida la salida a Obras)", () => {
@@ -35,7 +42,6 @@ describe("TabBar / LayoutConNav", () => {
       "href",
       "/promotores",
     );
-    expect(screen.getByRole("link", { name: /Nuevo/i })).toHaveAttribute("href", "/obras/nueva");
     expect(screen.getByRole("link", { name: /Perfil/i })).toHaveAttribute("href", "/perfil");
   });
 

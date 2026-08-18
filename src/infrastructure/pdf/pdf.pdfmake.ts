@@ -199,13 +199,8 @@ function aBloqueDePdfmake(bloque: BloqueDocumento): Content {
     case "distribucion":
       return {
         stack: [
-          { text: bloque.titulo, fontSize: 10, margin: [0, 0, 0, 2] },
-          {
-            ul: bloque.destinatarios.map((destinatario) => ({
-              text: destinatario,
-              fontSize: 10,
-            })),
-          },
+          { text: bloque.titulo, fontSize: 10, bold: true, margin: [0, 0, 0, 2] },
+          { text: bloque.correos, fontSize: 10 },
         ],
         margin: [0, 16, 0, 0],
       };

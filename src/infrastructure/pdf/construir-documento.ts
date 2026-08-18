@@ -54,7 +54,7 @@ export type BloqueDocumento =
   /** El recuadro de firmas al pie: coordinador a la izquierda, receptor a la derecha. */
   | { tipo: "firmas"; izquierda: FirmaDocumento; derecha?: FirmaDocumento }
   /** La lista de distribución: a quién se le envía. */
-  | { tipo: "distribucion"; titulo: string; destinatarios: string[] };
+  | { tipo: "distribucion"; titulo: string; correos: string };
 
 export interface DocumentoInforme {
   /** Va en las propiedades del PDF y en el nombre del archivo. */
@@ -247,14 +247,14 @@ export function construirDocumento(
   });
 
   // --- A quién se le envía ---
+  // Los correos van en UNA línea separados por ";", no en lista: así se copian
+  // y se pegan de golpe en el "Para:" del correo, que es lo que hacen ellos.
   const destinatarios = proyecto.listaDistribucion ?? [];
   if (destinatarios.length > 0) {
     bloques.push({
       tipo: "distribucion",
       titulo: rotulos.distribucion,
-      destinatarios: destinatarios.map((d) =>
-        d.nombre ? `${d.nombre} — ${d.correo}` : d.correo,
-      ),
+      correos: destinatarios.map((d) => d.correo).join("; "),
     });
   }
 
