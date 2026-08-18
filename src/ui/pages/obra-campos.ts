@@ -44,13 +44,28 @@ export const camposObra: CampoTexto<FormularioObra>[] = [
   },
   { nombre: "descripcion", etiqueta: "Descripción de la obra" },
   {
+    nombre: "ubicacion",
+    etiqueta: "Ubicación de la obra",
+    ayuda: "La dirección. Encabeza el informe.",
+  },
+  {
     nombre: "contratista",
     etiqueta: "Contratista",
     ayuda: "La empresa que ejecuta la obra. Aparece en la cabecera del informe.",
   },
+  { nombre: "cifContratista", etiqueta: "CIF del contratista" },
   { nombre: "fechaInicio", etiqueta: "Fecha de inicio", tipo: "date" },
   { nombre: "fechaFin", etiqueta: "Fecha de fin", tipo: "date" },
-  { nombre: "presupuesto", etiqueta: "Presupuesto" },
+  {
+    nombre: "plazoEjecucion",
+    etiqueta: "Plazo de ejecución",
+    ayuda: "Cuánto dura la obra. Por ejemplo: 18 meses.",
+  },
+  { nombre: "presupuestoEjecucion", etiqueta: "Presupuesto de ejecución" },
+  {
+    nombre: "presupuestoEss",
+    etiqueta: "Presupuesto del Estudio de Seguridad y Salud",
+  },
 ];
 
 /**
@@ -61,10 +76,14 @@ export const obraVacia: FormularioObra = {
   codigoObra: "",
   promotorId: "",
   descripcion: "",
+  ubicacion: "",
   contratista: "",
+  cifContratista: "",
   fechaInicio: "",
   fechaFin: "",
-  presupuesto: "",
+  plazoEjecucion: "",
+  presupuestoEjecucion: "",
+  presupuestoEss: "",
   frecuenciaVisita: "semanal",
   listaDistribucion: [],
 };
@@ -76,10 +95,14 @@ export function aDatosProyecto(form: FormularioObra): DatosProyecto {
     codigoObra: form.codigoObra.trim(),
     promotorId: form.promotorId,
     descripcion: opcional(form.descripcion),
+    ubicacion: opcional(form.ubicacion),
     contratista: opcional(form.contratista),
+    cifContratista: opcional(form.cifContratista),
     fechaInicio: opcional(form.fechaInicio),
     fechaFin: opcional(form.fechaFin),
-    presupuesto: opcional(form.presupuesto),
+    plazoEjecucion: opcional(form.plazoEjecucion),
+    presupuestoEjecucion: opcional(form.presupuestoEjecucion),
+    presupuestoEss: opcional(form.presupuestoEss),
     frecuenciaVisita: form.frecuenciaVisita,
     listaDistribucion: form.listaDistribucion?.map((destinatario) => ({
       nombre: opcional(destinatario.nombre),

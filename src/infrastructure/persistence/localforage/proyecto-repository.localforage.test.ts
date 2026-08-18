@@ -69,6 +69,38 @@ describe("LocalForageProyectoRepository", () => {
     expect(lista[0].codigoObra).toBe("OB-999");
   });
 
+  it("conserva el presupuesto de las obras guardadas con el nombre viejo del campo", async () => {
+    // Una obra tal y como la guardó la app ANTES de separar los dos
+    // presupuestos: el campo se llamaba `presupuesto` a secas. Los
+    // coordinadores tienen obras así en su dispositivo.
+    await repo["caja"].setItem("obra-vieja", {
+      id: "obra-vieja",
+      codigoObra: "OB-VIEJA",
+      promotorId: "promotor-1",
+      frecuenciaVisita: "semanal",
+      presupuesto: "27.470.256,11 €",
+    });
+
+    const recuperada = await repo.obtenerPorId("obra-vieja");
+
+    expect(recuperada?.presupuestoEjecucion).toBe("27.470.256,11 €");
+  });
+
+  it("no pisa el presupuesto nuevo si la obra ya tiene los dos campos", async () => {
+    await repo["caja"].setItem("obra-mixta", {
+      id: "obra-mixta",
+      codigoObra: "OB-MIXTA",
+      promotorId: "promotor-1",
+      frecuenciaVisita: "semanal",
+      presupuesto: "el viejo",
+      presupuestoEjecucion: "el nuevo",
+    });
+
+    const recuperada = await repo.obtenerPorId("obra-mixta");
+
+    expect(recuperada?.presupuestoEjecucion).toBe("el nuevo");
+  });
+
   it("descarta del listado lo que no supere la re-validación", async () => {
     await repo.guardar(proyectoDePrueba({ codigoObra: "OB-buena" }));
     // Sin promotorId ni frecuencia: corrupta.

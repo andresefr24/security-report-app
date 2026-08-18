@@ -48,7 +48,23 @@ export class LocalForageProyectoRepository implements ProyectoRepository {
 
   /** Re-valida lo leído: si está corrupto, devuelve null en vez de colarlo. */
   private revalidar(guardado: DatosProyecto): Proyecto | null {
-    const resultado = crearProyecto(guardado);
+    const resultado = crearProyecto(this.alDiaConLoViejo(guardado));
     return resultado.ok ? resultado.valor : null;
+  }
+
+  /**
+   * Puente para las obras guardadas ANTES de separar los dos presupuestos: el
+   * campo se llamaba `presupuesto` a secas y ahora es `presupuestoEjecucion`.
+   * Sin esto, a los coordinadores se les vaciaría el importe que ya tienen
+   * escrito, y esta vez sí hay datos reales en sus dispositivos.
+   *
+   * Es apaño de adaptador a propósito: el sitio de esto es la capa DTO del hito
+   * de persistencia; mientras no exista, vive aquí, que es la frontera con el
+   * disco.
+   */
+  private alDiaConLoViejo(guardado: DatosProyecto): DatosProyecto {
+    const conNombreViejo = guardado as DatosProyecto & { presupuesto?: string };
+    if (guardado.presupuestoEjecucion || !conNombreViejo.presupuesto) return guardado;
+    return { ...guardado, presupuestoEjecucion: conNombreViejo.presupuesto };
   }
 }
