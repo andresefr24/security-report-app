@@ -1,4 +1,4 @@
----
+——áí——éñóá·—ñóóóáóííóóóóóóúóó·—ñóñóíáóíáóííéíáíííñáéó——óéíóé—éáááá---
 title: Plan en fases — Ajustes del informe (respuesta a la propuesta de Josune)
 type: rolling
 updated: 2026-08-18
