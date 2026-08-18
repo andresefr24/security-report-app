@@ -105,6 +105,41 @@ describe("ObraFormPage", () => {
     expect([...proyectos.guardados.values()][0].contratista).toBe("API Movilidad");
   });
 
+  it("guarda los datos de obra que pedían los coordinadores", async () => {
+    const promotorId = await unPromotor();
+    montar(proyectos, promotores);
+
+    const selector = await screen.findByLabelText(/Promotor/i);
+    fireEvent.change(selector, { target: { value: promotorId } });
+    fireEvent.change(screen.getByLabelText(/Código de obra/i), {
+      target: { value: "OB-2026-014" },
+    });
+    fireEvent.change(screen.getByLabelText(/Ubicación de la obra/i), {
+      target: { value: "Calle de la Obra, 10, 28000 Madrid" },
+    });
+    fireEvent.change(screen.getByLabelText(/Plazo de ejecución/i), {
+      target: { value: "18 meses" },
+    });
+    fireEvent.change(screen.getByLabelText(/CIF del contratista/i), {
+      target: { value: "A99999999" },
+    });
+    fireEvent.change(screen.getByLabelText(/Presupuesto de ejecución/i), {
+      target: { value: "27.470.256,11 €" },
+    });
+    fireEvent.change(screen.getByLabelText(/Presupuesto del Estudio de Seguridad/i), {
+      target: { value: "189.523,06 €" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+
+    expect(await screen.findByText("Listado de obras")).toBeInTheDocument();
+    const guardada = [...proyectos.guardados.values()][0];
+    expect(guardada.ubicacion).toContain("la Obra");
+    expect(guardada.plazoEjecucion).toBe("18 meses");
+    expect(guardada.cifContratista).toBe("A99999999");
+    expect(guardada.presupuestoEjecucion).toBe("27.470.256,11 €");
+    expect(guardada.presupuestoEss).toBe("189.523,06 €");
+  });
+
   it("añade un destinatario a la lista de distribución y lo guarda con su rol", async () => {
     const promotorId = await unPromotor();
     montar(proyectos, promotores);

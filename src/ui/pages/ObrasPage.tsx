@@ -22,6 +22,26 @@ import { Button } from "@/ui/components/button";
 import { Card } from "@/ui/components/card";
 import { ETIQUETAS_FRECUENCIA } from "@/ui/pages/obra-campos";
 
+/** Papelera: icono en trazo, hereda color y tamaño de quien la usa. */
+function IconoPapelera() {
+  return (
+    <svg
+      className="h-6 w-6"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
+      <path
+        d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /** Concuerda el singular: "1 destinatario", pero "0 / 2 destinatarios". */
 function textoDestinatarios(cuantos: number): string {
   return cuantos === 1 ? "1 destinatario" : `${cuantos} destinatarios`;
@@ -149,10 +169,11 @@ export function ObrasPage({ listarProyectos, listarInformes, borrarInforme }: Ob
                                     deshacer.
                                   </p>
                                   <Button
-                                    variant="secondary"
+                                    variant="destructive"
                                     onClick={() => confirmarBorrado(proyecto.id, informe.id)}
-                                    className="h-[52px] w-full text-[18px]"
+                                    className="h-[52px] w-full gap-2 text-[18px]"
                                   >
+                                    <IconoPapelera />
                                     Sí, borrar el borrador
                                   </Button>
                                   <Button
@@ -165,10 +186,11 @@ export function ObrasPage({ listarProyectos, listarInformes, borrarInforme }: Ob
                                 </div>
                               ) : (
                                 <Button
-                                  variant="secondary"
+                                  variant="destructive"
                                   onClick={() => setPorConfirmar(informe.id)}
-                                  className="h-[52px] w-full text-[18px]"
+                                  className="h-[52px] w-full gap-2 text-[18px]"
                                 >
+                                  <IconoPapelera />
                                   Borrar borrador del {fechaLegible(informe.fechaHora)}
                                 </Button>
                               ))}
