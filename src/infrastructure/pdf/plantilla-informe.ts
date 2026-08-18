@@ -15,12 +15,20 @@ export interface PlantillaInforme {
   titulo: string[];
   /** El bloque de la derecha de la banda: código de formato y revisión. */
   formato: string[];
-  /** La referencia que va abajo a la izquierda en todas las páginas. */
-  referenciaPie: string;
+  /**
+   * El texto que acompaña al emisor a la derecha del título. Se completa con la
+   * empresa del PERFIL del coordinador: en los informes reales firman personas
+   * distintas, así que nunca se fija aquí.
+   */
+  prefijoEmisorCabecera: string;
   /** El valor fijo del campo "Tipo Documento" de la cabecera. */
   tipoDocumento: string;
-  /** Frase de contexto tras la cabecera. `{fecha}` se sustituye por la de la visita. */
-  fraseContexto: string;
+  /**
+   * Aviso de alcance que va justo debajo de la cabecera. Sustituye a la vieja
+   * frase de contexto: los coordinadores lo pidieron literal, porque acota su
+   * responsabilidad a lo que se vio ese día.
+   */
+  avisoAlcance: string;
   /** Cómo se llama cada campo de la tabla de cabecera. */
   etiquetas: {
     obra: string;
@@ -28,6 +36,13 @@ export interface PlantillaInforme {
     contratista: string;
     identificacion: string;
     fecha: string;
+    ubicacion: string;
+    cifContratista: string;
+    plazoEjecucion: string;
+    presupuestoEjecucion: string;
+    presupuestoEss: string;
+    fechaInicio: string;
+    fechaFin: string;
     tipoDocumento: string;
     emisor: string;
     empresaEmisor: string;
@@ -44,6 +59,8 @@ export interface PlantillaInforme {
   };
   /** Cuántas fotos caben en una fila. */
   fotosPorFila: number;
+  /** Cómo se rotula cada foto en su pie: "Foto 3". */
+  etiquetaFoto: string;
   /** Los dos encabezados del recuadro de firmas y el cargo del coordinador. */
   firmas: {
     tituloCoordinador: string;
@@ -61,20 +78,31 @@ export interface PlantillaInforme {
  * falta, se añade aquí al lado como otra constante.
  */
 export const PLANTILLA_SEMANAL: PlantillaInforme = {
-  titulo: ["INFORME SEMANAL DE VISITAS", "DE COORDINACIÓN DE S. Y S."],
+  titulo: ["INFORME DE VISITA DEL COORDINADOR", "DE SEGURIDAD Y SALUD"],
   formato: ["Formato 02_03", "G13a- SSFE", "Revisión: 0"],
-  referenciaPie: "R-IGO-SS-0001 Mod.8 Rev.2",
+  prefijoEmisorCabecera: "ING. CSS ",
   tipoDocumento: "INFORMATIVO",
-  fraseContexto:
-    "Después de realizar la visita de coordinación en materia de seguridad y salud " +
-    "en fecha {fecha} para regular las prácticas y acciones para la seguridad en la " +
-    "obra, se definen las acciones observadas.",
+  avisoAlcance:
+    "Las observaciones recogidas en el presente informe se limitan a las condiciones " +
+    "y situaciones detectadas durante la visita realizada, por lo que no tienen " +
+    "carácter exhaustivo. La ausencia de referencia a otras posibles deficiencias no " +
+    "implica su inexistencia ni exime a las empresas intervinientes del cumplimiento " +
+    "de la normativa vigente en materia de seguridad y salud, así como de las medidas " +
+    "preventivas establecidas en el Plan de Seguridad y Salud y demás documentación " +
+    "preventiva aplicable.",
   etiquetas: {
     obra: "Obra:",
     promotor: "Entidad Promotora:",
     contratista: "Contratista:",
     identificacion: "Identificación Documento:",
     fecha: "Fecha:",
+    ubicacion: "Ubicación:",
+    cifContratista: "CIF:",
+    plazoEjecucion: "Plazo de ejecución:",
+    presupuestoEjecucion: "Presupuesto de ejecución:",
+    presupuestoEss: "Presupuesto ESS:",
+    fechaInicio: "Inicio:",
+    fechaFin: "Fin:",
     tipoDocumento: "Tipo Documento:",
     emisor: "Emisor:",
     empresaEmisor: "Empresa:",
@@ -84,13 +112,14 @@ export const PLANTILLA_SEMANAL: PlantillaInforme = {
   rotulos: {
     calendario: "CALENDARIO DE VISITAS Y TRABAJOS EN EJECUCIÓN",
     situacion: "SITUACIÓN DE LA OBRA",
-    ubicacionActividad: "SITUACIÓN DE LA ACTUACIÓN",
+    ubicacionActividad: "Ubicación",
     descripcionActividad: "DESCRIPCIÓN DE LA ACTIVIDAD",
     distribucion: "Enviado por e-mail a:",
   },
   // Los informes reales ponen una foto por fila y gastan una hoja por foto. El
   // stakeholder pidió expresamente dos: es una mejora deliberada, no una copia.
   fotosPorFila: 2,
+  etiquetaFoto: "Foto",
   firmas: {
     tituloCoordinador: "Informe realizado por:",
     tituloRecibido: "Recibido por:",

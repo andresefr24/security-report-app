@@ -131,6 +131,13 @@ function aBloqueDePdfmake(bloque: BloqueDocumento): Content {
           width: ancho,
           stack: [
             { image: foto.imagen, fit: [ancho, ancho * 1.1] },
+            {
+              text: foto.numero,
+              fontSize: 9,
+              bold: true,
+              alignment: "center" as const,
+              margin: [0, 4, 0, 0] as [number, number, number, number],
+            },
             ...(foto.comentario
               ? [
                   {
@@ -138,7 +145,7 @@ function aBloqueDePdfmake(bloque: BloqueDocumento): Content {
                     fontSize: 9,
                     bold: true,
                     alignment: "center" as const,
-                    margin: [0, 4, 0, 0] as [number, number, number, number],
+                    margin: [0, 2, 0, 0] as [number, number, number, number],
                   },
                 ]
               : []),
@@ -232,10 +239,20 @@ export class PdfMakeAdapter implements PdfPort {
                 margin: [0, 4, 0, 4] as [number, number, number, number],
               },
               {
-                stack: documento.cabeceraPagina.formato.map((linea) => ({
-                  text: linea,
-                  fontSize: 8,
-                })),
+                stack: [
+                  ...documento.cabeceraPagina.formato.map((linea) => ({
+                    text: linea,
+                    fontSize: 8,
+                  })),
+                  // A la derecha del título, quién emite: lo pidieron para que se
+                  // vea de un vistazo de qué coordinador es el informe.
+                  {
+                    text: documento.emisorCabecera,
+                    fontSize: 8,
+                    bold: true,
+                    margin: [0, 4, 0, 0] as [number, number, number, number],
+                  },
+                ],
                 margin: [4, 4, 0, 4] as [number, number, number, number],
               },
             ],
@@ -243,17 +260,13 @@ export class PdfMakeAdapter implements PdfPort {
         },
       }),
 
-      // Y el pie con la referencia y el "X de Y".
+      // El pie solo lleva la paginación: la referencia de calidad que iba a la
+      // izquierda la pidieron fuera porque no les dice nada.
       footer: (paginaActual: number, total: number) => ({
         margin: [40, 10, 40, 0],
-        columns: [
-          { text: documento.referenciaPie, fontSize: 8 },
-          {
-            text: `${paginaActual} de ${total}`,
-            fontSize: 8,
-            alignment: "right",
-          },
-        ],
+        text: `${paginaActual} de ${total}`,
+        fontSize: 8,
+        alignment: "right",
       }),
 
       content: documento.bloques.map(aBloqueDePdfmake),
