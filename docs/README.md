@@ -40,6 +40,7 @@ This is the project vault: the `docs/` folder of the `security-report-app` repo.
 - [[informe-v2-radiografia]] — radiografía del rework del informe v2 (para Josune y su Claude): plan, diagrama, diseño de datos, deep dive.
 - [[maqueta-informe-real]] — cómo son visualmente los 8 informes reales (rótulos, cajas, fotos, firmas), sin datos personales. Entrada de la fase del PDF.
 - [[propuesta-informe-estructura-real]] — la propuesta del rework v2 y su registro de aprobación (D9) con las fases de ejecución.
+- [[propuesta-informe-ajustes-feedback]] — ajustes pedidos por Nicolás y Miren tras el primer uso real (rediseño del PDF, estados de la observación, datos de obra).
 - [[onboarding-josune]] — onboarding for Josune (fullstack): decisions, infra, phasing and tasks, for-dummies.
 - [[tasks-f1-draft]] — draft milestones M0–M9 for F1 (subject to change after stakeholder review).
 - [[design-system]] — design system normative (shadcn tokens, typography, nav, components, states). Source pieces in `../design/`.
