@@ -30,6 +30,8 @@ export interface FilaCabecera {
 /** Una foto ya lista para pintar: imagen y su comentario (si lo tiene). */
 export interface FotoDocumento {
   imagen: string;
+  /** Su número dentro del informe: "Foto 3". */
+  numero: string;
   comentario?: string;
 }
 
@@ -59,8 +61,8 @@ export interface DocumentoInforme {
   titulo: string;
   /** La banda superior, que se repite en todas las páginas. */
   cabeceraPagina: { titulo: string[]; formato: string[] };
-  /** La referencia que va al pie de todas las páginas, junto a "X de Y". */
-  referenciaPie: string;
+  /** El texto de la derecha del título: "ING. CSS " + la empresa del perfil. */
+  emisorCabecera: string;
   bloques: BloqueDocumento[];
 }
 
@@ -78,13 +80,6 @@ function fechaCorta(fechaHora: string): string {
   return fecha.toLocaleDateString("es", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-/** "2026-07-01T09:30" -> "1 de julio de 2026" (para la frase de contexto). */
-function fechaEnLetra(fechaHora: string): string {
-  const fecha = new Date(fechaHora);
-  if (Number.isNaN(fecha.getTime())) return fechaHora;
-  return fecha.toLocaleDateString("es", { dateStyle: "long" });
-}
-
 /**
  * El nº de documento. Se deriva de la fecha en vez de pedírselo al coordinador:
  * los informes reales usan unas veces un código de calidad y otras un correlativo
@@ -97,12 +92,27 @@ function identificacion(fechaHora: string): string {
   return `${fecha.getFullYear()}${dosDigitos(fecha.getMonth() + 1)}${dosDigitos(fecha.getDate())}`;
 }
 
-/** Reparte las fotos en filas de `porFila`. */
-function enFilas(fotos: Foto[], porFila: number): FotoDocumento[][] {
+/**
+ * Reparte las fotos en filas de `porFila` y les pone su número.
+ *
+ * La numeración es CORRELATIVA EN TODO EL INFORME (Foto 1, 2, 3…), no por
+ * actividad: los coordinadores se referían a "la foto 3" hablando del documento
+ * entero, y sin número no había forma de señalar una.
+ */
+function enFilas(
+  fotos: Foto[],
+  porFila: number,
+  etiqueta: string,
+  numeroInicial: number,
+): FotoDocumento[][] {
   const filas: FotoDocumento[][] = [];
   for (let i = 0; i < fotos.length; i += porFila) {
     filas.push(
-      fotos.slice(i, i + porFila).map((f) => ({ imagen: f.imagen, comentario: f.comentario })),
+      fotos.slice(i, i + porFila).map((f, j) => ({
+        imagen: f.imagen,
+        numero: `${etiqueta} ${numeroInicial + i + j}`,
+        comentario: f.comentario,
+      })),
     );
   }
   return filas;
@@ -125,8 +135,26 @@ export function construirDocumento(
           ? `${proyecto.codigoObra} — ${proyecto.descripcion}`
           : proyecto.codigoObra,
       },
+      { etiqueta: etiquetas.ubicacion, valor: proyecto.ubicacion ?? "" },
       { etiqueta: etiquetas.promotor, valor: promotor?.nombreRazonSocial ?? "No consta" },
-      { etiqueta: etiquetas.contratista, valor: proyecto.contratista ?? "" },
+      {
+        etiqueta: etiquetas.contratista,
+        valor: proyecto.contratista ?? "",
+        etiqueta2: proyecto.cifContratista ? etiquetas.cifContratista : undefined,
+        valor2: proyecto.cifContratista,
+      },
+      {
+        etiqueta: etiquetas.plazoEjecucion,
+        valor: proyecto.plazoEjecucion ?? "",
+        etiqueta2: proyecto.fechaInicio ? etiquetas.fechaInicio : undefined,
+        valor2: proyecto.fechaInicio,
+      },
+      {
+        etiqueta: etiquetas.presupuestoEjecucion,
+        valor: proyecto.presupuestoEjecucion ?? "",
+        etiqueta2: proyecto.presupuestoEss ? etiquetas.presupuestoEss : undefined,
+        valor2: proyecto.presupuestoEss,
+      },
       {
         etiqueta: etiquetas.identificacion,
         valor: identificacion(informe.fechaHora),
@@ -151,10 +179,7 @@ export function construirDocumento(
     ],
   });
 
-  bloques.push({
-    tipo: "parrafo",
-    texto: plantilla.fraseContexto.replace("{fecha}", fechaEnLetra(informe.fechaHora)),
-  });
+  bloques.push({ tipo: "parrafo", texto: plantilla.avisoAlcance });
 
   // --- El calendario de la semana ---
   if (informe.resumenSemana) {
@@ -169,6 +194,8 @@ export function construirDocumento(
   }
 
   // --- Las actividades: el cuerpo del informe ---
+  // Las fotos se numeran seguidas a lo largo de todo el informe.
+  let numeroDeFoto = 1;
   for (const actividad of informe.actividades ?? []) {
     const lineas: string[] = [];
     if (actividad.ubicacion) {
@@ -179,9 +206,16 @@ export function construirDocumento(
     }
     if (lineas.length > 0) bloques.push({ tipo: "rotulo", lineas });
 
-    for (const fila of enFilas(actividad.fotos ?? [], plantilla.fotosPorFila)) {
+    const fotos = actividad.fotos ?? [];
+    for (const fila of enFilas(
+      fotos,
+      plantilla.fotosPorFila,
+      plantilla.etiquetaFoto,
+      numeroDeFoto,
+    )) {
       bloques.push({ tipo: "filaFotos", fotos: fila, fotosPorFila: plantilla.fotosPorFila });
     }
+    numeroDeFoto += fotos.length;
   }
 
   // --- El recuadro de firmas ---
@@ -227,7 +261,7 @@ export function construirDocumento(
   return {
     titulo: `Informe ${proyecto.codigoObra} — ${fechaLegible(informe.fechaHora)}`,
     cabeceraPagina: { titulo: plantilla.titulo, formato: plantilla.formato },
-    referenciaPie: plantilla.referenciaPie,
+    emisorCabecera: `${plantilla.prefijoEmisorCabecera}${coordinador.contacto?.empresa ?? ""}`.trim(),
     bloques,
   };
 }
