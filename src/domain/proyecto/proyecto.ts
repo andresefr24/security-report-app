@@ -40,14 +40,21 @@ export interface DatosProyecto {
   /** Id del promotor dueño de la obra. Referencia, no copia. */
   promotorId: Id;
   descripcion?: string;
+  /** La dirección de la obra. Encabeza el informe como "Ubicación". */
+  ubicacion?: string;
   /** La empresa contratista. Estable por obra; sale en la cabecera del informe. */
   contratista?: string;
+  cifContratista?: string;
   /** Formato AAAA-MM-DD. */
   fechaInicio?: string;
   /** Formato AAAA-MM-DD. */
   fechaFin?: string;
+  /** Cuánto dura la obra, en texto libre ("18 meses"). */
+  plazoEjecucion?: string;
   /** Provisional: texto libre. */
-  presupuesto?: string;
+  presupuestoEjecucion?: string;
+  /** El del material del Estudio de Seguridad y Salud. */
+  presupuestoEss?: string;
   frecuenciaVisita: FrecuenciaVisita;
   listaDistribucion?: Destinatario[];
 }
