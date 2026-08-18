@@ -64,7 +64,7 @@ function textoDe(bloques: BloqueDocumento[]): string {
             .map((f) => `${f.titulo} ${f.lineas.join(" ")}`)
             .join("\n");
         case "distribucion":
-          return `${b.titulo} ${b.destinatarios.join(" ")}`;
+          return `${b.titulo} ${b.correos}`;
       }
     })
     .join("\n");
@@ -134,7 +134,10 @@ describe("construirDocumento", () => {
       );
       const texto = textoDe(bloques);
 
-      expect(texto).toContain("SITUACIÓN DE LA ACTUACIÓN: (M-103) PK 03+500 - Glorieta de Cobeña");
+      // "Situación de la actuación" desapareció: los coordinadores lo llaman
+      // ubicación, y así lo pidieron.
+      expect(texto).toContain("Ubicación: (M-103) PK 03+500 - Glorieta de Cobeña");
+      expect(texto).not.toContain("SITUACIÓN DE LA ACTUACIÓN");
       expect(texto).toContain("DESCRIPCIÓN DE LA ACTIVIDAD: Colocación de chapa metálica.");
     });
 
@@ -169,6 +172,34 @@ describe("construirDocumento", () => {
     });
   });
 
+  describe("cabecera con los datos de la obra", () => {
+    const obraCompleta = {
+      ubicacion: "Pº del Tren Talgo, 10, 28290 Las Rozas de Madrid",
+      cifContratista: "A28017986",
+      plazoEjecucion: "18 meses",
+      presupuestoEjecucion: "27.470.256,11 €",
+      presupuestoEss: "189.523,06 €",
+      fechaInicio: "2024-04-11",
+    };
+
+    it("lleva ubicación, plazo, presupuestos y CIF", () => {
+      const texto = textoDe(construirDocumento(datosDelPdf({}, obraCompleta)).bloques);
+
+      expect(texto).toContain("Ubicación: Pº del Tren Talgo, 10, 28290 Las Rozas de Madrid");
+      expect(texto).toContain("Plazo de ejecución: 18 meses");
+      expect(texto).toContain("Presupuesto de ejecución: 27.470.256,11 €");
+      expect(texto).toContain("Presupuesto ESS: 189.523,06 €");
+      expect(texto).toContain("CIF: A28017986");
+    });
+
+    it("sustituye la frase de contexto por el aviso de alcance", () => {
+      const texto = textoDe(construirDocumento(datosDelPdf()).bloques);
+
+      expect(texto).toContain("no tienen carácter exhaustivo");
+      expect(texto).not.toContain("Después de realizar la visita de coordinación");
+    });
+  });
+
   describe("fotos", () => {
     function conFotos(cuantas: number): BloqueDocumento[] {
       return construirDocumento(
@@ -193,6 +224,34 @@ describe("construirDocumento", () => {
       expect(filas).toHaveLength(2);
       expect(filas[0].fotos).toHaveLength(2);
       expect(filas[1].fotos).toHaveLength(1);
+    });
+
+    it("numera las fotos seguidas en todo el informe, no por actividad", () => {
+      const { bloques } = construirDocumento(
+        datosDelPdf({
+          actividades: [
+            {
+              id: "a1",
+              descripcion: "Desbroce.",
+              fotos: [
+                { id: "f1", imagen: "data:image/png;base64,A" },
+                { id: "f2", imagen: "data:image/png;base64,B" },
+              ],
+            },
+            {
+              id: "a2",
+              descripcion: "Limpieza.",
+              fotos: [{ id: "f3", imagen: "data:image/png;base64,C" }],
+            },
+          ],
+        }),
+      );
+
+      const numeros = bloques
+        .filter((b) => b.tipo === "filaFotos")
+        .flatMap((b) => b.fotos.map((f) => f.numero));
+      // La primera foto de la SEGUNDA actividad es la 3, no vuelve a la 1.
+      expect(numeros).toEqual(["Foto 1", "Foto 2", "Foto 3"]);
     });
 
     it("lleva el comentario de cada foto", () => {
@@ -246,13 +305,14 @@ describe("construirDocumento", () => {
       expect(firmas?.derecha?.imagen).toBeUndefined();
     });
 
-    it("lista a quién se le envía, tomándolo de la obra", () => {
+    it("pone los correos en una línea separados por ';', para copiarlos de golpe", () => {
       const { bloques } = construirDocumento(
         datosDelPdf(
           {},
           {
             listaDistribucion: [
               { nombre: "Carlos Díaz", correo: "carlos@ejemplo.es", rol: "contratista" },
+              { correo: "belen@ejemplo.es", rol: "promotor" },
             ],
           },
         ),
@@ -260,7 +320,7 @@ describe("construirDocumento", () => {
       const texto = textoDe(bloques);
 
       expect(texto).toContain("Enviado por e-mail a:");
-      expect(texto).toContain("Carlos Díaz — carlos@ejemplo.es");
+      expect(texto).toContain("carlos@ejemplo.es; belen@ejemplo.es");
     });
 
     it("omite la distribución si la obra no tiene destinatarios", () => {
@@ -270,12 +330,15 @@ describe("construirDocumento", () => {
     });
   });
 
-  it("repite la banda de cabecera y la referencia del pie en todas las páginas", () => {
-    const { cabeceraPagina, referenciaPie } = construirDocumento(datosDelPdf());
+  it("lleva el título nuevo y, a su derecha, quién emite el informe", () => {
+    const { cabeceraPagina, emisorCabecera } = construirDocumento(datosDelPdf());
 
-    expect(cabeceraPagina.titulo.join(" ")).toContain("INFORME SEMANAL DE VISITAS");
+    expect(cabeceraPagina.titulo.join(" ")).toBe(
+      "INFORME DE VISITA DEL COORDINADOR DE SEGURIDAD Y SALUD",
+    );
     expect(cabeceraPagina.formato.join(" ")).toContain("G13a- SSFE");
-    expect(referenciaPie).toContain("R-IGO-SS-0001");
+    // El emisor sale del perfil, nunca fijado en la plantilla.
+    expect(emisorCabecera).toBe("ING. CSS TPS Ingeniería");
   });
 
   it("el título identifica la obra y la fecha (sirve para el nombre del archivo)", () => {

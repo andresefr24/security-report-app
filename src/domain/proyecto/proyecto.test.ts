@@ -125,14 +125,14 @@ describe("crearProyecto", () => {
         contratista: "API Movilidad",
         fechaInicio: "2026-09-01",
         fechaFin: "2027-03-31",
-        presupuesto: "1.250.000 €",
+        presupuestoEjecucion: "1.250.000 €",
       }),
     );
 
     expect(resultado.ok).toBe(true);
     if (resultado.ok) {
       expect(resultado.valor.fechaInicio).toBe("2026-09-01");
-      expect(resultado.valor.presupuesto).toBe("1.250.000 €");
+      expect(resultado.valor.presupuestoEjecucion).toBe("1.250.000 €");
       expect(resultado.valor.contratista).toBe("API Movilidad");
     }
   });
