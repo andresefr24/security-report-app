@@ -12,6 +12,10 @@ import {
 } from "@/domain/promotor/promotor";
 import { type PromotorRepository } from "@/domain/ports/promotor-repository";
 import { type Id } from "@/domain/shared/id";
+import { type Result } from "@/domain/shared/result";
+import { migrar, sellar, type Guardado } from "@/infrastructure/persistence/migracion";
+import { ESCALONES_PROMOTOR } from "@/infrastructure/persistence/localforage/migraciones-promotor";
+import { cuarentena } from "@/infrastructure/persistence/cuarentena";
 
 export class LocalForagePromotorRepository implements PromotorRepository {
   private readonly caja: LocalForage;
@@ -25,21 +29,34 @@ export class LocalForagePromotorRepository implements PromotorRepository {
 
   async guardar(promotor: Promotor): Promise<void> {
     // La clave es el id: guardar con el mismo id reemplaza (editar).
-    await this.caja.setItem(promotor.id, promotor);
+    await this.caja.setItem(promotor.id, sellar(promotor, ESCALONES_PROMOTOR));
   }
 
   async obtenerPorId(id: Id): Promise<Promotor | null> {
-    const guardado = await this.caja.getItem<DatosPromotor>(id);
-    return guardado === null ? null : this.revalidar(guardado);
+    const guardado = await this.caja.getItem<Guardado>(id);
+    if (guardado === null) return null;
+
+    const resultado = this.revalidar(guardado);
+    if (resultado.ok) return resultado.valor;
+
+    await cuarentena.apartar("promotor", id, guardado, resultado.errores);
+    return null;
   }
 
   async listar(): Promise<Promotor[]> {
     const promotores: Promotor[] = [];
-    // iterate recorre toda la caja; descartamos lo que no supere la validación.
-    await this.caja.iterate<DatosPromotor, void>((guardado) => {
-      const promotor = this.revalidar(guardado);
-      if (promotor) promotores.push(promotor);
+    const ilegibles: { clave: string; guardado: Guardado; motivos: string[] }[] = [];
+
+    await this.caja.iterate<Guardado, void>((guardado, clave) => {
+      const resultado = this.revalidar(guardado);
+      if (resultado.ok) promotores.push(resultado.valor);
+      else ilegibles.push({ clave, guardado, motivos: resultado.errores });
     });
+
+    // `iterate` no espera promesas: se apartan después, fuera del bucle.
+    await Promise.all(
+      ilegibles.map((f) => cuarentena.apartar("promotor", f.clave, f.guardado, f.motivos)),
+    );
     // Orden estable y útil para la pantalla: alfabético por razón social.
     return promotores.sort((a, b) =>
       a.nombreRazonSocial.localeCompare(b.nombreRazonSocial, "es"),
@@ -47,12 +64,12 @@ export class LocalForagePromotorRepository implements PromotorRepository {
   }
 
   /**
-   * Re-valida lo leído antes de devolverlo al dominio: si los datos guardados
-   * estuvieran corruptos o fueran de una versión vieja, devolvemos null en vez
-   * de colar un Promotor inválido hacia dentro.
+   * MIGRAR y DESPUÉS validar, como en los demás adaptadores. El promotor no ha
+   * cambiado de forma todavía, pero pasa por el mismo embudo para no dejar dos
+   * regímenes conviviendo. Ver docs/nota-migracion-datos.md.
    */
-  private revalidar(guardado: DatosPromotor): Promotor | null {
-    const resultado = crearPromotor(guardado);
-    return resultado.ok ? resultado.valor : null;
+  private revalidar(guardado: Guardado): Result<Promotor> {
+    const alDia = migrar(guardado, ESCALONES_PROMOTOR) as unknown as DatosPromotor;
+    return crearPromotor(alDia);
   }
 }
