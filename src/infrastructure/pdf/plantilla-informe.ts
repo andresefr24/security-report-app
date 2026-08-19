@@ -10,6 +10,16 @@
 // Los rótulos salen de la lectura de los 8 informes reales: ver
 // docs/maqueta-informe-real.md, que es la ficha de la que se copió todo esto.
 
+import { type EstadoObservacion } from "@/domain/informe/informe";
+
+/** Cómo se ve una etiqueta de estado en ESTE formato de documento. */
+export interface PintaEstadoPdf {
+  etiqueta: string;
+  fondo: string;
+  texto: string;
+  borde: string;
+}
+
 export interface PlantillaInforme {
   /** El título de la banda superior, una línea por renglón. */
   titulo: string[];
@@ -55,8 +65,17 @@ export interface PlantillaInforme {
     situacion: string;
     ubicacionActividad: string;
     descripcionActividad: string;
+    /** Cómo encabeza cada bloque: "OBSERVACIÓN 1". */
+    observacion: string;
     distribucion: string;
   };
+  /**
+   * Cómo se rotula y de qué color va cada estado en el documento. Está aquí y no
+   * en la pantalla porque es parte del FORMATO: otro organismo podría llamarlos
+   * de otra manera o usar otros colores. La pantalla tiene su propia versión con
+   * clases de Tailwind (ui/pages/informe/estados-observacion.ts).
+   */
+  estados: Record<EstadoObservacion, PintaEstadoPdf>;
   /** Cuántas fotos caben en una fila. */
   fotosPorFila: number;
   /** Cómo se rotula cada foto en su pie: "Foto 3". */
@@ -113,11 +132,33 @@ export const PLANTILLA_SEMANAL: PlantillaInforme = {
     calendario: "CALENDARIO DE VISITAS Y TRABAJOS EN EJECUCIÓN",
     situacion: "SITUACIÓN DE LA OBRA",
     ubicacionActividad: "Ubicación",
-    descripcionActividad: "DESCRIPCIÓN DE LA ACTIVIDAD",
+    // Lo pidieron así, con el nombre que usan ellos.
+    descripcionActividad: "OBSERVACIÓN PREVENTIVA DE SEGURIDAD (OPS)",
+    observacion: "OBSERVACIÓN",
     distribucion: "Enviado por e-mail a:",
   },
   // Los informes reales ponen una foto por fila y gastan una hoja por foto. El
   // stakeholder pidió expresamente dos: es una mejora deliberada, no una copia.
+  estados: {
+    "medida-requerida": {
+      etiqueta: "MEDIDA REQUERIDA",
+      fondo: "#fdf3d7",
+      texto: "#8a5a00",
+      borde: "#e0b74a",
+    },
+    "observacion-preventiva": {
+      etiqueta: "OBSERVACIÓN PREVENTIVA",
+      fondo: "#fdf3d7",
+      texto: "#8a5a00",
+      borde: "#e0b74a",
+    },
+    subsanado: {
+      etiqueta: "SUBSANADO",
+      fondo: "#e3f2e3",
+      texto: "#1c6b30",
+      borde: "#8cc79a",
+    },
+  },
   fotosPorFila: 2,
   etiquetaFoto: "Foto",
   firmas: {

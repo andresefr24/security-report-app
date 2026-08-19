@@ -14,7 +14,7 @@ function datosDelPdf(
   const informe = crearInforme({
     proyectoId: "obra-1",
     fechaHora: "2026-07-01T09:30",
-    actividades: [{ id: "a1", descripcion: "Visita sin incidencias reseñables." }],
+    observaciones: [{ id: "o1", titulo: "Visita sin incidencias reseñables." }],
     ...cambiosInforme,
   });
   const proyecto = crearProyecto({
@@ -54,6 +54,8 @@ function textoDe(bloques: BloqueDocumento[]): string {
             .join("\n");
         case "rotulo":
           return b.lineas.join("\n");
+        case "observacion":
+          return `${b.encabezado} ${b.titulo} ${b.estado?.etiqueta ?? ""}\n${b.lineas.join("\n")}`;
         case "parrafo":
           return b.texto;
         case "filaFotos":
@@ -120,10 +122,10 @@ describe("construirDocumento", () => {
   });
 
   describe("cuerpo", () => {
-    it("encabeza cada actividad con los rótulos del informe real", () => {
+    it("encabeza cada observacion con los rótulos del informe real", () => {
       const { bloques } = construirDocumento(
         datosDelPdf({
-          actividades: [
+          observaciones: [
             {
               id: "a1",
               ubicacion: "(M-103) PK 03+500 - Glorieta de Cobeña",
@@ -138,20 +140,45 @@ describe("construirDocumento", () => {
       // ubicación, y así lo pidieron.
       expect(texto).toContain("Ubicación: (M-103) PK 03+500 - Glorieta de Cobeña");
       expect(texto).not.toContain("SITUACIÓN DE LA ACTUACIÓN");
-      expect(texto).toContain("DESCRIPCIÓN DE LA ACTIVIDAD: Colocación de chapa metálica.");
+      expect(texto).toContain(
+        "OBSERVACIÓN PREVENTIVA DE SEGURIDAD (OPS): Colocación de chapa metálica.",
+      );
     });
 
-    it("pinta una sección por cada actividad", () => {
+    it("pinta un encabezado por cada observación, numerado", () => {
       const { bloques } = construirDocumento(
         datosDelPdf({
-          actividades: [
-            { id: "a1", descripcion: "Desbroce mecánico." },
-            { id: "a2", descripcion: "Limpieza de calzada." },
+          observaciones: [
+            { id: "o1", titulo: "Desbroce mecánico." },
+            { id: "o2", titulo: "Limpieza de calzada." },
           ],
         }),
       );
 
-      expect(bloques.filter((b) => b.tipo === "rotulo")).toHaveLength(2);
+      const encabezados = bloques.filter((b) => b.tipo === "observacion");
+      expect(encabezados).toHaveLength(2);
+      expect(encabezados[0]).toMatchObject({
+        encabezado: "OBSERVACIÓN 1",
+        titulo: "Desbroce mecánico.",
+      });
+      expect(encabezados[1].encabezado).toBe("OBSERVACIÓN 2");
+    });
+
+    it("pone la etiqueta de color del estado, y ninguna si no tiene", () => {
+      const { bloques } = construirDocumento(
+        datosDelPdf({
+          observaciones: [
+            { id: "o1", titulo: "Con estado", estado: "subsanado" },
+            { id: "o2", titulo: "Sin estado" },
+          ],
+        }),
+      );
+
+      const [conEstado, sinEstado] = bloques.filter((b) => b.tipo === "observacion");
+      expect(conEstado.estado?.etiqueta).toBe("SUBSANADO");
+      // El color lo pone la app; el coordinador solo elige el estado.
+      expect(conEstado.estado?.fondo).toMatch(/^#/);
+      expect(sinEstado.estado).toBeUndefined();
     });
 
     it("lleva el calendario de la semana cuando lo hay", () => {
@@ -204,7 +231,7 @@ describe("construirDocumento", () => {
     function conFotos(cuantas: number): BloqueDocumento[] {
       return construirDocumento(
         datosDelPdf({
-          actividades: [
+          observaciones: [
             {
               id: "a1",
               descripcion: "Desbroce.",
@@ -226,10 +253,10 @@ describe("construirDocumento", () => {
       expect(filas[1].fotos).toHaveLength(1);
     });
 
-    it("numera las fotos seguidas en todo el informe, no por actividad", () => {
+    it("numera las fotos seguidas en todo el informe, no por observacion", () => {
       const { bloques } = construirDocumento(
         datosDelPdf({
-          actividades: [
+          observaciones: [
             {
               id: "a1",
               descripcion: "Desbroce.",
@@ -250,14 +277,14 @@ describe("construirDocumento", () => {
       const numeros = bloques
         .filter((b) => b.tipo === "filaFotos")
         .flatMap((b) => b.fotos.map((f) => f.numero));
-      // La primera foto de la SEGUNDA actividad es la 3, no vuelve a la 1.
+      // La primera foto de la SEGUNDA observacion es la 3, no vuelve a la 1.
       expect(numeros).toEqual(["Foto 1", "Foto 2", "Foto 3"]);
     });
 
     it("lleva el comentario de cada foto", () => {
       const { bloques } = construirDocumento(
         datosDelPdf({
-          actividades: [
+          observaciones: [
             {
               id: "a1",
               descripcion: "Desbroce.",
@@ -276,7 +303,7 @@ describe("construirDocumento", () => {
       expect(textoDe(bloques)).toContain("Extintor y batefuego junto al grupo electrógeno.");
     });
 
-    it("una actividad sin fotos no genera ninguna fila", () => {
+    it("una observacion sin fotos no genera ninguna fila", () => {
       expect(conFotos(0).filter((b) => b.tipo === "filaFotos")).toHaveLength(0);
     });
   });

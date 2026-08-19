@@ -118,24 +118,26 @@ describe("Flujo del informe (crear borrador → wizard)", () => {
     expect(guardado.estado).toBe("borrador");
   });
 
-  it("escribe una actividad en el paso 2 y la autoguarda", async () => {
+  it("escribe una observación en el paso 2 y la autoguarda", async () => {
     const obraId = await unaObra();
     montar(`/obras/${obraId}/informes/nuevo`);
     await screen.findByText("Paso 1 de 3");
 
     fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
     await screen.findByText("Paso 2 de 3");
-    expect(screen.getByText("Situación y actividades")).toBeInTheDocument();
+    expect(screen.getByText("Situación y observaciones")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Añadir actividad" }));
-    fireEvent.change(screen.getByLabelText(/Qué pasó/i), {
+    fireEvent.click(screen.getByRole("button", { name: "Añadir observación" }));
+    fireEvent.change(screen.getByLabelText(/^Título$/i), {
       target: { value: "Limpieza de calzada con barredora." },
     });
+    fireEvent.click(screen.getByRole("button", { name: "MEDIDA REQUERIDA" }));
     fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
     await screen.findByText("Paso 3 de 3");
 
     const guardado = [...informes.guardados.values()][0];
-    expect(guardado.actividades?.[0].descripcion).toBe("Limpieza de calzada con barredora.");
+    expect(guardado.observaciones?.[0].titulo).toBe("Limpieza de calzada con barredora.");
+    expect(guardado.observaciones?.[0].estado).toBe("medida-requerida");
   });
 
   it("muestra un error si la obra no existe", async () => {

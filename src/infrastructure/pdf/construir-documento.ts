@@ -15,6 +15,7 @@ import { type DatosDelPdf } from "@/domain/ports/pdf-port";
 import { type Foto } from "@/domain/informe/informe";
 import {
   PLANTILLA_SEMANAL,
+  type PintaEstadoPdf,
   type PlantillaInforme,
 } from "@/infrastructure/pdf/plantilla-informe";
 
@@ -49,6 +50,18 @@ export type BloqueDocumento =
   /** Un rótulo de sección: en mayúsculas y dentro de su recuadro. */
   | { tipo: "rotulo"; lineas: string[] }
   | { tipo: "parrafo"; texto: string }
+  /**
+   * La cabecera de una observación: su número y título, la etiqueta de estado de
+   * color, y debajo la ubicación y la explicación. Va todo en un bloque para que
+   * no se parta entre dos páginas y deje el título huérfano al pie.
+   */
+  | {
+      tipo: "observacion";
+      encabezado: string;
+      titulo: string;
+      estado?: PintaEstadoPdf;
+      lineas: string[];
+    }
   /** Una fila de fotos (tantas como diga la plantilla) con su comentario debajo. */
   | { tipo: "filaFotos"; fotos: FotoDocumento[]; fotosPorFila: number }
   /** El recuadro de firmas al pie: coordinador a la izquierda, receptor a la derecha. */
@@ -196,17 +209,28 @@ export function construirDocumento(
   // --- Las actividades: el cuerpo del informe ---
   // Las fotos se numeran seguidas a lo largo de todo el informe.
   let numeroDeFoto = 1;
-  for (const actividad of informe.actividades ?? []) {
+  let numeroDeObservacion = 1;
+  for (const observacion of informe.observaciones ?? []) {
     const lineas: string[] = [];
-    if (actividad.ubicacion) {
-      lineas.push(`${rotulos.ubicacionActividad}: ${actividad.ubicacion}`);
+    if (observacion.ubicacion) {
+      lineas.push(`${rotulos.ubicacionActividad}: ${observacion.ubicacion}`);
     }
-    if (actividad.descripcion) {
-      lineas.push(`${rotulos.descripcionActividad}: ${actividad.descripcion}`);
+    if (observacion.descripcion) {
+      lineas.push(`${rotulos.descripcionActividad}: ${observacion.descripcion}`);
     }
-    if (lineas.length > 0) bloques.push({ tipo: "rotulo", lineas });
 
-    const fotos = actividad.fotos ?? [];
+    bloques.push({
+      tipo: "observacion",
+      encabezado: `${rotulos.observacion} ${numeroDeObservacion}`,
+      titulo: observacion.titulo ?? "",
+      // El color y el rótulo salen de la plantilla: el coordinador solo elige
+      // el estado, nunca escribe la etiqueta.
+      estado: observacion.estado ? plantilla.estados[observacion.estado] : undefined,
+      lineas,
+    });
+    numeroDeObservacion++;
+
+    const fotos = observacion.fotos ?? [];
     for (const fila of enFilas(
       fotos,
       plantilla.fotosPorFila,
