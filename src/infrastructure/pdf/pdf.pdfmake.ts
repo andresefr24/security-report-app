@@ -105,6 +105,60 @@ function aBloqueDePdfmake(bloque: BloqueDocumento): Content {
         margin: [0, 10, 0, 6],
       };
 
+    // El encabezado de una observación: "OBSERVACIÓN 1" y su título a la
+    // izquierda, y a la derecha la etiqueta de estado con su color.
+    case "observacion": {
+      const izquierda: Content = {
+        stack: [
+          { text: bloque.encabezado, fontSize: 11, bold: true, color: "#1b3a6b" },
+          { text: bloque.titulo, fontSize: 12, bold: true, color: "#1b3a6b" },
+        ],
+        margin: [6, 6, 6, 6],
+      };
+      const derecha: Content = bloque.estado
+        ? {
+            text: bloque.estado.etiqueta,
+            fontSize: 9,
+            bold: true,
+            alignment: "center",
+            color: bloque.estado.texto,
+            fillColor: bloque.estado.fondo,
+            margin: [4, 10, 4, 10],
+          }
+        : { text: "" };
+
+      const borde = bloque.estado ? bloque.estado.borde : "#cccccc";
+      return {
+        // `unbreakable` mantiene la cabecera entera en la misma página: sin esto
+        // el título se quedaba solo al pie y su contenido pasaba a la siguiente.
+        unbreakable: true,
+        stack: [
+          {
+            table: { widths: ["*", 150], body: [[izquierda, derecha]] },
+            layout: {
+              hLineColor: () => borde,
+              vLineColor: () => borde,
+              hLineWidth: () => 0.8,
+              vLineWidth: () => 0.8,
+            },
+          },
+          ...(bloque.lineas.length > 0
+            ? [
+                {
+                  stack: bloque.lineas.map((linea) => ({
+                    text: linea,
+                    fontSize: 11,
+                    margin: [0, 2, 0, 0] as [number, number, number, number],
+                  })),
+                  margin: [6, 6, 0, 0] as [number, number, number, number],
+                },
+              ]
+            : []),
+        ],
+        margin: [0, 14, 0, 8],
+      };
+    }
+
     case "parrafo":
       return {
         text: bloque.texto,
@@ -183,6 +237,9 @@ function aBloqueDePdfmake(bloque: BloqueDocumento): Content {
       });
 
       return {
+        // Igual que la cabecera de la observación: el recuadro de firmas se
+        // partía entre dos páginas y quedaba la mitad en cada una.
+        unbreakable: true,
         table: {
           widths: ["*", "*"],
           body: [

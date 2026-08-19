@@ -70,11 +70,14 @@ test("un coordinador crea un informe de punta a punta y llega al PDF", async ({ 
   await page.getByLabel(/^Nombre$/).fill("Luis Jefe de Obra");
   await page.getByRole("button", { name: "Siguiente" }).click();
 
-  // 6) Paso 2: la actividad. Sin al menos una descrita no se puede cerrar.
+  // 6) Paso 2: la observación. Sin al menos una con título no se puede cerrar.
   await expect(page.getByText("Paso 2 de 3")).toBeVisible();
-  await page.getByRole("button", { name: "Añadir actividad" }).click();
+  await page.getByRole("button", { name: "Añadir observación" }).click();
+  await page.getByLabel(/^Título$/).fill("Grupo electrógeno sin medios de extinción");
   await page.getByLabel(/Dónde/i).fill("(M-103) PK 03+500");
-  await page.getByLabel(/Qué pasó/i).fill("Visita sin incidencias reseñables.");
+  await page.getByLabel(/Explicación/i).fill("Se requiere instalar extintores.");
+  // El estado se elige con un botón; la app pone la etiqueta y el color.
+  await page.getByRole("button", { name: "MEDIDA REQUERIDA" }).click();
   await page.getByRole("button", { name: "Siguiente" }).click();
   await expect(page.getByText("Paso 3 de 3")).toBeVisible();
 
