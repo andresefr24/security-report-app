@@ -1,9 +1,10 @@
 // Test de INTEGRACIÓN del adaptador de promotores: ejerce el camino real de
 // localForage → IndexedDB (con fake-indexeddb, porque jsdom no trae IndexedDB).
 import "fake-indexeddb/auto";
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { crearPromotor, type DatosPromotor, type Promotor } from "@/domain/promotor/promotor";
 import { LocalForagePromotorRepository } from "@/infrastructure/persistence/localforage/promotor-repository.localforage";
+import { cuarentena } from "@/infrastructure/persistence/cuarentena";
 
 // Ayudante: crea un Promotor ya validado para las pruebas.
 function promotorDePrueba(datos: DatosPromotor): Promotor {
@@ -18,6 +19,8 @@ describe("LocalForagePromotorRepository", () => {
   beforeEach(async () => {
     repo = new LocalForagePromotorRepository();
     await repo["caja"].clear();
+    await cuarentena.vaciar();
+    vi.spyOn(console, "warn").mockImplementation(() => {});
   });
 
   it("devuelve null al buscar un promotor que no existe", async () => {
@@ -75,5 +78,33 @@ describe("LocalForagePromotorRepository", () => {
     expect(lista).toHaveLength(1);
     expect(lista[0].nombreRazonSocial).toBe("Promotor bueno");
     expect(await repo.obtenerPorId("corrupto")).toBeNull();
+  });
+
+  it("sella con la versión de hoy lo que guarda", async () => {
+    const promotor = promotorDePrueba({ nombreRazonSocial: "Canal de Isabel II" });
+    await repo.guardar(promotor);
+
+    const enDisco = await repo["caja"].getItem<{ schemaVersion?: number }>(promotor.id);
+    expect(enDisco?.schemaVersion).toBe(1);
+  });
+
+  it("lee los promotores sin sello que ya están en el dispositivo", async () => {
+    await repo["caja"].setItem("viejo", { id: "viejo", nombreRazonSocial: "Canal de siempre" });
+
+    const recuperado = await repo.obtenerPorId("viejo");
+
+    expect(recuperado?.nombreRazonSocial).toBe("Canal de siempre");
+  });
+
+  it("aparta en cuarentena lo que no se puede leer, en vez de tirarlo", async () => {
+    // Sin razón social: no valida ni migrándolo.
+    await repo["caja"].setItem("roto", { id: "roto" });
+
+    const lista = await repo.listar();
+
+    expect(lista).toHaveLength(0);
+    const apartadas = await cuarentena.listar();
+    expect(apartadas).toHaveLength(1);
+    expect(apartadas[0].agregado).toBe("promotor");
   });
 });
