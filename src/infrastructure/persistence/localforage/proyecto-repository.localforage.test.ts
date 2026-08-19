@@ -69,6 +69,14 @@ describe("LocalForageProyectoRepository", () => {
     expect(lista[0].codigoObra).toBe("OB-999");
   });
 
+  it("sella con la versión de hoy lo que guarda", async () => {
+    const obra = proyectoDePrueba();
+    await repo.guardar(obra);
+
+    const enDisco = await repo["caja"].getItem<{ schemaVersion?: number }>(obra.id);
+    expect(enDisco?.schemaVersion).toBe(1);
+  });
+
   it("conserva el presupuesto de las obras guardadas con el nombre viejo del campo", async () => {
     // Una obra tal y como la guardó la app ANTES de separar los dos
     // presupuestos: el campo se llamaba `presupuesto` a secas. Los
@@ -84,6 +92,30 @@ describe("LocalForageProyectoRepository", () => {
     const recuperada = await repo.obtenerPorId("obra-vieja");
 
     expect(recuperada?.presupuestoEjecucion).toBe("27.470.256,11 €");
+  });
+
+  it("una obra sin sello se trata como v0 y sube por todos los escalones", async () => {
+    await repo["caja"].setItem("obra-vieja", {
+      id: "obra-vieja",
+      codigoObra: "OB-VIEJA",
+      promotorId: "promotor-1",
+      frecuenciaVisita: "semanal",
+      presupuesto: "1.000 €",
+    });
+
+    // Al releerla ya viene con la forma de hoy…
+    const recuperada = await repo.obtenerPorId("obra-vieja");
+    expect(recuperada?.presupuestoEjecucion).toBe("1.000 €");
+
+    // …y al volver a guardarla queda sellada, así que la próxima lectura no
+    // tiene que migrar nada.
+    if (!recuperada) throw new Error("debería existir");
+    await repo.guardar(recuperada);
+    const enDisco = await repo["caja"].getItem<{ schemaVersion?: number; presupuesto?: string }>(
+      "obra-vieja",
+    );
+    expect(enDisco?.schemaVersion).toBe(1);
+    expect(enDisco?.presupuesto).toBeUndefined();
   });
 
   it("no pisa el presupuesto nuevo si la obra ya tiene los dos campos", async () => {
