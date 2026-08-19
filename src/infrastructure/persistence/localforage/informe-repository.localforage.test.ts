@@ -47,6 +47,29 @@ describe("LocalForageInformeRepository", () => {
     expect(recuperado?.firmas?.[0].rol).toBe("coordinador");
   });
 
+  it("sella con la versión de hoy lo que guarda", async () => {
+    const informe = informeDePrueba();
+    await repo.guardar(informe);
+
+    const enDisco = await repo["caja"].getItem<{ schemaVersion?: number }>(informe.id);
+    expect(enDisco?.schemaVersion).toBe(1);
+  });
+
+  it("lee los informes sin sello que ya están en el dispositivo", async () => {
+    // Lo que hay hoy en los móviles de los coordinadores: la forma es la de
+    // ahora (el modelo v2 entró antes de que lo usaran), solo falta el sello.
+    await repo["caja"].setItem("informe-viejo", {
+      id: "informe-viejo",
+      proyectoId: "obra-1",
+      fechaHora: "2026-08-16T09:30",
+      actividades: [{ id: "a1", descripcion: "Grupo electrógeno sin extintores." }],
+    });
+
+    const recuperado = await repo.obtenerPorId("informe-viejo");
+
+    expect(recuperado?.actividades?.[0].descripcion).toBe("Grupo electrógeno sin extintores.");
+  });
+
   it("guardar con el mismo id reemplaza (autoguardado del wizard)", async () => {
     const informe = informeDePrueba({ situacion: "Primer borrador" });
     await repo.guardar(informe);
