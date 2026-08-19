@@ -1,9 +1,10 @@
 // Test de INTEGRACIÓN del adaptador de informes: localForage → IndexedDB
 // (con fake-indexeddb, porque jsdom no trae IndexedDB).
 import "fake-indexeddb/auto";
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { crearInforme, type DatosInforme, type Informe } from "@/domain/informe/informe";
 import { LocalForageInformeRepository } from "@/infrastructure/persistence/localforage/informe-repository.localforage";
+import { cuarentena } from "@/infrastructure/persistence/cuarentena";
 
 function informeDePrueba(cambios: Partial<DatosInforme> = {}): Informe {
   const resultado = crearInforme({
@@ -21,6 +22,8 @@ describe("LocalForageInformeRepository", () => {
   beforeEach(async () => {
     repo = new LocalForageInformeRepository();
     await repo["caja"].clear();
+    await cuarentena.vaciar();
+    vi.spyOn(console, "warn").mockImplementation(() => {});
   });
 
   it("devuelve null al buscar un informe que no existe", async () => {
@@ -96,5 +99,26 @@ describe("LocalForageInformeRepository", () => {
 
     const lista = await repo.listarPorProyecto("obra-1");
     expect(lista).toHaveLength(1);
+  });
+
+  it("aparta el borrador viejo que ya no valida, en vez de tirarlo", async () => {
+    // Un borrador de ANTES del rework: tenía `contenido` en vez de actividades.
+    // Hasta ahora zod lo descartaba al releer y desaparecía sin que nadie se
+    // enterase; ahora se aparta con su motivo.
+    await repo["caja"].setItem("borrador-antiguo", {
+      id: "borrador-antiguo",
+      proyectoId: "obra-1",
+      fechaHora: "2026-07-01T09:30",
+      contenido: "Visita sin incidencias.",
+      firmas: [{ nombre: "Ana", rol: "contratista", firma: "data:image/png;base64,AAAA" }],
+    });
+
+    const lista = await repo.listarPorProyecto("obra-1");
+
+    expect(lista).toHaveLength(0);
+    const apartadas = await cuarentena.listar();
+    expect(apartadas).toHaveLength(1);
+    expect(apartadas[0].agregado).toBe("informe");
+    expect(apartadas[0].cruda).toMatchObject({ contenido: "Visita sin incidencias." });
   });
 });
