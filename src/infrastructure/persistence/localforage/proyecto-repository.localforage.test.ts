@@ -1,9 +1,10 @@
 // Test de INTEGRACIÓN del adaptador de obras: ejerce localForage → IndexedDB
 // (con fake-indexeddb, porque jsdom no trae IndexedDB).
 import "fake-indexeddb/auto";
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { crearProyecto, type DatosProyecto, type Proyecto } from "@/domain/proyecto/proyecto";
 import { LocalForageProyectoRepository } from "@/infrastructure/persistence/localforage/proyecto-repository.localforage";
+import { cuarentena } from "@/infrastructure/persistence/cuarentena";
 
 function proyectoDePrueba(cambios: Partial<DatosProyecto> = {}): Proyecto {
   const resultado = crearProyecto({
@@ -22,6 +23,9 @@ describe("LocalForageProyectoRepository", () => {
   beforeEach(async () => {
     repo = new LocalForageProyectoRepository();
     await repo["caja"].clear();
+    await cuarentena.vaciar();
+    // El aviso de cuarentena por consola es a propósito; que no ensucie la salida.
+    vi.spyOn(console, "warn").mockImplementation(() => {});
   });
 
   it("devuelve null al buscar una obra que no existe", async () => {
@@ -69,6 +73,14 @@ describe("LocalForageProyectoRepository", () => {
     expect(lista[0].codigoObra).toBe("OB-999");
   });
 
+  it("sella con la versión de hoy lo que guarda", async () => {
+    const obra = proyectoDePrueba();
+    await repo.guardar(obra);
+
+    const enDisco = await repo["caja"].getItem<{ schemaVersion?: number }>(obra.id);
+    expect(enDisco?.schemaVersion).toBe(1);
+  });
+
   it("conserva el presupuesto de las obras guardadas con el nombre viejo del campo", async () => {
     // Una obra tal y como la guardó la app ANTES de separar los dos
     // presupuestos: el campo se llamaba `presupuesto` a secas. Los
@@ -86,6 +98,30 @@ describe("LocalForageProyectoRepository", () => {
     expect(recuperada?.presupuestoEjecucion).toBe("27.470.256,11 €");
   });
 
+  it("una obra sin sello se trata como v0 y sube por todos los escalones", async () => {
+    await repo["caja"].setItem("obra-vieja", {
+      id: "obra-vieja",
+      codigoObra: "OB-VIEJA",
+      promotorId: "promotor-1",
+      frecuenciaVisita: "semanal",
+      presupuesto: "1.000 €",
+    });
+
+    // Al releerla ya viene con la forma de hoy…
+    const recuperada = await repo.obtenerPorId("obra-vieja");
+    expect(recuperada?.presupuestoEjecucion).toBe("1.000 €");
+
+    // …y al volver a guardarla queda sellada, así que la próxima lectura no
+    // tiene que migrar nada.
+    if (!recuperada) throw new Error("debería existir");
+    await repo.guardar(recuperada);
+    const enDisco = await repo["caja"].getItem<{ schemaVersion?: number; presupuesto?: string }>(
+      "obra-vieja",
+    );
+    expect(enDisco?.schemaVersion).toBe(1);
+    expect(enDisco?.presupuesto).toBeUndefined();
+  });
+
   it("no pisa el presupuesto nuevo si la obra ya tiene los dos campos", async () => {
     await repo["caja"].setItem("obra-mixta", {
       id: "obra-mixta",
@@ -101,13 +137,42 @@ describe("LocalForageProyectoRepository", () => {
     expect(recuperada?.presupuestoEjecucion).toBe("el nuevo");
   });
 
-  it("descarta del listado lo que no supere la re-validación", async () => {
+  it("saca del listado lo que no supere la re-validación, pero NO lo tira", async () => {
     await repo.guardar(proyectoDePrueba({ codigoObra: "OB-buena" }));
-    // Sin promotorId ni frecuencia: corrupta.
+    // Sin promotorId ni frecuencia: no valida ni migrándola.
     await repo["caja"].setItem("corrupta", { id: "corrupta", codigoObra: "OB-mala" });
 
     const lista = await repo.listar();
+
+    // La pantalla no puede mostrarla, así que no sale en la lista…
     expect(lista).toHaveLength(1);
     expect(lista[0].codigoObra).toBe("OB-buena");
+
+    // …pero la ficha se aparta con su motivo, no se pierde. Es de un usuario
+    // real: es un bug nuestro que hay que mirar, no basura.
+    const apartadas = await cuarentena.listar();
+    expect(apartadas).toHaveLength(1);
+    expect(apartadas[0].agregado).toBe("obra");
+    expect(apartadas[0].clave).toBe("corrupta");
+    expect(apartadas[0].cruda).toMatchObject({ codigoObra: "OB-mala" });
+    // Guarda el porqué, para poder mirarlo luego. Ojo: cuando el campo falta
+    // del todo, el mensaje es el genérico de zod, no el nuestro en español —
+    // nuestros textos solo saltan cuando el campo viene vacío, no ausente.
+    expect(apartadas[0].motivos.length).toBeGreaterThan(0);
+  });
+
+  it("también aparta la ficha ilegible al pedirla por su id", async () => {
+    await repo["caja"].setItem("corrupta", { id: "corrupta", codigoObra: "OB-mala" });
+
+    expect(await repo.obtenerPorId("corrupta")).toBeNull();
+    expect(await cuarentena.listar()).toHaveLength(1);
+  });
+
+  it("una obra que se lee bien no acaba en cuarentena", async () => {
+    await repo.guardar(proyectoDePrueba());
+
+    await repo.listar();
+
+    expect(await cuarentena.listar()).toHaveLength(0);
   });
 });
