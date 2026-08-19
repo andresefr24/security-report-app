@@ -13,6 +13,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { type AltaPromotor } from "@/application/use-cases/alta-promotor";
 import { type EditarPromotor } from "@/application/use-cases/editar-promotor";
 import { Button } from "@/ui/components/button";
+import { CampoLogo } from "@/ui/components/campo-logo";
 import { CamposTexto } from "@/ui/components/campos-formulario";
 import {
   aDatosPromotor,
@@ -40,6 +41,8 @@ export function PromotorFormPage({ altaPromotor, editarPromotor }: PromotorFormP
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormularioPromotor>({
     resolver: zodResolver(esquemaFormularioPromotor),
@@ -98,6 +101,11 @@ export function PromotorFormPage({ altaPromotor, editarPromotor }: PromotorFormP
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
         <CamposTexto campos={camposPromotor} register={register} errors={errors} />
+
+        <CampoLogo
+          valor={watch("logo") || undefined}
+          onChange={(logo) => setValue("logo", logo ?? "", { shouldDirty: true })}
+        />
 
         {errorGeneral && (
           <p className="text-[15px] text-destructive" role="alert">

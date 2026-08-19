@@ -73,7 +73,12 @@ export interface DocumentoInforme {
   /** Va en las propiedades del PDF y en el nombre del archivo. */
   titulo: string;
   /** La banda superior, que se repite en todas las páginas. */
-  cabeceraPagina: { titulo: string[]; formato: string[] };
+  cabeceraPagina: {
+    titulo: string[];
+    formato: string[];
+    /** El logotipo del promotor, si lo tiene. A la izquierda del título. */
+    logo?: string;
+  };
   /** El texto de la derecha del título: "ING. CSS " + la empresa del perfil. */
   emisorCabecera: string;
   bloques: BloqueDocumento[];
@@ -284,7 +289,13 @@ export function construirDocumento(
 
   return {
     titulo: `Informe ${proyecto.codigoObra} — ${fechaLegible(informe.fechaHora)}`,
-    cabeceraPagina: { titulo: plantilla.titulo, formato: plantilla.formato },
+    cabeceraPagina: {
+      titulo: plantilla.titulo,
+      formato: plantilla.formato,
+      // El hueco de la izquierda es del promotor: si no tiene logo, se queda
+      // vacío y el documento sale igual de bien.
+      logo: promotor?.logo,
+    },
     emisorCabecera: `${plantilla.prefijoEmisorCabecera}${coordinador.contacto?.empresa ?? ""}`.trim(),
     bloques,
   };
