@@ -14,6 +14,9 @@ import {
   type DatosCoordinador,
 } from "@/domain/coordinador/coordinador";
 import { type CoordinadorRepository } from "@/domain/ports/coordinador-repository";
+import { migrar, sellar, type Guardado } from "@/infrastructure/persistence/migracion";
+import { ESCALONES_COORDINADOR } from "@/infrastructure/persistence/localforage/migraciones-coordinador";
+import { cuarentena } from "@/infrastructure/persistence/cuarentena";
 
 // Clave única: solo hay un perfil, así que siempre se guarda/lee en el mismo sitio.
 const CLAVE_PERFIL = "perfil";
@@ -31,21 +34,26 @@ export class LocalForageCoordinadorRepository implements CoordinadorRepository {
   }
 
   async guardar(coordinador: Coordinador): Promise<void> {
-    // localForage guarda el objeto tal cual, incluida la firma (texto dataURL).
-    await this.caja.setItem(CLAVE_PERFIL, coordinador);
+    // localForage guarda el objeto tal cual, incluida la firma (texto dataURL),
+    // sellado con la versión de hoy.
+    await this.caja.setItem(CLAVE_PERFIL, sellar(coordinador, ESCALONES_COORDINADOR));
   }
 
   async obtener(): Promise<Coordinador | null> {
-    const guardado = await this.caja.getItem<DatosCoordinador>(CLAVE_PERFIL);
+    const guardado = await this.caja.getItem<Guardado>(CLAVE_PERFIL);
     if (guardado === null) {
       // Primera apertura: aún no hay perfil. No es un error.
       return null;
     }
 
-    // Re-validamos lo leído antes de devolverlo hacia el dominio. Si los datos
-    // guardados estuvieran corruptos o fueran de una versión vieja, no colamos un
-    // Coordinador inválido: devolvemos null (= "no hay perfil válido").
-    const resultado = crearCoordinador(guardado);
-    return resultado.ok ? resultado.valor : null;
+    // Migrar y DESPUÉS validar, como en los demás adaptadores. Si el perfil
+    // guardado no vale ni migrándolo, no colamos un Coordinador inválido hacia
+    // dentro: se aparta en cuarentena y decimos "no hay perfil válido".
+    const alDia = migrar(guardado, ESCALONES_COORDINADOR) as unknown as DatosCoordinador;
+    const resultado = crearCoordinador(alDia);
+    if (resultado.ok) return resultado.valor;
+
+    await cuarentena.apartar("coordinador", CLAVE_PERFIL, guardado, resultado.errores);
+    return null;
   }
 }

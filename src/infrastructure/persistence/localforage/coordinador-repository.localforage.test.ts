@@ -5,9 +5,10 @@
 // fake-indexeddb solo aquí, para darle uno "de mentira" pero con comportamiento
 // real. Así probamos que el cableado con la librería funciona de verdad.
 import "fake-indexeddb/auto";
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { crearCoordinador, type Coordinador } from "@/domain/coordinador/coordinador";
 import { LocalForageCoordinadorRepository } from "@/infrastructure/persistence/localforage/coordinador-repository.localforage";
+import { cuarentena } from "@/infrastructure/persistence/cuarentena";
 
 // Ayudante: crea un Coordinador ya validado para las pruebas.
 function coordinadorDePrueba(): Coordinador {
@@ -29,6 +30,8 @@ describe("LocalForageCoordinadorRepository", () => {
     repo = new LocalForageCoordinadorRepository();
     // Cada test parte de una caja vacía para que no se pisen entre sí.
     await repo["caja"].clear();
+    await cuarentena.vaciar();
+    vi.spyOn(console, "warn").mockImplementation(() => {});
   });
 
   it("devuelve null cuando aún no se ha guardado ningún perfil", async () => {
@@ -63,11 +66,34 @@ describe("LocalForageCoordinadorRepository", () => {
     expect(recuperado?.numeroRegistroIrsst).toBe("4500");
   });
 
-  it("devuelve null si lo guardado no supera la re-validación (datos corruptos)", async () => {
+  it("devuelve null si lo guardado no supera la re-validación, y lo aparta", async () => {
     // Simulamos datos corruptos escribiendo directamente en la caja, saltándonos
     // guardar(): un perfil sin el registro IRSST obligatorio.
     await repo["caja"].setItem("perfil", { nombreCompleto: "Sin registro" });
 
+    // La app se comporta como si no hubiera perfil…
     expect(await repo.obtener()).toBeNull();
+
+    // …pero el perfil que escribió el coordinador no se pierde: se aparta.
+    const apartadas = await cuarentena.listar();
+    expect(apartadas).toHaveLength(1);
+    expect(apartadas[0].agregado).toBe("coordinador");
+    expect(apartadas[0].cruda).toMatchObject({ nombreCompleto: "Sin registro" });
+  });
+
+  it("sella con la versión de hoy el perfil que guarda", async () => {
+    await repo.guardar(coordinadorDePrueba());
+
+    const enDisco = await repo["caja"].getItem<{ schemaVersion?: number }>("perfil");
+    expect(enDisco?.schemaVersion).toBe(1);
+  });
+
+  it("lee el perfil sin sello que ya está en el dispositivo", async () => {
+    await repo["caja"].setItem("perfil", {
+      nombreCompleto: "Nicolás José Morales Padrón",
+      numeroRegistroIrsst: "3306",
+    });
+
+    expect((await repo.obtener())?.numeroRegistroIrsst).toBe("3306");
   });
 });
