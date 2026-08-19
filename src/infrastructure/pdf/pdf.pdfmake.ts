@@ -280,7 +280,14 @@ export class PdfMakeAdapter implements PdfPort {
           widths: [110, "*", 110],
           body: [
             [
-              { text: "", fontSize: 8 },
+              documento.cabeceraPagina.logo
+                ? {
+                    image: documento.cabeceraPagina.logo,
+                    fit: [100, 42] as [number, number],
+                    alignment: "center" as const,
+                    margin: [4, 6, 4, 6] as [number, number, number, number],
+                  }
+                : { text: "", fontSize: 8 },
               {
                 stack: documento.cabeceraPagina.titulo.map((linea) => ({
                   text: linea,

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { construirDocumento, type BloqueDocumento } from "@/infrastructure/pdf/construir-documento";
 import { crearInforme, type DatosInforme } from "@/domain/informe/informe";
 import { crearProyecto, type DatosProyecto } from "@/domain/proyecto/proyecto";
-import { crearPromotor } from "@/domain/promotor/promotor";
+import { crearPromotor, type DatosPromotor } from "@/domain/promotor/promotor";
 import { crearCoordinador } from "@/domain/coordinador/coordinador";
 import { type DatosDelPdf } from "@/domain/ports/pdf-port";
 
@@ -10,6 +10,7 @@ import { type DatosDelPdf } from "@/domain/ports/pdf-port";
 function datosDelPdf(
   cambiosInforme: Partial<DatosInforme> = {},
   cambiosProyecto: Partial<DatosProyecto> = {},
+  cambiosPromotor: Partial<DatosPromotor> = {},
 ): DatosDelPdf {
   const informe = crearInforme({
     proyectoId: "obra-1",
@@ -25,7 +26,11 @@ function datosDelPdf(
     frecuenciaVisita: "semanal",
     ...cambiosProyecto,
   });
-  const promotor = crearPromotor({ id: "promotor-1", nombreRazonSocial: "Canal de Isabel II" });
+  const promotor = crearPromotor({
+    id: "promotor-1",
+    nombreRazonSocial: "Canal de Isabel II",
+    ...cambiosPromotor,
+  });
   const coordinador = crearCoordinador({
     nombreCompleto: "Ana García López",
     numeroRegistroIrsst: "3306",
@@ -355,6 +360,18 @@ describe("construirDocumento", () => {
 
       expect(bloques.filter((b) => b.tipo === "distribucion")).toHaveLength(0);
     });
+  });
+
+  it("pone el logotipo del promotor en la cabecera, si lo tiene", () => {
+    const { cabeceraPagina } = construirDocumento(
+      datosDelPdf({}, {}, { logo: "data:image/png;base64,LOGO" }),
+    );
+
+    expect(cabeceraPagina.logo).toBe("data:image/png;base64,LOGO");
+  });
+
+  it("sin logotipo el hueco se queda vacío y el informe sale igual", () => {
+    expect(construirDocumento(datosDelPdf()).cabeceraPagina.logo).toBeUndefined();
   });
 
   it("lleva el título nuevo y, a su derecha, quién emite el informe", () => {
