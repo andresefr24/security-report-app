@@ -71,7 +71,7 @@ function textoDe(bloques: BloqueDocumento[]): string {
             .map((f) => `${f.titulo} ${f.lineas.join(" ")}`)
             .join("\n");
         case "distribucion":
-          return `${b.titulo} ${b.correos}`;
+          return `${b.titulo} ${b.correos.join(" ")}`;
       }
     })
     .join("\n");
@@ -354,15 +354,13 @@ describe("construirDocumento", () => {
       expect(firmas?.izquierda.lineas.join(" ")).toContain("Fdo. Ana García López");
     });
 
-    it("deja el recuadro de 'recibido por' aunque nadie lo haya firmado", () => {
+    it("ya no pinta el recuadro de 'recibido por': nadie firmaba ahí", () => {
       const { bloques } = construirDocumento(datosDelPdf());
 
-      const firmas = bloques.find((b) => b.tipo === "firmas");
-      expect(firmas?.derecha?.titulo).toBe("Recibido por:");
-      expect(firmas?.derecha?.imagen).toBeUndefined();
+      expect(bloques.find((b) => b.tipo === "firmas")?.derecha).toBeUndefined();
     });
 
-    it("pone los correos en una línea separados por ';', para copiarlos de golpe", () => {
+    it("pone los correos en lista, uno por línea y sin el punto y coma", () => {
       const { bloques } = construirDocumento(
         datosDelPdf(
           {},
@@ -371,8 +369,11 @@ describe("construirDocumento", () => {
       );
       const texto = textoDe(bloques);
 
-      expect(texto).toContain("Enviado por e-mail a:");
-      expect(texto).toContain("carlos@ejemplo.es; belen@ejemplo.es");
+      const distribucion = bloques.find((b) => b.tipo === "distribucion");
+      expect(distribucion?.titulo).toBe("Enviado por e-mail a:");
+      // El ";" es para escribirlos en la obra; en el documento se leen en lista.
+      expect(distribucion?.correos).toEqual(["carlos@ejemplo.es", "belen@ejemplo.es"]);
+      expect(texto).not.toContain(";");
     });
 
     it("omite la distribución si la obra no tiene destinatarios", () => {

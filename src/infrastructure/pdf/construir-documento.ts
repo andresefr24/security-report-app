@@ -64,10 +64,13 @@ export type BloqueDocumento =
     }
   /** Una fila de fotos (tantas como diga la plantilla) con su comentario debajo. */
   | { tipo: "filaFotos"; fotos: FotoDocumento[]; fotosPorFila: number }
-  /** El recuadro de firmas al pie: coordinador a la izquierda, receptor a la derecha. */
+  /**
+   * El recuadro de firmas al pie. Solo firma el coordinador: quien recibía el
+   * informe no llegaba a firmar nunca en la app, así que su hueco vacío sobraba.
+   */
   | { tipo: "firmas"; izquierda: FirmaDocumento; derecha?: FirmaDocumento }
-  /** La lista de distribución: a quién se le envía. */
-  | { tipo: "distribucion"; titulo: string; correos: string };
+  /** La lista de distribución: a quién se le envía, uno por línea. */
+  | { tipo: "distribucion"; titulo: string; correos: string[] };
 
 export interface DocumentoInforme {
   /** Va en las propiedades del PDF y en el nombre del archivo. */
@@ -252,7 +255,6 @@ export function construirDocumento(
 
   // --- El recuadro de firmas ---
   const firmaCoordinador = (informe.firmas ?? []).find((f) => f.rol === "coordinador");
-  const firmaRecibido = (informe.firmas ?? []).find((f) => f.rol === "recibido");
   const registro = `${plantilla.firmas.cargoCoordinador} - ${plantilla.firmas.etiquetaRegistro} ${coordinador.numeroRegistroIrsst}`;
 
   bloques.push({
@@ -266,18 +268,18 @@ export function construirDocumento(
         coordinador.contacto?.empresa ?? "",
       ].filter(Boolean),
     },
-    derecha: {
-      titulo: plantilla.firmas.tituloRecibido,
-      imagen: firmaRecibido?.firma,
-      lineas: [firmaRecibido?.nombre ? `Fdo: ${firmaRecibido.nombre}` : ""].filter(Boolean),
-    },
   });
 
   // --- A quién se le envía ---
-  // Los correos salen tal y como los escribió el coordinador en la obra: en una
-  // línea, separados por ";", listos para copiar y pegar en el "Para:".
-  if (proyecto.correos) {
-    bloques.push({ tipo: "distribucion", titulo: rotulos.distribucion, correos: proyecto.correos });
+  // En la obra se escriben todos seguidos separados por ";" porque así se copian
+  // y se pegan de golpe; en el documento se leen mejor en lista, uno debajo de
+  // otro y sin el punto y coma a la vista.
+  const correos = (proyecto.correos ?? "")
+    .split(";")
+    .map((correo) => correo.trim())
+    .filter(Boolean);
+  if (correos.length > 0) {
+    bloques.push({ tipo: "distribucion", titulo: rotulos.distribucion, correos });
   }
 
   return {

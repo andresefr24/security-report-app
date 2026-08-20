@@ -55,9 +55,9 @@ describe("LocalForageInformeRepository", () => {
     await repo.guardar(informe);
 
     const enDisco = await repo["caja"].getItem<{ schemaVersion?: number }>(informe.id);
-    // Tres escalones: el sello inicial, el paso a observación y la retirada
-    // del receptor.
-    expect(enDisco?.schemaVersion).toBe(3);
+    // Cuatro escalones: el sello, el paso a observación, la retirada del
+    // receptor y la de las firmas de "recibido".
+    expect(enDisco?.schemaVersion).toBe(4);
   });
 
   it("convierte en observaciones las actividades de los informes ya guardados", async () => {
@@ -127,6 +127,27 @@ describe("LocalForageInformeRepository", () => {
 
     const lista = await repo.listarPorProyecto("obra-1");
     expect(lista).toHaveLength(1);
+  });
+
+  it("tira la firma de 'recibido' de los informes ya guardados, sin perder el resto", async () => {
+    await repo["caja"].setItem("informe-con-recibido", {
+      id: "informe-con-recibido",
+      proyectoId: "obra-1",
+      fechaHora: "2026-08-16T09:30",
+      observaciones: [{ id: "o1", titulo: "Grupo electrógeno" }],
+      firmas: [
+        { nombre: "Ana", rol: "coordinador", firma: "data:image/png;base64,AAAA" },
+        { nombre: "Luis", rol: "recibido", firma: "data:image/png;base64,BBBB" },
+      ],
+    });
+
+    const recuperado = await repo.obtenerPorId("informe-con-recibido");
+
+    // Sin el escalón, ese rol ya no valida y el informe ENTERO caería en
+    // cuarentena; así solo se va la firma que sobra.
+    expect(recuperado?.firmas).toHaveLength(1);
+    expect(recuperado?.firmas?.[0].rol).toBe("coordinador");
+    expect(recuperado?.observaciones).toHaveLength(1);
   });
 
   it("aparta el borrador viejo que ya no valida, en vez de tirarlo", async () => {

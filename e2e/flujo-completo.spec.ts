@@ -83,9 +83,9 @@ test("un coordinador crea un informe de punta a punta y llega al PDF", async ({ 
   await page.getByRole("button", { name: "Siguiente" }).click();
   await expect(page.getByText("Paso 3 de 3")).toBeVisible();
 
-  // 7) Firma del coordinador, la primera ranura (la de "recibido" es opcional).
-  await page.getByLabel(/Nombre de quien firma/i).first().fill("Ana García López");
-  await firmar(page.getByLabel(/Zona para dibujar la firma/i).first());
+  // 7) La firma del coordinador, la única que hay.
+  await page.getByLabel(/Nombre de quien firma/i).fill("Ana García López");
+  await firmar(page.getByLabel(/Zona para dibujar la firma/i));
 
   // 8) Finalizar → pantalla de entrega con el PDF listo.
   await page.getByRole("button", { name: "Finalizar" }).click();
