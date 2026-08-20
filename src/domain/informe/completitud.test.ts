@@ -8,20 +8,18 @@ const FIRMA_COORDINADOR = {
   firma: "data:image/png;base64,AAAA",
 };
 
-/** Un informe listo para cerrarse: una actividad descrita + firma del coordinador. */
+/** Un informe listo para cerrarse: una observación con título + firma del coordinador. */
 function informeListo(cambios: Partial<DatosInforme> = {}): DatosInforme {
   return {
     proyectoId: "obra-1",
-    actividades: [
-      { id: "a1", descripcion: "Limpieza de calzada con barredora." },
-    ],
+    observaciones: [{ id: "o1", titulo: "Limpieza de calzada con barredora." }],
     firmas: [FIRMA_COORDINADOR],
     ...cambios,
   };
 }
 
 describe("loQueFaltaParaFinalizar", () => {
-  it("no falta nada cuando hay una actividad descrita y firma del coordinador", () => {
+  it("no falta nada cuando hay una observación con título y firma del coordinador", () => {
     expect(loQueFaltaParaFinalizar(informeListo())).toEqual([]);
   });
 
@@ -29,22 +27,30 @@ describe("loQueFaltaParaFinalizar", () => {
     const falta = loQueFaltaParaFinalizar({ proyectoId: "obra-1" });
 
     expect(falta).toHaveLength(2);
-    expect(falta.join(" ")).toContain("actividad");
+    expect(falta.join(" ")).toContain("observación");
     expect(falta.join(" ")).toContain("firma del coordinador");
   });
 
-  it("exige al menos una actividad", () => {
-    expect(loQueFaltaParaFinalizar(informeListo({ actividades: [] }))).toEqual([
-      "Falta describir al menos una actividad.",
+  it("exige al menos una observación", () => {
+    expect(loQueFaltaParaFinalizar(informeListo({ observaciones: [] }))).toEqual([
+      "Falta el título de al menos una observación.",
     ]);
   });
 
-  it("no le vale una actividad vacía: tiene que estar descrita", () => {
+  it("no le vale una observación sin título, aunque tenga explicación", () => {
     const falta = loQueFaltaParaFinalizar(
-      informeListo({ actividades: [{ id: "a1", descripcion: "   " }] }),
+      informeListo({
+        observaciones: [{ id: "o1", titulo: "   ", descripcion: "Un texto largo." }],
+      }),
     );
 
-    expect(falta).toEqual(["Falta describir al menos una actividad."]);
+    expect(falta).toEqual(["Falta el título de al menos una observación."]);
+  });
+
+  it("NO exige la explicación larga ni el estado: con el título basta", () => {
+    expect(
+      loQueFaltaParaFinalizar(informeListo({ observaciones: [{ id: "o1", titulo: "Vale" }] })),
+    ).toEqual([]);
   });
 
   it("exige la firma del coordinador", () => {
@@ -61,12 +67,11 @@ describe("loQueFaltaParaFinalizar", () => {
     expect(loQueFaltaParaFinalizar(informeListo({ situacion: undefined }))).toEqual([]);
   });
 
-  it("NO exige fotos, comentarios de foto ni receptor", () => {
+  it("NO exige fotos ni comentarios de foto", () => {
     expect(
       loQueFaltaParaFinalizar(
         informeListo({
-          actividades: [{ id: "a1", descripcion: "Desbroce mecánico.", fotos: [] }],
-          receptor: undefined,
+          observaciones: [{ id: "o1", titulo: "Desbroce mecánico.", fotos: [] }],
         }),
       ),
     ).toEqual([]);

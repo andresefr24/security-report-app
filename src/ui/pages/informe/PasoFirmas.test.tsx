@@ -5,7 +5,7 @@ import { PasoFirmas } from "@/ui/pages/informe/PasoFirmas";
 import { type DatosInforme } from "@/domain/informe/informe";
 
 // El campo de firma usa <canvas> (no va en jsdom). Lo sustituimos por un botón
-// que simula firmar, con un texto que identifica a su ranura por el aria-label.
+// que simula firmar.
 vi.mock("@/ui/components/campo-firma", () => ({
   CampoFirma: ({ onChange }: { onChange: (v: string | undefined) => void }) => (
     <button type="button" onClick={() => onChange("data:image/png;base64,FIRMA")}>
@@ -30,46 +30,37 @@ function Arnes({ inicial }: { inicial: DatosInforme }) {
 const base: DatosInforme = { proyectoId: "obra-1" };
 
 describe("PasoFirmas", () => {
-  it("muestra solo dos ranuras: el coordinador y quien recibe", () => {
+  it("solo pide la firma del coordinador", () => {
     render(<Arnes inicial={base} />);
 
     expect(screen.getByText("Firma del coordinador")).toBeInTheDocument();
-    expect(screen.getByText("Recibido por (opcional)")).toBeInTheDocument();
-    expect(screen.getAllByLabelText(/Nombre de quien firma/i)).toHaveLength(2);
+    // "Recibido por" se quitó: nadie firmaba ahí y su hueco salía vacío en el PDF.
+    expect(screen.queryByText(/Recibido por/i)).not.toBeInTheDocument();
+    expect(screen.getAllByLabelText(/Nombre de quien firma/i)).toHaveLength(1);
   });
 
-  it("avisa de que falta la firma del coordinador, la única obligatoria", () => {
+  it("avisa mientras falte la firma", () => {
     render(<Arnes inicial={base} />);
 
-    const aviso = screen.getByText(/Faltan firmas obligatorias/i);
-    expect(aviso).toHaveTextContent("el coordinador");
-    expect(aviso).not.toHaveTextContent("quien recibe");
+    expect(screen.getByText(/Falta tu firma/i)).toBeInTheDocument();
   });
 
-  it("trae puesto el nombre del receptor escrito en el paso de datos", () => {
-    render(<Arnes inicial={{ ...base, receptor: { nombre: "Luis Jefe" } }} />);
-
-    expect(screen.getByDisplayValue("Luis Jefe")).toBeInTheDocument();
-  });
-
-  it("solo escribe en el informe las firmas completas (nombre + trazo)", () => {
+  it("solo escribe en el informe la firma completa (nombre + trazo)", () => {
     render(<Arnes inicial={base} />);
-
-    // Aún no hay ninguna firma completa.
     expect(screen.getByTestId("num-firmas")).toHaveTextContent("0");
 
-    // Firmamos sin nombre: sigue sin ser completa.
-    fireEvent.click(screen.getAllByRole("button", { name: "firmar" })[0]);
+    // Firmamos sin nombre: aún no está completa.
+    fireEvent.click(screen.getByRole("button", { name: "firmar" }));
     expect(screen.getByTestId("num-firmas")).toHaveTextContent("0");
 
-    // Ponemos el nombre: ahora sí está completa y entra en el informe.
-    fireEvent.change(screen.getAllByLabelText(/Nombre de quien firma/i)[0], {
+    // Con el nombre ya entra en el informe.
+    fireEvent.change(screen.getByLabelText(/Nombre de quien firma/i), {
       target: { value: "Ana Coordinadora" },
     });
     expect(screen.getByTestId("num-firmas")).toHaveTextContent("1");
   });
 
-  it("recoge la firma de quien recibe sin perder la del coordinador", () => {
+  it("trae puesta la firma que ya estaba guardada", () => {
     render(
       <Arnes
         inicial={{
@@ -81,25 +72,18 @@ describe("PasoFirmas", () => {
       />,
     );
 
-    expect(screen.getByTestId("num-firmas")).toHaveTextContent("1");
-
-    // Firmamos ahora la de quien recibe (segunda ranura).
-    fireEvent.change(screen.getAllByLabelText(/Nombre de quien firma/i)[1], {
-      target: { value: "Luis Jefe" },
-    });
-    fireEvent.click(screen.getAllByRole("button", { name: "firmar" })[1]);
-
-    expect(screen.getByTestId("num-firmas")).toHaveTextContent("2");
+    expect(screen.getByDisplayValue("Ana Coordinadora")).toBeInTheDocument();
+    expect(screen.queryByText(/Falta tu firma/i)).not.toBeInTheDocument();
   });
 
-  it("deja de avisar cuando la firma del coordinador está completa", () => {
+  it("deja de avisar cuando la firma está completa", () => {
     render(<Arnes inicial={base} />);
 
-    fireEvent.change(screen.getAllByLabelText(/Nombre de quien firma/i)[0], {
+    fireEvent.change(screen.getByLabelText(/Nombre de quien firma/i), {
       target: { value: "Ana Coordinadora" },
     });
-    fireEvent.click(screen.getAllByRole("button", { name: "firmar" })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "firmar" }));
 
-    expect(screen.queryByText(/Faltan firmas obligatorias/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Falta tu firma/i)).not.toBeInTheDocument();
   });
 });

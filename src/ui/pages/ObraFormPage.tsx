@@ -9,16 +9,17 @@
 // obra. Desviación consciente del design-system.
 
 import { useEffect, useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { type CrearProyecto } from "@/application/use-cases/crear-proyecto";
+import { type EditarProyecto } from "@/application/use-cases/editar-proyecto";
 import { type ListarPromotores } from "@/application/use-cases/listar-promotores";
 import { type Promotor } from "@/domain/promotor/promotor";
-import { FRECUENCIAS_VISITA, ROLES_DESTINATARIO } from "@/domain/proyecto/esquema-proyecto";
+import { FRECUENCIAS_VISITA } from "@/domain/proyecto/esquema-proyecto";
 import { Button } from "@/ui/components/button";
 import { Card } from "@/ui/components/card";
-import { Input } from "@/ui/components/input";
+import { Textarea } from "@/ui/components/textarea";
 import { Label } from "@/ui/components/label";
 import { CamposTexto, mensajeError } from "@/ui/components/campos-formulario";
 import {
@@ -26,7 +27,7 @@ import {
   camposObra,
   esquemaFormularioObra,
   ETIQUETAS_FRECUENCIA,
-  ETIQUETAS_ROL,
+  aFormularioObra,
   obraVacia,
   type FormularioObra,
 } from "@/ui/pages/obra-campos";
@@ -38,10 +39,22 @@ const CLASES_SELECT =
 
 export interface ObraFormPageProps {
   crearProyecto: CrearProyecto;
+  editarProyecto: EditarProyecto;
   listarPromotores: ListarPromotores;
 }
 
-export function ObraFormPage({ crearProyecto, listarPromotores }: ObraFormPageProps) {
+/**
+ * Una sola pantalla para dar de alta y para corregir, como en el promotor: el
+ * formulario es el mismo y solo cambia si llega con datos precargados. Con id en
+ * la URL (/obras/:id) edita esa obra; sin él (/obras/nueva) crea una.
+ */
+export function ObraFormPage({
+  crearProyecto,
+  editarProyecto,
+  listarPromotores,
+}: ObraFormPageProps) {
+  const { id } = useParams<{ id: string }>();
+  const editando = Boolean(id);
   const navegar = useNavigate();
   const [promotores, setPromotores] = useState<Promotor[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -49,8 +62,8 @@ export function ObraFormPage({ crearProyecto, listarPromotores }: ObraFormPagePr
 
   const {
     register,
-    control,
     handleSubmit,
+    reset,
     watch,
     setValue,
     formState: { errors, isSubmitting },
@@ -59,25 +72,32 @@ export function ObraFormPage({ crearProyecto, listarPromotores }: ObraFormPagePr
     defaultValues: obraVacia,
   });
 
-  const { fields, append, remove } = useFieldArray({ control, name: "listaDistribucion" });
   const frecuencia = watch("frecuenciaVisita");
 
-  // Cargamos los promotores para poder elegir uno.
+  // Cargamos los promotores para poder elegir uno y, si estamos editando, la
+  // obra que se va a corregir.
   useEffect(() => {
     let activo = true;
-    listarPromotores.ejecutar().then((lista) => {
-      if (!activo) return;
-      setPromotores(lista);
-      setCargando(false);
-    });
+    Promise.all([listarPromotores.ejecutar(), id ? editarProyecto.cargar(id) : null]).then(
+      ([lista, obra]) => {
+        if (!activo) return;
+        setPromotores(lista);
+        if (id && !obra) setErrorGeneral("Esa obra ya no existe.");
+        if (obra) reset(aFormularioObra(obra));
+        setCargando(false);
+      },
+    );
     return () => {
       activo = false;
     };
-  }, [listarPromotores]);
+  }, [listarPromotores, editarProyecto, id, reset]);
 
   async function onSubmit(datos: FormularioObra) {
     setErrorGeneral(null);
-    const resultado = await crearProyecto.ejecutar(aDatosProyecto(datos));
+    const valores = aDatosProyecto(datos);
+    const resultado = id
+      ? await editarProyecto.ejecutar({ ...valores, id })
+      : await crearProyecto.ejecutar(valores);
     if (resultado.ok) {
       navegar("/obras");
       return;
@@ -113,7 +133,9 @@ export function ObraFormPage({ crearProyecto, listarPromotores }: ObraFormPagePr
   return (
     <main className="mx-auto max-w-2xl px-6 py-10 space-y-8">
       <header className="space-y-2">
-        <h1 className="text-[28px] font-semibold text-foreground">Nueva obra</h1>
+        <h1 className="text-[28px] font-semibold text-foreground">
+          {editando ? "Editar obra" : "Nueva obra"}
+        </h1>
         <p className="text-[18px] text-muted-foreground">
           Elige el promotor, rellena los datos y añade quién recibirá los informes.
         </p>
@@ -159,76 +181,24 @@ export function ObraFormPage({ crearProyecto, listarPromotores }: ObraFormPagePr
           </div>
         </div>
 
-        {/* Lista de distribución: quién recibe los informes de esta obra. */}
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <Label className="text-[16px] font-semibold">Lista de distribución</Label>
-            <p className="text-[15px] text-muted-foreground">
-              Quién recibirá los informes de esta obra. Puedes añadirlos ahora o más tarde.
-            </p>
-          </div>
-
-          {fields.map((campo, indice) => (
-            <Card key={campo.id} className="space-y-3 p-4">
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor={`listaDistribucion.${indice}.correo`}
-                  className="text-[16px] font-semibold"
-                >
-                  Correo
-                </Label>
-                <Input
-                  id={`listaDistribucion.${indice}.correo`}
-                  type="email"
-                  className="h-[52px] text-[18px]"
-                  {...register(`listaDistribucion.${indice}.correo`)}
-                />
-                {mensajeError(errors, `listaDistribucion.${indice}.correo`) && (
-                  <p className="text-[15px] text-destructive">
-                    {mensajeError(errors, `listaDistribucion.${indice}.correo`)}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor={`listaDistribucion.${indice}.rol`}
-                  className="text-[16px] font-semibold"
-                >
-                  Rol
-                </Label>
-                <select
-                  id={`listaDistribucion.${indice}.rol`}
-                  className={CLASES_SELECT}
-                  {...register(`listaDistribucion.${indice}.rol`)}
-                >
-                  {ROLES_DESTINATARIO.map((rol) => (
-                    <option key={rol} value={rol}>
-                      {ETIQUETAS_ROL[rol]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => remove(indice)}
-                className="h-[52px] w-full text-[18px]"
-              >
-                Quitar destinatario
-              </Button>
-            </Card>
-          ))}
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => append({ correo: "", rol: "promotor" })}
-            className="h-[52px] w-full text-[18px]"
-          >
-            Añadir destinatario
-          </Button>
+        {/* A quién se le manda el informe: un solo campo, con los correos
+            separados por ";". Lo pidieron así porque es lo que hacen: copiarlo
+            entero y pegarlo en el "Para:" del correo. */}
+        <div className="space-y-1.5">
+          <Label htmlFor="correos" className="text-[16px] font-semibold">
+            Correos
+          </Label>
+          <p className="text-[15px] text-muted-foreground">
+            A quién se le manda el informe de esta obra. Escríbelos todos seguidos,
+            separados por punto y coma.
+          </p>
+          <Textarea
+            id="correos"
+            rows={3}
+            placeholder="uno@ejemplo.es; otro@ejemplo.es"
+            className="text-[18px]"
+            {...register("correos")}
+          />
         </div>
 
         {errorGeneral && (

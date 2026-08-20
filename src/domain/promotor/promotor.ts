@@ -32,6 +32,8 @@ export interface DatosPromotor {
   nombreRazonSocial: string;
   /** Datos fiscales. Provisional: NIF/CIF. */
   nif?: string;
+  /** Logotipo opcional (imagen reducida, dataURL). Sale en la cabecera del PDF. */
+  logo?: string;
   contacto?: ContactoPromotor;
 }
 

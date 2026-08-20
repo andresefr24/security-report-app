@@ -19,4 +19,7 @@ export interface ProyectoRepository {
 
   /** Devuelve las obras de un promotor concreto. */
   listarPorPromotor(promotorId: Id): Promise<Proyecto[]>;
+
+  /** Borra la obra con ese id. Si no existe, no pasa nada. */
+  borrar(id: Id): Promise<void>;
 }

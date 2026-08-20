@@ -22,6 +22,12 @@ export const esquemaPromotor = z.object({
   nombreRazonSocial: textoObligatorio("El nombre o razón social no puede estar vacío."),
   // Datos fiscales. Provisional: de momento basta el NIF/CIF.
   nif: z.string().optional(),
+  /**
+   * Su logotipo, opcional. Va a la izquierda del título en la cabecera del
+   * informe: los coordinadores lo pidieron para que el documento salga con la
+   * marca de quien encarga la obra. Se guarda reducido, como las fotos.
+   */
+  logo: z.string().optional(),
   contacto: z
     .object({
       persona: z.string().optional(),

@@ -34,6 +34,7 @@ export const camposPromotor: CampoTexto<FormularioPromotor>[] = [
 export const promotorVacio: FormularioPromotor = {
   nombreRazonSocial: "",
   nif: "",
+  logo: "",
   contacto: { persona: "", correo: "", telefono: "" },
 };
 
@@ -43,6 +44,7 @@ export function aFormularioPromotor(promotor: Promotor): FormularioPromotor {
     id: promotor.id,
     nombreRazonSocial: promotor.nombreRazonSocial,
     nif: promotor.nif ?? "",
+    logo: promotor.logo ?? "",
     contacto: {
       persona: promotor.contacto?.persona ?? "",
       correo: promotor.contacto?.correo ?? "",
@@ -64,6 +66,7 @@ export function aDatosPromotor(form: FormularioPromotor): DatosPromotor {
     id: form.id,
     nombreRazonSocial: form.nombreRazonSocial.trim(),
     nif: opcional(form.nif),
+    logo: opcional(form.logo),
     contacto: tieneContacto ? contacto : undefined,
   };
 }

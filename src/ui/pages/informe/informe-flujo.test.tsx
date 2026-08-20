@@ -102,40 +102,38 @@ describe("Flujo del informe (crear borrador → wizard)", () => {
     expect(informes.guardados.size).toBe(1);
   });
 
-  it("recorre los pasos y autoguarda lo escrito", async () => {
+  it("el paso 1 solo pide la fecha y la hora de la visita", async () => {
     const obraId = await unaObra();
     montar(`/obras/${obraId}/informes/nuevo`);
     await screen.findByText("Paso 1 de 3");
 
-    fireEvent.change(screen.getByLabelText(/^Nombre$/i), {
-      target: { value: "Luis Jefe" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
-    await screen.findByText("Paso 2 de 3");
-
-    const guardado = [...informes.guardados.values()][0];
-    expect(guardado.receptor?.nombre).toBe("Luis Jefe");
-    expect(guardado.estado).toBe("borrador");
+    expect(screen.getByLabelText(/Fecha y hora de la visita/i)).toBeInTheDocument();
+    // Lo de "quién recibe el informe" se quitó: ya sale del promotor y de la
+    // obra, y quien lo recibe en mano se recoge al firmar.
+    expect(screen.queryByLabelText(/^Nombre$/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Empresa o entidad/i)).not.toBeInTheDocument();
   });
 
-  it("escribe una actividad en el paso 2 y la autoguarda", async () => {
+  it("escribe una observación en el paso 2 y la autoguarda", async () => {
     const obraId = await unaObra();
     montar(`/obras/${obraId}/informes/nuevo`);
     await screen.findByText("Paso 1 de 3");
 
     fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
     await screen.findByText("Paso 2 de 3");
-    expect(screen.getByText("Situación y actividades")).toBeInTheDocument();
+    expect(screen.getByText("Situación y observaciones")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Añadir actividad" }));
-    fireEvent.change(screen.getByLabelText(/Qué pasó/i), {
+    fireEvent.click(screen.getByRole("button", { name: "Añadir observación" }));
+    fireEvent.change(screen.getByLabelText(/^Título$/i), {
       target: { value: "Limpieza de calzada con barredora." },
     });
+    fireEvent.click(screen.getByRole("button", { name: "MEDIDA REQUERIDA" }));
     fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
     await screen.findByText("Paso 3 de 3");
 
     const guardado = [...informes.guardados.values()][0];
-    expect(guardado.actividades?.[0].descripcion).toBe("Limpieza de calzada con barredora.");
+    expect(guardado.observaciones?.[0].titulo).toBe("Limpieza de calzada con barredora.");
+    expect(guardado.observaciones?.[0].estado).toBe("medida-requerida");
   });
 
   it("muestra un error si la obra no existe", async () => {

@@ -59,28 +59,33 @@ test("un coordinador crea un informe de punta a punta y llega al PDF", async ({ 
   await page.getByLabel(/Promotor/i).selectOption({ label: "Canal de Isabel II" });
   await page.getByLabel(/Código de obra/i).fill("OB-2026-014");
   await page.getByLabel(/^Contratista$/).fill("API Movilidad");
+  await page.getByLabel(/^Correos$/).fill("uno@ejemplo.es; otro@ejemplo.es");
   await page.getByRole("button", { name: "Guardar" }).click();
-  await expect(page.getByText("OB-2026-014")).toBeVisible();
+  // El botón de borrar también dice el código, así que buscamos el título.
+  await expect(page.getByText("OB-2026-014", { exact: true })).toBeVisible();
 
   // 4) Nuevo informe de esa obra → abre el wizard.
   await page.getByRole("link", { name: "Nuevo informe" }).click();
   await expect(page.getByText("Paso 1 de 3")).toBeVisible();
 
-  // 5) Paso 1: quién recibe el informe (opcional, pero es lo normal).
-  await page.getByLabel(/^Nombre$/).fill("Luis Jefe de Obra");
+  // 5) Paso 1: solo la fecha y la hora, que ya vienen puestas.
+  await expect(page.getByLabel(/Fecha y hora de la visita/i)).toBeVisible();
   await page.getByRole("button", { name: "Siguiente" }).click();
 
-  // 6) Paso 2: la actividad. Sin al menos una descrita no se puede cerrar.
+  // 6) Paso 2: la observación. Sin al menos una con título no se puede cerrar.
   await expect(page.getByText("Paso 2 de 3")).toBeVisible();
-  await page.getByRole("button", { name: "Añadir actividad" }).click();
+  await page.getByRole("button", { name: "Añadir observación" }).click();
+  await page.getByLabel(/^Título$/).fill("Grupo electrógeno sin medios de extinción");
   await page.getByLabel(/Dónde/i).fill("(M-103) PK 03+500");
-  await page.getByLabel(/Qué pasó/i).fill("Visita sin incidencias reseñables.");
+  await page.getByLabel(/Explicación/i).fill("Se requiere instalar extintores.");
+  // El estado se elige con un botón; la app pone la etiqueta y el color.
+  await page.getByRole("button", { name: "MEDIDA REQUERIDA" }).click();
   await page.getByRole("button", { name: "Siguiente" }).click();
   await expect(page.getByText("Paso 3 de 3")).toBeVisible();
 
-  // 7) Firma del coordinador, la primera ranura (la de "recibido" es opcional).
-  await page.getByLabel(/Nombre de quien firma/i).first().fill("Ana García López");
-  await firmar(page.getByLabel(/Zona para dibujar la firma/i).first());
+  // 7) La firma del coordinador, la única que hay.
+  await page.getByLabel(/Nombre de quien firma/i).fill("Ana García López");
+  await firmar(page.getByLabel(/Zona para dibujar la firma/i));
 
   // 8) Finalizar → pantalla de entrega con el PDF listo.
   await page.getByRole("button", { name: "Finalizar" }).click();

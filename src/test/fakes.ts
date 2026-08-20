@@ -59,6 +59,9 @@ export class ProyectoRepositoryEnMemoria implements ProyectoRepository {
   async listarPorPromotor(promotorId: Id): Promise<Proyecto[]> {
     return [...this.guardados.values()].filter((p) => p.promotorId === promotorId);
   }
+  async borrar(id: Id): Promise<void> {
+    this.guardados.delete(id);
+  }
 }
 
 /**

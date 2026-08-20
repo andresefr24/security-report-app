@@ -32,18 +32,17 @@ describe("LocalForageProyectoRepository", () => {
     expect(await repo.obtenerPorId("no-existe")).toBeNull();
   });
 
-  it("guarda una obra y la recupera con su lista de distribución", async () => {
+  it("guarda una obra y la recupera con sus correos", async () => {
     const proyecto = proyectoDePrueba({
       descripcion: "Centro cívico Los Molinos",
-      listaDistribucion: [{ correo: "marta@canal.es", rol: "promotor" }],
+      correos: "marta@canal.es; jefe@contrata.es",
     });
     await repo.guardar(proyecto);
 
     const recuperada = await repo.obtenerPorId(proyecto.id);
     expect(recuperada?.codigoObra).toBe("OB-001");
     expect(recuperada?.descripcion).toBe("Centro cívico Los Molinos");
-    expect(recuperada?.listaDistribucion?.[0].correo).toBe("marta@canal.es");
-    expect(recuperada?.listaDistribucion?.[0].rol).toBe("promotor");
+    expect(recuperada?.correos).toBe("marta@canal.es; jefe@contrata.es");
   });
 
   it("lista todas las obras ordenadas por código", async () => {
@@ -78,7 +77,8 @@ describe("LocalForageProyectoRepository", () => {
     await repo.guardar(obra);
 
     const enDisco = await repo["caja"].getItem<{ schemaVersion?: number }>(obra.id);
-    expect(enDisco?.schemaVersion).toBe(1);
+    // Dos escalones: los presupuestos y los correos.
+    expect(enDisco?.schemaVersion).toBe(2);
   });
 
   it("conserva el presupuesto de las obras guardadas con el nombre viejo del campo", async () => {
@@ -118,7 +118,7 @@ describe("LocalForageProyectoRepository", () => {
     const enDisco = await repo["caja"].getItem<{ schemaVersion?: number; presupuesto?: string }>(
       "obra-vieja",
     );
-    expect(enDisco?.schemaVersion).toBe(1);
+    expect(enDisco?.schemaVersion).toBe(2);
     expect(enDisco?.presupuesto).toBeUndefined();
   });
 

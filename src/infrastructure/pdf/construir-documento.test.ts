@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { construirDocumento, type BloqueDocumento } from "@/infrastructure/pdf/construir-documento";
 import { crearInforme, type DatosInforme } from "@/domain/informe/informe";
 import { crearProyecto, type DatosProyecto } from "@/domain/proyecto/proyecto";
-import { crearPromotor } from "@/domain/promotor/promotor";
+import { crearPromotor, type DatosPromotor } from "@/domain/promotor/promotor";
 import { crearCoordinador } from "@/domain/coordinador/coordinador";
 import { type DatosDelPdf } from "@/domain/ports/pdf-port";
 
@@ -10,11 +10,12 @@ import { type DatosDelPdf } from "@/domain/ports/pdf-port";
 function datosDelPdf(
   cambiosInforme: Partial<DatosInforme> = {},
   cambiosProyecto: Partial<DatosProyecto> = {},
+  cambiosPromotor: Partial<DatosPromotor> = {},
 ): DatosDelPdf {
   const informe = crearInforme({
     proyectoId: "obra-1",
     fechaHora: "2026-07-01T09:30",
-    actividades: [{ id: "a1", descripcion: "Visita sin incidencias reseñables." }],
+    observaciones: [{ id: "o1", titulo: "Visita sin incidencias reseñables." }],
     ...cambiosInforme,
   });
   const proyecto = crearProyecto({
@@ -25,7 +26,11 @@ function datosDelPdf(
     frecuenciaVisita: "semanal",
     ...cambiosProyecto,
   });
-  const promotor = crearPromotor({ id: "promotor-1", nombreRazonSocial: "Canal de Isabel II" });
+  const promotor = crearPromotor({
+    id: "promotor-1",
+    nombreRazonSocial: "Canal de Isabel II",
+    ...cambiosPromotor,
+  });
   const coordinador = crearCoordinador({
     nombreCompleto: "Ana García López",
     numeroRegistroIrsst: "3306",
@@ -54,6 +59,8 @@ function textoDe(bloques: BloqueDocumento[]): string {
             .join("\n");
         case "rotulo":
           return b.lineas.join("\n");
+        case "observacion":
+          return `${b.encabezado} ${b.titulo} ${b.estado?.etiqueta ?? ""}\n${b.lineas.join("\n")}`;
         case "parrafo":
           return b.texto;
         case "filaFotos":
@@ -64,7 +71,7 @@ function textoDe(bloques: BloqueDocumento[]): string {
             .map((f) => `${f.titulo} ${f.lineas.join(" ")}`)
             .join("\n");
         case "distribucion":
-          return `${b.titulo} ${b.correos}`;
+          return `${b.titulo} ${b.correos.join(" ")}`;
       }
     })
     .join("\n");
@@ -82,6 +89,22 @@ describe("construirDocumento", () => {
       expect(texto).toContain("01/07/2026");
     });
 
+    it("no pinta las filas que se quedan en blanco", () => {
+      // La obra de prueba no tiene ubicación ni plazo ni presupuestos: esas
+      // filas no deben salir, o el documento parece a medio rellenar.
+      const texto = textoDe(construirDocumento(datosDelPdf()).bloques);
+
+      expect(texto).not.toContain("Ubicación:");
+      expect(texto).not.toContain("Plazo de ejecución:");
+      expect(texto).not.toContain("Presupuesto de ejecución:");
+    });
+
+    it("ya no pide el receptor: quien recibe el informe se recoge al firmar", () => {
+      const texto = textoDe(construirDocumento(datosDelPdf()).bloques);
+
+      expect(texto).not.toContain("Receptor:");
+    });
+
     it("lleva el contratista de la obra", () => {
       const { bloques } = construirDocumento(datosDelPdf({}, { contratista: "API Movilidad" }));
 
@@ -94,16 +117,6 @@ describe("construirDocumento", () => {
 
       expect(texto).toContain("Emisor: Ana García López");
       expect(texto).toContain("TPS Ingeniería");
-    });
-
-    it("nombra a quien recibe el informe, con su empresa", () => {
-      const { bloques } = construirDocumento(
-        datosDelPdf({ receptor: { nombre: "Luis Jefe", empresa: "Constructora SL" } }),
-      );
-      const texto = textoDe(bloques);
-
-      expect(texto).toContain("Receptor: Luis Jefe");
-      expect(texto).toContain("Constructora SL");
     });
 
     it("deriva el nº de documento de la fecha, sin pedírselo al coordinador", () => {
@@ -120,10 +133,10 @@ describe("construirDocumento", () => {
   });
 
   describe("cuerpo", () => {
-    it("encabeza cada actividad con los rótulos del informe real", () => {
+    it("encabeza cada observacion con los rótulos del informe real", () => {
       const { bloques } = construirDocumento(
         datosDelPdf({
-          actividades: [
+          observaciones: [
             {
               id: "a1",
               ubicacion: "(M-103) PK 03+500 - Glorieta de Cobeña",
@@ -138,20 +151,63 @@ describe("construirDocumento", () => {
       // ubicación, y así lo pidieron.
       expect(texto).toContain("Ubicación: (M-103) PK 03+500 - Glorieta de Cobeña");
       expect(texto).not.toContain("SITUACIÓN DE LA ACTUACIÓN");
-      expect(texto).toContain("DESCRIPCIÓN DE LA ACTIVIDAD: Colocación de chapa metálica.");
+      expect(texto).toContain(
+        "OBSERVACIÓN PREVENTIVA DE SEGURIDAD (OPS): Colocación de chapa metálica.",
+      );
     });
 
-    it("pinta una sección por cada actividad", () => {
+    it("pinta un encabezado por cada observación, numerado", () => {
       const { bloques } = construirDocumento(
         datosDelPdf({
-          actividades: [
-            { id: "a1", descripcion: "Desbroce mecánico." },
-            { id: "a2", descripcion: "Limpieza de calzada." },
+          observaciones: [
+            { id: "o1", titulo: "Desbroce mecánico." },
+            { id: "o2", titulo: "Limpieza de calzada." },
           ],
         }),
       );
 
-      expect(bloques.filter((b) => b.tipo === "rotulo")).toHaveLength(2);
+      const encabezados = bloques.filter((b) => b.tipo === "observacion");
+      expect(encabezados).toHaveLength(2);
+      expect(encabezados[0]).toMatchObject({
+        encabezado: "OBSERVACIÓN 1",
+        titulo: "Desbroce mecánico.",
+      });
+      expect(encabezados[1].encabezado).toBe("OBSERVACIÓN 2");
+    });
+
+    it("pone la etiqueta de color del estado, y ninguna si no tiene", () => {
+      const { bloques } = construirDocumento(
+        datosDelPdf({
+          observaciones: [
+            { id: "o1", titulo: "Con estado", estado: "subsanado" },
+            { id: "o2", titulo: "Sin estado" },
+          ],
+        }),
+      );
+
+      const [conEstado, sinEstado] = bloques.filter((b) => b.tipo === "observacion");
+      expect(conEstado.estado?.etiqueta).toBe("SUBSANADO");
+      // El color lo pone la app; el coordinador solo elige el estado.
+      expect(conEstado.estado?.fondo).toMatch(/^#/);
+      expect(sinEstado.estado).toBeUndefined();
+    });
+
+    it("una observación marcada como continuación repite el número de la anterior", () => {
+      const { bloques } = construirDocumento(
+        datosDelPdf({
+          observaciones: [
+            { id: "o1", titulo: "Grupo electrógeno", estado: "medida-requerida" },
+            { id: "o2", titulo: "Grupo electrógeno", estado: "subsanado", continuaAnterior: true },
+            { id: "o3", titulo: "Otra cosa" },
+          ],
+        }),
+      );
+
+      const encabezados = bloques
+        .filter((b) => b.tipo === "observacion")
+        .map((b) => b.encabezado);
+      // El hallazgo y cómo quedó son la misma observación; la siguiente ya es otra.
+      expect(encabezados).toEqual(["OBSERVACIÓN 1", "OBSERVACIÓN 1", "OBSERVACIÓN 2"]);
     });
 
     it("lleva el calendario de la semana cuando lo hay", () => {
@@ -175,6 +231,7 @@ describe("construirDocumento", () => {
   describe("cabecera con los datos de la obra", () => {
     const obraCompleta = {
       ubicacion: "Pº del Tren Talgo, 10, 28290 Las Rozas de Madrid",
+      contratista: "VIAS Y CONSTRUCCIONES, S.A.",
       cifContratista: "A28017986",
       plazoEjecucion: "18 meses",
       presupuestoEjecucion: "27.470.256,11 €",
@@ -204,7 +261,7 @@ describe("construirDocumento", () => {
     function conFotos(cuantas: number): BloqueDocumento[] {
       return construirDocumento(
         datosDelPdf({
-          actividades: [
+          observaciones: [
             {
               id: "a1",
               descripcion: "Desbroce.",
@@ -226,10 +283,10 @@ describe("construirDocumento", () => {
       expect(filas[1].fotos).toHaveLength(1);
     });
 
-    it("numera las fotos seguidas en todo el informe, no por actividad", () => {
+    it("numera las fotos seguidas en todo el informe, no por observacion", () => {
       const { bloques } = construirDocumento(
         datosDelPdf({
-          actividades: [
+          observaciones: [
             {
               id: "a1",
               descripcion: "Desbroce.",
@@ -250,14 +307,14 @@ describe("construirDocumento", () => {
       const numeros = bloques
         .filter((b) => b.tipo === "filaFotos")
         .flatMap((b) => b.fotos.map((f) => f.numero));
-      // La primera foto de la SEGUNDA actividad es la 3, no vuelve a la 1.
+      // La primera foto de la SEGUNDA observacion es la 3, no vuelve a la 1.
       expect(numeros).toEqual(["Foto 1", "Foto 2", "Foto 3"]);
     });
 
     it("lleva el comentario de cada foto", () => {
       const { bloques } = construirDocumento(
         datosDelPdf({
-          actividades: [
+          observaciones: [
             {
               id: "a1",
               descripcion: "Desbroce.",
@@ -276,7 +333,7 @@ describe("construirDocumento", () => {
       expect(textoDe(bloques)).toContain("Extintor y batefuego junto al grupo electrógeno.");
     });
 
-    it("una actividad sin fotos no genera ninguna fila", () => {
+    it("una observacion sin fotos no genera ninguna fila", () => {
       expect(conFotos(0).filter((b) => b.tipo === "filaFotos")).toHaveLength(0);
     });
   });
@@ -297,30 +354,26 @@ describe("construirDocumento", () => {
       expect(firmas?.izquierda.lineas.join(" ")).toContain("Fdo. Ana García López");
     });
 
-    it("deja el recuadro de 'recibido por' aunque nadie lo haya firmado", () => {
+    it("ya no pinta el recuadro de 'recibido por': nadie firmaba ahí", () => {
       const { bloques } = construirDocumento(datosDelPdf());
 
-      const firmas = bloques.find((b) => b.tipo === "firmas");
-      expect(firmas?.derecha?.titulo).toBe("Recibido por:");
-      expect(firmas?.derecha?.imagen).toBeUndefined();
+      expect(bloques.find((b) => b.tipo === "firmas")?.derecha).toBeUndefined();
     });
 
-    it("pone los correos en una línea separados por ';', para copiarlos de golpe", () => {
+    it("pone los correos en lista, uno por línea y sin el punto y coma", () => {
       const { bloques } = construirDocumento(
         datosDelPdf(
           {},
-          {
-            listaDistribucion: [
-              { nombre: "Carlos Díaz", correo: "carlos@ejemplo.es", rol: "contratista" },
-              { correo: "belen@ejemplo.es", rol: "promotor" },
-            ],
-          },
+          { correos: "carlos@ejemplo.es; belen@ejemplo.es" },
         ),
       );
       const texto = textoDe(bloques);
 
-      expect(texto).toContain("Enviado por e-mail a:");
-      expect(texto).toContain("carlos@ejemplo.es; belen@ejemplo.es");
+      const distribucion = bloques.find((b) => b.tipo === "distribucion");
+      expect(distribucion?.titulo).toBe("Enviado por e-mail a:");
+      // El ";" es para escribirlos en la obra; en el documento se leen en lista.
+      expect(distribucion?.correos).toEqual(["carlos@ejemplo.es", "belen@ejemplo.es"]);
+      expect(texto).not.toContain(";");
     });
 
     it("omite la distribución si la obra no tiene destinatarios", () => {
@@ -328,6 +381,18 @@ describe("construirDocumento", () => {
 
       expect(bloques.filter((b) => b.tipo === "distribucion")).toHaveLength(0);
     });
+  });
+
+  it("pone el logotipo del promotor en la cabecera, si lo tiene", () => {
+    const { cabeceraPagina } = construirDocumento(
+      datosDelPdf({}, {}, { logo: "data:image/png;base64,LOGO" }),
+    );
+
+    expect(cabeceraPagina.logo).toBe("data:image/png;base64,LOGO");
+  });
+
+  it("sin logotipo el hueco se queda vacío y el informe sale igual", () => {
+    expect(construirDocumento(datosDelPdf()).cabeceraPagina.logo).toBeUndefined();
   });
 
   it("lleva el título nuevo y, a su derecha, quién emite el informe", () => {

@@ -33,7 +33,7 @@ describe("LocalForageInformeRepository", () => {
   it("guarda un informe con sus fotos y firmas y lo recupera", async () => {
     const informe = informeDePrueba({
       situacion: "Visita sin incidencias.",
-      actividades: [
+      observaciones: [
         {
           id: "a1",
           descripcion: "Desbroce de márgenes.",
@@ -46,7 +46,7 @@ describe("LocalForageInformeRepository", () => {
 
     const recuperado = await repo.obtenerPorId(informe.id);
     expect(recuperado?.situacion).toBe("Visita sin incidencias.");
-    expect(recuperado?.actividades?.[0].fotos?.[0].imagen).toBe("data:image/png;base64,AAAA");
+    expect(recuperado?.observaciones?.[0].fotos?.[0].imagen).toBe("data:image/png;base64,AAAA");
     expect(recuperado?.firmas?.[0].rol).toBe("coordinador");
   });
 
@@ -55,22 +55,50 @@ describe("LocalForageInformeRepository", () => {
     await repo.guardar(informe);
 
     const enDisco = await repo["caja"].getItem<{ schemaVersion?: number }>(informe.id);
-    expect(enDisco?.schemaVersion).toBe(1);
+    // Cuatro escalones: el sello, el paso a observación, la retirada del
+    // receptor y la de las firmas de "recibido".
+    expect(enDisco?.schemaVersion).toBe(4);
   });
 
-  it("lee los informes sin sello que ya están en el dispositivo", async () => {
-    // Lo que hay hoy en los móviles de los coordinadores: la forma es la de
-    // ahora (el modelo v2 entró antes de que lo usaran), solo falta el sello.
+  it("convierte en observaciones las actividades de los informes ya guardados", async () => {
+    // ESTE es el informe que Nicolás y Miren tienen hoy en el móvil: sin sello y
+    // con `actividades`. Sin el escalón v1→v2, zod lo descartaría entero.
     await repo["caja"].setItem("informe-viejo", {
       id: "informe-viejo",
       proyectoId: "obra-1",
       fechaHora: "2026-08-16T09:30",
-      actividades: [{ id: "a1", descripcion: "Grupo electrógeno sin extintores." }],
+      actividades: [
+        {
+          id: "a1",
+          ubicacion: "Junto a las casetas",
+          descripcion: "Grupo electrógeno sin extintores.",
+          fotos: [{ id: "f1", imagen: "data:image/png;base64,AAAA", comentario: "El equipo." }],
+        },
+      ],
     });
 
     const recuperado = await repo.obtenerPorId("informe-viejo");
 
-    expect(recuperado?.actividades?.[0].descripcion).toBe("Grupo electrógeno sin extintores.");
+    // El texto que escribieron sigue entero, ahora dentro de una observación.
+    expect(recuperado?.observaciones).toHaveLength(1);
+    expect(recuperado?.observaciones?.[0].descripcion).toBe("Grupo electrógeno sin extintores.");
+    expect(recuperado?.observaciones?.[0].ubicacion).toBe("Junto a las casetas");
+    expect(recuperado?.observaciones?.[0].fotos?.[0].comentario).toBe("El equipo.");
+    // El título se queda vacío: no hay de dónde sacarlo sin inventárselo.
+    expect(recuperado?.observaciones?.[0].titulo).toBeUndefined();
+  });
+
+  it("lo que estaba marcado como incidencia pasa a 'medida requerida'", async () => {
+    await repo["caja"].setItem("informe-incidencia", {
+      id: "informe-incidencia",
+      proyectoId: "obra-1",
+      fechaHora: "2026-08-16T09:30",
+      actividades: [{ id: "a1", descripcion: "Extensión IP-20.", tipo: "incidencia" }],
+    });
+
+    const recuperado = await repo.obtenerPorId("informe-incidencia");
+
+    expect(recuperado?.observaciones?.[0].estado).toBe("medida-requerida");
   });
 
   it("guardar con el mismo id reemplaza (autoguardado del wizard)", async () => {
@@ -101,8 +129,29 @@ describe("LocalForageInformeRepository", () => {
     expect(lista).toHaveLength(1);
   });
 
+  it("tira la firma de 'recibido' de los informes ya guardados, sin perder el resto", async () => {
+    await repo["caja"].setItem("informe-con-recibido", {
+      id: "informe-con-recibido",
+      proyectoId: "obra-1",
+      fechaHora: "2026-08-16T09:30",
+      observaciones: [{ id: "o1", titulo: "Grupo electrógeno" }],
+      firmas: [
+        { nombre: "Ana", rol: "coordinador", firma: "data:image/png;base64,AAAA" },
+        { nombre: "Luis", rol: "recibido", firma: "data:image/png;base64,BBBB" },
+      ],
+    });
+
+    const recuperado = await repo.obtenerPorId("informe-con-recibido");
+
+    // Sin el escalón, ese rol ya no valida y el informe ENTERO caería en
+    // cuarentena; así solo se va la firma que sobra.
+    expect(recuperado?.firmas).toHaveLength(1);
+    expect(recuperado?.firmas?.[0].rol).toBe("coordinador");
+    expect(recuperado?.observaciones).toHaveLength(1);
+  });
+
   it("aparta el borrador viejo que ya no valida, en vez de tirarlo", async () => {
-    // Un borrador de ANTES del rework: tenía `contenido` en vez de actividades.
+    // Un borrador de ANTES del rework: tenía `contenido` en vez de observaciones.
     // Hasta ahora zod lo descartaba al releer y desaparecía sin que nadie se
     // enterase; ahora se aparta con su motivo.
     await repo["caja"].setItem("borrador-antiguo", {

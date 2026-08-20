@@ -29,32 +29,10 @@ describe("PasoDatos", () => {
     expect(fecha.value).toBe("2026-07-02T10:00");
   });
 
-  it("recoge quién recibe el informe: nombre y empresa", () => {
+  it("ya no pide quién recibe el informe: eso se recoge al firmar", () => {
     render(<Arnes inicial={base} />);
 
-    const nombre = screen.getByLabelText<HTMLInputElement>(/^Nombre$/i);
-    fireEvent.change(nombre, { target: { value: "Luis Jefe" } });
-    expect(nombre.value).toBe("Luis Jefe");
-
-    const empresa = screen.getByLabelText<HTMLInputElement>(/Empresa o entidad/i);
-    fireEvent.change(empresa, { target: { value: "Constructora SL" } });
-    expect(empresa.value).toBe("Constructora SL");
-  });
-
-  it("muestra el receptor ya guardado", () => {
-    render(
-      <Arnes
-        inicial={{ ...base, receptor: { nombre: "Luis Jefe", empresa: "Constructora SL" } }}
-      />,
-    );
-
-    expect(screen.getByDisplayValue("Luis Jefe")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("Constructora SL")).toBeInTheDocument();
-  });
-
-  it("deja el receptor en blanco: nunca es obligatorio", () => {
-    render(<Arnes inicial={base} />);
-
-    expect(screen.getByLabelText<HTMLInputElement>(/^Nombre$/i).value).toBe("");
+    expect(screen.queryByLabelText(/^Nombre$/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Empresa o entidad/i)).not.toBeInTheDocument();
   });
 });
