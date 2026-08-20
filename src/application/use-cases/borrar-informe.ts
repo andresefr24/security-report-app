@@ -4,10 +4,14 @@
 // el coordinador abre uno por error, se le queda ahí para siempre ocupando la
 // lista de la obra.
 //
-// REGLA: solo se borran los BORRADORES. Un informe finalizado está firmado y es
-// evidencia legal de la visita ([[legal-context]]); retirarlo no puede ser un
-// toque de más en una lista. Si algún día hace falta, será una decisión aparte y
-// con su propio aviso.
+// SE BORRA CUALQUIERA, también los finalizados. La primera versión solo dejaba
+// borrar borradores, para proteger la evidencia de la visita... y montó una
+// trampa sin salida: un informe cerrado no se podía quitar, y como la obra no se
+// puede borrar con informes dentro, la obra tampoco. Los datos son suyos y están
+// en su dispositivo; la app no puede dejarles encerrados.
+//
+// La protección se mueve a donde sirve: la pantalla avisa de que un informe
+// cerrado es la evidencia de una visita y pide confirmarlo aparte.
 
 import { type InformeRepository } from "@/domain/ports/informe-repository";
 import { exito, fallo, type Result } from "@/domain/shared/result";
@@ -20,10 +24,6 @@ export class BorrarInforme {
     const informe = await this.informes.obtenerPorId(id);
     if (!informe) {
       return fallo(["Este informe ya no existe."]);
-    }
-
-    if (informe.estado === "finalizado") {
-      return fallo(["Un informe cerrado y firmado no se puede borrar."]);
     }
 
     await this.informes.borrar(id);

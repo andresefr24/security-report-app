@@ -42,34 +42,35 @@ describe("BorrarProyecto", () => {
     expect(proyectos.guardados.has(id)).toBe(false);
   });
 
-  it("NO borra una obra con informes: son la evidencia de las visitas", async () => {
-    const id = await unaObra();
-    await new CrearBorradorInforme(informes, proyectos).ejecutar(id);
-
-    const resultado = await new BorrarProyecto(proyectos, informes).ejecutar(id);
-
-    expect(resultado.ok).toBe(false);
-    if (!resultado.ok) expect(resultado.errores.join(" ")).toContain("Bórralo primero");
-    expect(proyectos.guardados.has(id)).toBe(true);
-  });
-
-  it("cuenta los informes en plural cuando hay más de uno", async () => {
+  it("borra la obra CON sus informes: si no, no habría forma de quitarla", async () => {
     const id = await unaObra();
     await new CrearBorradorInforme(informes, proyectos).ejecutar(id);
     await new CrearBorradorInforme(informes, proyectos).ejecutar(id);
 
     const resultado = await new BorrarProyecto(proyectos, informes).ejecutar(id);
 
-    expect(resultado.ok).toBe(false);
-    if (!resultado.ok) expect(resultado.errores.join(" ")).toContain("2 informes");
+    expect(resultado.ok).toBe(true);
+    expect(proyectos.guardados.has(id)).toBe(false);
+    expect(informes.guardados.size).toBe(0);
   });
 
-  it("no cuenta los informes de OTRA obra", async () => {
+  it("no toca los informes de OTRA obra", async () => {
     const id = await unaObra();
     const otra = await unaObra();
     await new CrearBorradorInforme(informes, proyectos).ejecutar(otra);
 
-    expect((await new BorrarProyecto(proyectos, informes).ejecutar(id)).ok).toBe(true);
+    await new BorrarProyecto(proyectos, informes).ejecutar(id);
+
+    expect(proyectos.guardados.has(otra)).toBe(true);
+    expect(informes.guardados.size).toBe(1);
+  });
+
+  it("dice cuántos informes se va a llevar por delante, para poder avisar", async () => {
+    const id = await unaObra();
+    await new CrearBorradorInforme(informes, proyectos).ejecutar(id);
+    await new CrearBorradorInforme(informes, proyectos).ejecutar(id);
+
+    expect(await new BorrarProyecto(proyectos, informes).cuantosInformes(id)).toBe(2);
   });
 
   it("avisa si la obra ya no existe", async () => {

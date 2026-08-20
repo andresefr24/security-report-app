@@ -83,6 +83,16 @@ export function ObrasPage({
     }
     setAvisoObra(null);
     setObras((actual) => actual.filter((o) => o.proyecto.id !== obraId));
+    setInformesPorObra((actual) => ({ ...actual, [obraId]: [] }));
+  }
+
+  /** Lo que se pierde al borrar la obra, dicho en su idioma. */
+  function loQueSeLleva(obraId: Id): string {
+    const cuantos = (informesPorObra[obraId] ?? []).length;
+    if (cuantos === 0) return "No tiene informes.";
+    return cuantos === 1
+      ? "Se borrará también su informe."
+      : `Se borrarán también sus ${cuantos} informes.`;
   }
 
   async function confirmarBorrado(obraId: Id, informeId: Id) {
@@ -157,6 +167,14 @@ export function ObrasPage({
                   <p className="text-[16px] text-muted-foreground">
                     Visita {ETIQUETAS_FRECUENCIA[proyecto.frecuenciaVisita].toLowerCase()}
                   </p>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="mt-2 h-[52px] w-full text-[18px]"
+                  >
+                    <Link to={`/obras/${proyecto.id}`}>Editar los datos de la obra</Link>
+                  </Button>
+
                   {(informesPorObra[proyecto.id] ?? []).length > 0 && (
                     <div className="space-y-2 pt-2">
                       <p className="text-[16px] font-semibold">Informes de esta obra</p>
@@ -176,39 +194,40 @@ export function ObrasPage({
 
                             {/* Solo los borradores se pueden tirar: uno cerrado
                                 está firmado y es evidencia de la visita. */}
-                            {informe.estado === "borrador" &&
-                              (porConfirmar === informe.id ? (
-                                <div className="space-y-2 rounded-md bg-secondary p-3">
-                                  <p className="text-[16px]">
-                                    ¿Seguro que quieres borrar este borrador? No se puede
-                                    deshacer.
-                                  </p>
-                                  <Button
-                                    variant="destructive"
-                                    onClick={() => confirmarBorrado(proyecto.id, informe.id)}
-                                    className="h-[52px] w-full gap-2 text-[18px]"
-                                  >
-                                    <IconoPapelera />
-                                    Sí, borrar el borrador
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => setPorConfirmar(null)}
-                                    className="h-[52px] w-full text-[18px]"
-                                  >
-                                    No, dejarlo
-                                  </Button>
-                                </div>
-                              ) : (
+                            {porConfirmar === informe.id ? (
+                              <div className="space-y-2 rounded-md bg-secondary p-3">
+                                <p className="text-[16px]">
+                                  {informe.estado === "finalizado"
+                                    ? "Este informe está cerrado y firmado: es la evidencia de esa visita. Asegúrate de tener guardado el PDF antes de borrarlo."
+                                    : "¿Seguro que quieres borrar este borrador?"}{" "}
+                                  No se puede deshacer.
+                                </p>
                                 <Button
                                   variant="destructive"
-                                  onClick={() => setPorConfirmar(informe.id)}
+                                  onClick={() => confirmarBorrado(proyecto.id, informe.id)}
                                   className="h-[52px] w-full gap-2 text-[18px]"
                                 >
                                   <IconoPapelera />
-                                  Borrar borrador del {fechaLegible(informe.fechaHora)}
+                                  Sí, borrar el informe
                                 </Button>
-                              ))}
+                                <Button
+                                  variant="outline"
+                                  onClick={() => setPorConfirmar(null)}
+                                  className="h-[52px] w-full text-[18px]"
+                                >
+                                  No, dejarlo
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                variant="destructive"
+                                onClick={() => setPorConfirmar(informe.id)}
+                                className="h-[52px] w-full gap-2 text-[18px]"
+                              >
+                                <IconoPapelera />
+                                Borrar el informe del {fechaLegible(informe.fechaHora)}
+                              </Button>
+                            )}
                           </li>
                         ))}
                       </ul>
@@ -224,8 +243,8 @@ export function ObrasPage({
                   {obraPorConfirmar === proyecto.id ? (
                     <div className="mt-2 space-y-2 rounded-md bg-secondary p-3">
                       <p className="text-[16px]">
-                        ¿Seguro que quieres borrar la obra {proyecto.codigoObra}? No se puede
-                        deshacer.
+                        ¿Seguro que quieres borrar la obra {proyecto.codigoObra}?{" "}
+                        {loQueSeLleva(proyecto.id)} No se puede deshacer.
                       </p>
                       <Button
                         variant="destructive"

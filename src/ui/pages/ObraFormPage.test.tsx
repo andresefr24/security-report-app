@@ -3,27 +3,32 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { ObraFormPage } from "@/ui/pages/ObraFormPage";
 import { CrearProyecto } from "@/application/use-cases/crear-proyecto";
+import { EditarProyecto } from "@/application/use-cases/editar-proyecto";
 import { ListarPromotores } from "@/application/use-cases/listar-promotores";
 import { AltaPromotor } from "@/application/use-cases/alta-promotor";
 import { type Id } from "@/domain/shared/id";
 import { PromotorRepositoryEnMemoria, ProyectoRepositoryEnMemoria } from "@/test/fakes";
 import { FUTURE_PROVIDER, FUTURE_ROUTER } from "@/app/opciones-router";
 
-function montar(proyectos: ProyectoRepositoryEnMemoria, promotores: PromotorRepositoryEnMemoria) {
+function montar(
+  proyectos: ProyectoRepositoryEnMemoria,
+  promotores: PromotorRepositoryEnMemoria,
+  ruta = "/obras/nueva",
+) {
+  const pagina = (
+    <ObraFormPage
+      crearProyecto={new CrearProyecto(proyectos, promotores)}
+      editarProyecto={new EditarProyecto(proyectos, promotores)}
+      listarPromotores={new ListarPromotores(promotores)}
+    />
+  );
   const router = createMemoryRouter(
     [
-      {
-        path: "/obras/nueva",
-        element: (
-          <ObraFormPage
-            crearProyecto={new CrearProyecto(proyectos, promotores)}
-            listarPromotores={new ListarPromotores(promotores)}
-          />
-        ),
-      },
+      { path: "/obras/nueva", element: pagina },
+      { path: "/obras/:id", element: pagina },
       { path: "/obras", element: <p>Listado de obras</p> },
     ],
-    { initialEntries: ["/obras/nueva"], future: FUTURE_ROUTER },
+    { initialEntries: [ruta], future: FUTURE_ROUTER },
   );
   return render(<RouterProvider router={router} future={FUTURE_PROVIDER} />);
 }
@@ -159,4 +164,44 @@ describe("ObraFormPage", () => {
     );
   });
 
+  it("abre una obra existente con sus datos ya puestos y guarda los cambios", async () => {
+    const promotorId = await unPromotor();
+    const obra = await new CrearProyecto(proyectos, promotores).ejecutar({
+      codigoObra: "OB-VIEJA",
+      promotorId,
+      frecuenciaVisita: "semanal",
+      correos: "marta@canal.es",
+    });
+    if (!obra.ok) throw new Error("crear la obra debería funcionar");
+
+    montar(proyectos, promotores, `/obras/${obra.valor.id}`);
+
+    expect(await screen.findByText("Editar obra")).toBeInTheDocument();
+    expect(screen.getByLabelText<HTMLInputElement>(/Código de obra/i).value).toBe("OB-VIEJA");
+
+    // Rellenar lo que no existía cuando se dio de alta es justo para lo que
+    // hacía falta poder editar.
+    fireEvent.change(screen.getByLabelText(/Ubicación de la obra/i), {
+      target: { value: "Pº del Tren Talgo, 10" },
+    });
+    fireEvent.change(screen.getByLabelText(/^Correos$/i), {
+      target: { value: "marta@canal.es; jefe@contrata.es" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+
+    expect(await screen.findByText("Listado de obras")).toBeInTheDocument();
+    // Se corrige la misma obra, no se crea otra.
+    expect(proyectos.guardados.size).toBe(1);
+    const guardada = proyectos.guardados.get(obra.valor.id);
+    expect(guardada?.ubicacion).toBe("Pº del Tren Talgo, 10");
+    expect(guardada?.correos).toBe("marta@canal.es; jefe@contrata.es");
+  });
+
+  it("avisa si la obra que se intenta editar ya no existe", async () => {
+    await unPromotor();
+
+    montar(proyectos, promotores, "/obras/obra-fantasma");
+
+    expect(await screen.findByText(/Esa obra ya no existe/i)).toBeInTheDocument();
+  });
 });

@@ -118,12 +118,12 @@ describe("ObrasPage", () => {
     montar();
 
     // Primer toque: solo pregunta, no borra nada.
-    fireEvent.click(await screen.findByRole("button", { name: /Borrar borrador/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Borrar el informe/i }));
     expect(screen.getByText(/¿Seguro que quieres borrar/i)).toBeInTheDocument();
     expect(informes.guardados.size).toBe(1);
 
     // Segundo toque: ahora sí.
-    fireEvent.click(screen.getByRole("button", { name: /Sí, borrar el borrador/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Sí, borrar el informe/i }));
     await waitFor(() => expect(informes.guardados.size).toBe(0));
     expect(screen.queryByRole("link", { name: /Borrador/i })).not.toBeInTheDocument();
   });
@@ -141,14 +141,14 @@ describe("ObrasPage", () => {
 
     montar();
 
-    fireEvent.click(await screen.findByRole("button", { name: /Borrar borrador/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /Borrar el informe/i }));
     fireEvent.click(screen.getByRole("button", { name: /No, dejarlo/i }));
 
     expect(screen.queryByText(/¿Seguro que quieres borrar/i)).not.toBeInTheDocument();
     expect(informes.guardados.size).toBe(1);
   });
 
-  it("no ofrece borrar un informe ya cerrado: es evidencia firmada", async () => {
+  it("al borrar un informe cerrado avisa de que es la evidencia de esa visita", async () => {
     const alta = await new AltaPromotor(promotores).ejecutar({ nombreRazonSocial: "Promotor" });
     if (!alta.ok) throw new Error("el alta debería funcionar");
     const obra = await new CrearProyecto(proyectos, promotores).ejecutar({
@@ -164,7 +164,12 @@ describe("ObrasPage", () => {
     montar();
 
     await screen.findByText(/Informes de esta obra/i);
-    expect(screen.queryByRole("button", { name: /Borrar borrador/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Borrar el informe/i }));
+
+    // Se puede borrar —si no, la obra quedaría atrapada— pero se le dice lo que
+    // está a punto de perder.
+    expect(screen.getByText(/evidencia de esa visita/i)).toBeInTheDocument();
+    expect(screen.getByText(/PDF/)).toBeInTheDocument();
   });
 
   it("no mezcla los informes de una obra con los de otra", async () => {
@@ -225,7 +230,7 @@ describe("ObrasPage", () => {
     await waitFor(() => expect(proyectos.guardados.size).toBe(0));
   });
 
-  it("no deja borrar una obra que tiene informes, y explica por qué", async () => {
+  it("avisa de cuántos informes se lleva la obra por delante, y los borra", async () => {
     const alta = await new AltaPromotor(promotores).ejecutar({ nombreRazonSocial: "Promotor" });
     if (!alta.ok) throw new Error("el alta debería funcionar");
     const obra = await new CrearProyecto(proyectos, promotores).ejecutar({
@@ -239,9 +244,11 @@ describe("ObrasPage", () => {
     montar();
 
     fireEvent.click(await screen.findByRole("button", { name: /Borrar la obra OB-001/i }));
+    expect(screen.getByText(/Se borrará también su informe/i)).toBeInTheDocument();
+
     fireEvent.click(screen.getByRole("button", { name: /Sí, borrar la obra/i }));
 
-    expect(await screen.findByText(/Bórralo primero/i)).toBeInTheDocument();
-    expect(proyectos.guardados.size).toBe(1);
+    await waitFor(() => expect(proyectos.guardados.size).toBe(0));
+    expect(informes.guardados.size).toBe(0);
   });
 });

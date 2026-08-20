@@ -76,6 +76,18 @@ export const obraVacia: FormularioObra = {
   correos: "",
 };
 
+/** Datos guardados -> valores del formulario (para editar una obra existente). */
+export function aFormularioObra(proyecto: DatosProyecto): FormularioObra {
+  return {
+    ...obraVacia,
+    // Solo se copia lo que tiene valor: el resto se queda en "" y el campo sale
+    // vacío en vez de con un "undefined" dentro.
+    ...Object.fromEntries(
+      Object.entries(proyecto).filter(([, valor]) => valor !== undefined && valor !== null),
+    ),
+  };
+}
+
 /** Valores del formulario -> datos para el caso de uso. */
 export function aDatosProyecto(form: FormularioObra): DatosProyecto {
   return {

@@ -11,8 +11,9 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { type CrearProyecto } from "@/application/use-cases/crear-proyecto";
+import { type EditarProyecto } from "@/application/use-cases/editar-proyecto";
 import { type ListarPromotores } from "@/application/use-cases/listar-promotores";
 import { type Promotor } from "@/domain/promotor/promotor";
 import { FRECUENCIAS_VISITA } from "@/domain/proyecto/esquema-proyecto";
@@ -26,6 +27,7 @@ import {
   camposObra,
   esquemaFormularioObra,
   ETIQUETAS_FRECUENCIA,
+  aFormularioObra,
   obraVacia,
   type FormularioObra,
 } from "@/ui/pages/obra-campos";
@@ -37,10 +39,22 @@ const CLASES_SELECT =
 
 export interface ObraFormPageProps {
   crearProyecto: CrearProyecto;
+  editarProyecto: EditarProyecto;
   listarPromotores: ListarPromotores;
 }
 
-export function ObraFormPage({ crearProyecto, listarPromotores }: ObraFormPageProps) {
+/**
+ * Una sola pantalla para dar de alta y para corregir, como en el promotor: el
+ * formulario es el mismo y solo cambia si llega con datos precargados. Con id en
+ * la URL (/obras/:id) edita esa obra; sin él (/obras/nueva) crea una.
+ */
+export function ObraFormPage({
+  crearProyecto,
+  editarProyecto,
+  listarPromotores,
+}: ObraFormPageProps) {
+  const { id } = useParams<{ id: string }>();
+  const editando = Boolean(id);
   const navegar = useNavigate();
   const [promotores, setPromotores] = useState<Promotor[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -49,6 +63,7 @@ export function ObraFormPage({ crearProyecto, listarPromotores }: ObraFormPagePr
   const {
     register,
     handleSubmit,
+    reset,
     watch,
     setValue,
     formState: { errors, isSubmitting },
@@ -59,22 +74,30 @@ export function ObraFormPage({ crearProyecto, listarPromotores }: ObraFormPagePr
 
   const frecuencia = watch("frecuenciaVisita");
 
-  // Cargamos los promotores para poder elegir uno.
+  // Cargamos los promotores para poder elegir uno y, si estamos editando, la
+  // obra que se va a corregir.
   useEffect(() => {
     let activo = true;
-    listarPromotores.ejecutar().then((lista) => {
-      if (!activo) return;
-      setPromotores(lista);
-      setCargando(false);
-    });
+    Promise.all([listarPromotores.ejecutar(), id ? editarProyecto.cargar(id) : null]).then(
+      ([lista, obra]) => {
+        if (!activo) return;
+        setPromotores(lista);
+        if (id && !obra) setErrorGeneral("Esa obra ya no existe.");
+        if (obra) reset(aFormularioObra(obra));
+        setCargando(false);
+      },
+    );
     return () => {
       activo = false;
     };
-  }, [listarPromotores]);
+  }, [listarPromotores, editarProyecto, id, reset]);
 
   async function onSubmit(datos: FormularioObra) {
     setErrorGeneral(null);
-    const resultado = await crearProyecto.ejecutar(aDatosProyecto(datos));
+    const valores = aDatosProyecto(datos);
+    const resultado = id
+      ? await editarProyecto.ejecutar({ ...valores, id })
+      : await crearProyecto.ejecutar(valores);
     if (resultado.ok) {
       navegar("/obras");
       return;
@@ -110,7 +133,9 @@ export function ObraFormPage({ crearProyecto, listarPromotores }: ObraFormPagePr
   return (
     <main className="mx-auto max-w-2xl px-6 py-10 space-y-8">
       <header className="space-y-2">
-        <h1 className="text-[28px] font-semibold text-foreground">Nueva obra</h1>
+        <h1 className="text-[28px] font-semibold text-foreground">
+          {editando ? "Editar obra" : "Nueva obra"}
+        </h1>
         <p className="text-[18px] text-muted-foreground">
           Elige el promotor, rellena los datos y añade quién recibirá los informes.
         </p>
