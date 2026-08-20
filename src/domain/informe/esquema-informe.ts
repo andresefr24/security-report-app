@@ -18,13 +18,15 @@ import { textoObligatorio } from "@/domain/shared/validacion";
 export const ESTADOS_INFORME = ["borrador", "finalizado"] as const;
 
 /**
- * Quién firma un informe: el coordinador (obligatoria, es su prueba de presencia)
- * y quien lo recibe en obra (opcional). El promotor no firma, y la subcontrata
- * tampoco: la regla "la subcontrata con incumplimiento firma" se eliminó en el
- * modelo v2 porque no aparece en ninguno de los 8 informes reales.
- * Ver docs/entity-informe#signatures.
+ * Quién firma un informe: SOLO el coordinador, y es obligatoria — es su prueba
+ * de presencia y lo que da valor legal al documento.
+ *
+ * Hubo un rol "recibido" para quien recogía el informe en obra, pero en la
+ * práctica nunca se firmaba desde la app y su hueco salía vacío en el PDF, así
+ * que los coordinadores lo quitaron. El promotor y la subcontrata tampoco
+ * firman. Ver docs/entity-informe#signatures.
  */
-export const ROLES_FIRMANTE = ["coordinador", "recibido"] as const;
+export const ROLES_FIRMANTE = ["coordinador"] as const;
 
 /**
  * En qué estado está una observación. Sustituye al `tipo` invisible que dejó D9

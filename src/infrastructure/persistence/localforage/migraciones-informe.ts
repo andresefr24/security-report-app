@@ -66,8 +66,22 @@ const fueraElReceptor: Escalon = (guardado) => {
   return resto;
 };
 
+/**
+ * v3 → v4 · Fuera las firmas de "recibido".
+ *
+ * El rol desapareció: en la app nunca se llegaba a firmar ahí y el recuadro
+ * salía vacío en el documento. Sin este escalón, un informe guardado con una
+ * firma de ese rol ya no validaría y acabaría entero en cuarentena.
+ */
+const fueraLasFirmasDeRecibido: Escalon = (guardado) => {
+  const { firmas, ...resto } = guardado as Guardado & { firmas?: { rol?: string }[] };
+  if (!Array.isArray(firmas)) return resto;
+  return { ...resto, firmas: firmas.filter((firma) => firma?.rol !== "recibido") };
+};
+
 export const ESCALONES_INFORME: Escalon[] = [
   soloSellar,
   laActividadPasaAObservacion,
   fueraElReceptor,
+  fueraLasFirmasDeRecibido,
 ];
