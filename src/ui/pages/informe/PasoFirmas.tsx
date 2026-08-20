@@ -51,9 +51,6 @@ export function PasoFirmas({ informe, actualizar }: PropsPaso) {
   const [local, setLocal] = useState<Record<string, { nombre: string; firma: string }>>(() => {
     const inicial: Record<string, { nombre: string; firma: string }> = {};
     for (const f of informe.firmas ?? []) inicial[f.rol] = { nombre: f.nombre, firma: f.firma };
-    // Si el receptor ya se escribió en el paso de datos, su nombre viene puesto.
-    const receptor = informe.receptor?.nombre?.trim();
-    if (receptor && !inicial.recibido) inicial.recibido = { nombre: receptor, firma: "" };
     return inicial;
   });
 

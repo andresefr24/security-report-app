@@ -140,42 +140,23 @@ describe("ObraFormPage", () => {
     expect(guardada.presupuestoEss).toBe("189.523,06 €");
   });
 
-  it("añade un destinatario a la lista de distribución y lo guarda con su rol", async () => {
+  it("guarda los correos en un solo campo, separados por punto y coma", async () => {
     const promotorId = await unPromotor();
     montar(proyectos, promotores);
 
     const selector = await screen.findByLabelText(/Promotor/i);
     fireEvent.change(selector, { target: { value: promotorId } });
     fireEvent.change(screen.getByLabelText(/Código de obra/i), { target: { value: "OB-001" } });
-
-    fireEvent.click(screen.getByRole("button", { name: /Añadir destinatario/i }));
-    fireEvent.change(screen.getByLabelText(/^Correo$/i), {
-      target: { value: "marta@canal.es" },
+    fireEvent.change(screen.getByLabelText(/^Correos$/i), {
+      target: { value: "marta@canal.es; jefe@contrata.es" },
     });
-    fireEvent.change(screen.getByLabelText(/^Rol$/i), { target: { value: "contratista" } });
 
     fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
 
     expect(await screen.findByText("Listado de obras")).toBeInTheDocument();
-    const guardada = [...proyectos.guardados.values()][0];
-    expect(guardada.listaDistribucion).toHaveLength(1);
-    expect(guardada.listaDistribucion?.[0].correo).toBe("marta@canal.es");
-    expect(guardada.listaDistribucion?.[0].rol).toBe("contratista");
+    expect([...proyectos.guardados.values()][0].correos).toBe(
+      "marta@canal.es; jefe@contrata.es",
+    );
   });
 
-  it("no guarda si un destinatario tiene el correo mal escrito", async () => {
-    const promotorId = await unPromotor();
-    montar(proyectos, promotores);
-
-    const selector = await screen.findByLabelText(/Promotor/i);
-    fireEvent.change(selector, { target: { value: promotorId } });
-    fireEvent.change(screen.getByLabelText(/Código de obra/i), { target: { value: "OB-001" } });
-
-    fireEvent.click(screen.getByRole("button", { name: /Añadir destinatario/i }));
-    fireEvent.change(screen.getByLabelText(/^Correo$/i), { target: { value: "no-es-correo" } });
-    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
-
-    expect(await screen.findByText(/formato válido/i)).toBeInTheDocument();
-    expect(proyectos.guardados.size).toBe(0);
-  });
 });

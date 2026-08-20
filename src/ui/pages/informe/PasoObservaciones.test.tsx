@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { useState } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { PasoObservaciones } from "@/ui/pages/informe/PasoObservaciones";
+import { PasoObservaciones, numerar } from "@/ui/pages/informe/PasoObservaciones";
 import { type DatosInforme } from "@/domain/informe/informe";
 
 vi.mock("@/ui/pages/informe/comprimir-foto", () => ({
@@ -154,5 +154,53 @@ describe("PasoObservaciones", () => {
 
     expect(screen.getByDisplayValue("Semana del 3 al 7 de agosto.")).toBeInTheDocument();
     expect(screen.getByDisplayValue("La obra avanza según programación.")).toBeInTheDocument();
+  });
+  it("enlaza una observación con la anterior y le hereda el título", () => {
+    render(
+      <Arnes
+        inicial={{
+          ...base,
+          observaciones: [
+            { id: "o1", titulo: "Grupo electrógeno sin extintores", estado: "medida-requerida" },
+            { id: "o2" },
+          ],
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Es continuación de la anterior/i }));
+
+    // Las dos son la observación 1: el hallazgo y cómo quedó.
+    expect(screen.getAllByText(/^Observación 1/)).toHaveLength(2);
+    // Y no hay que reescribir el título.
+    expect(screen.getAllByDisplayValue("Grupo electrógeno sin extintores")).toHaveLength(2);
+  });
+
+  it("la primera observación no ofrece enlazarse: no hay ninguna encima", () => {
+    render(<Arnes inicial={{ ...base, observaciones: [{ id: "o1" }] }} />);
+
+    expect(
+      screen.queryByRole("button", { name: /Es continuación de la anterior/i }),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("numerar", () => {
+  it("numera de una en una cuando ninguna continúa a otra", () => {
+    expect(numerar([{}, {}, {}])).toEqual([1, 2, 3]);
+  });
+
+  it("una continuación repite el número de la de arriba", () => {
+    expect(numerar([{}, { continuaAnterior: true }, {}])).toEqual([1, 1, 2]);
+  });
+
+  it("varias seguidas comparten el mismo número", () => {
+    expect(
+      numerar([{}, { continuaAnterior: true }, { continuaAnterior: true }, {}]),
+    ).toEqual([1, 1, 1, 2]);
+  });
+
+  it("la primera no puede continuar a nadie, aunque venga marcada", () => {
+    expect(numerar([{ continuaAnterior: true }, {}])).toEqual([1, 2]);
   });
 });

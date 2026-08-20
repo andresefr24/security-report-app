@@ -59,15 +59,17 @@ test("un coordinador crea un informe de punta a punta y llega al PDF", async ({ 
   await page.getByLabel(/Promotor/i).selectOption({ label: "Canal de Isabel II" });
   await page.getByLabel(/Código de obra/i).fill("OB-2026-014");
   await page.getByLabel(/^Contratista$/).fill("API Movilidad");
+  await page.getByLabel(/^Correos$/).fill("uno@ejemplo.es; otro@ejemplo.es");
   await page.getByRole("button", { name: "Guardar" }).click();
-  await expect(page.getByText("OB-2026-014")).toBeVisible();
+  // El botón de borrar también dice el código, así que buscamos el título.
+  await expect(page.getByText("OB-2026-014", { exact: true })).toBeVisible();
 
   // 4) Nuevo informe de esa obra → abre el wizard.
   await page.getByRole("link", { name: "Nuevo informe" }).click();
   await expect(page.getByText("Paso 1 de 3")).toBeVisible();
 
-  // 5) Paso 1: quién recibe el informe (opcional, pero es lo normal).
-  await page.getByLabel(/^Nombre$/).fill("Luis Jefe de Obra");
+  // 5) Paso 1: solo la fecha y la hora, que ya vienen puestas.
+  await expect(page.getByLabel(/Fecha y hora de la visita/i)).toBeVisible();
   await page.getByRole("button", { name: "Siguiente" }).click();
 
   // 6) Paso 2: la observación. Sin al menos una con título no se puede cerrar.

@@ -67,12 +67,11 @@ describe("loQueFaltaParaFinalizar", () => {
     expect(loQueFaltaParaFinalizar(informeListo({ situacion: undefined }))).toEqual([]);
   });
 
-  it("NO exige fotos, comentarios de foto ni receptor", () => {
+  it("NO exige fotos ni comentarios de foto", () => {
     expect(
       loQueFaltaParaFinalizar(
         informeListo({
           observaciones: [{ id: "o1", titulo: "Desbroce mecánico.", fotos: [] }],
-          receptor: undefined,
         }),
       ),
     ).toEqual([]);
