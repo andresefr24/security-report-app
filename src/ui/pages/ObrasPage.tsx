@@ -23,11 +23,16 @@ import { Button } from "@/ui/components/button";
 import { Card } from "@/ui/components/card";
 import { ETIQUETAS_FRECUENCIA } from "@/ui/pages/obra-campos";
 
-/** Papelera: icono en trazo, hereda color y tamaño de quien la usa. */
+/**
+ * Papelera: icono en trazo, hereda el color de quien la usa.
+ *
+ * El `!` es necesario: el botón encoge por defecto cualquier icono a 16px, y a
+ * ese tamaño no se distingue. Con presbicia eso no es un detalle.
+ */
 function IconoPapelera() {
   return (
     <svg
-      className="h-6 w-6"
+      className="!h-6 !w-6"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
