@@ -3,11 +3,12 @@
 // Hace falta porque una obra creada por error se quedaba ahí para siempre,
 // ensuciando la pantalla principal.
 //
-// REGLA: solo se borra una obra que NO tenga informes. Los informes son la
-// evidencia de las visitas ([[legal-context]]): borrar la obra y llevárselos por
-// delante en el mismo gesto sería demasiado fácil de hacer sin querer. Si de
-// verdad quiere deshacerse de todo, primero borra los borradores desde la propia
-// obra; y si hay informes cerrados, eso ya es una conversación aparte.
+// La obra se borra CON SUS INFORMES. La primera versión se negaba si tenía
+// alguno, para proteger la evidencia de las visitas, pero dejaba al coordinador
+// encerrado: no había forma de quitar una obra que ya se hubiera usado.
+//
+// Quien avisa es la pantalla, que dice cuántos informes se van a borrar con
+// ella antes de pedir la confirmación. Aquí solo se cuenta y se hace.
 
 import { type ProyectoRepository } from "@/domain/ports/proyecto-repository";
 import { type InformeRepository } from "@/domain/ports/informe-repository";
@@ -20,19 +21,22 @@ export class BorrarProyecto {
     private readonly informes: InformeRepository,
   ) {}
 
+  /** Cuántos informes se van a borrar con la obra. Lo usa el aviso de la pantalla. */
+  async cuantosInformes(id: Id): Promise<number> {
+    return (await this.informes.listarPorProyecto(id)).length;
+  }
+
   async ejecutar(id: Id): Promise<Result<void>> {
     const proyecto = await this.proyectos.obtenerPorId(id);
     if (!proyecto) {
       return fallo(["Esta obra ya no existe."]);
     }
 
+    // Primero los informes: si algo fallara a mitad, es mejor quedarse con la
+    // obra vacía que con informes huérfanos que no se ven desde ninguna parte.
     const informes = await this.informes.listarPorProyecto(id);
-    if (informes.length > 0) {
-      return fallo([
-        informes.length === 1
-          ? "Esta obra tiene un informe. Bórralo primero si quieres quitar la obra."
-          : `Esta obra tiene ${informes.length} informes. Bórralos primero si quieres quitar la obra.`,
-      ]);
+    for (const informe of informes) {
+      await this.informes.borrar(informe.id);
     }
 
     await this.proyectos.borrar(id);

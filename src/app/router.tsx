@@ -74,6 +74,19 @@ export const router = createBrowserRouter([
     element: (
       <ObraFormPage
         crearProyecto={casosDeUso.crearProyecto}
+        editarProyecto={casosDeUso.editarProyecto}
+        listarPromotores={casosDeUso.listarPromotores}
+      />
+    ),
+  },
+  {
+    // La misma pantalla, con la obra ya cargada: corregir un dedazo o rellenar
+    // los datos que no existían cuando se dio de alta.
+    path: '/obras/:id',
+    element: (
+      <ObraFormPage
+        crearProyecto={casosDeUso.crearProyecto}
+        editarProyecto={casosDeUso.editarProyecto}
         listarPromotores={casosDeUso.listarPromotores}
       />
     ),

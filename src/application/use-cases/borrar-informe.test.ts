@@ -46,7 +46,11 @@ describe("BorrarInforme", () => {
     expect(informes.guardados.has(id)).toBe(false);
   });
 
-  it("NO borra un informe cerrado: está firmado y es evidencia legal", async () => {
+  it("borra también un informe cerrado: la app no puede dejarles encerrados", async () => {
+    // La primera versión se negaba, para proteger la evidencia de la visita, y
+    // montaba una trampa: el informe no se podía quitar y la obra tampoco,
+    // porque no se borra una obra con informes. El aviso vive ahora en la
+    // pantalla, que dice lo que se pierde antes de pedir confirmación.
     const id = await unBorrador();
     const guardado = informes.guardados.get(id);
     if (!guardado) throw new Error("el borrador debería estar guardado");
@@ -54,10 +58,8 @@ describe("BorrarInforme", () => {
 
     const resultado = await new BorrarInforme(informes).ejecutar(id);
 
-    expect(resultado.ok).toBe(false);
-    if (!resultado.ok) expect(resultado.errores.join(" ")).toContain("no se puede borrar");
-    // Y sigue ahí.
-    expect(informes.guardados.has(id)).toBe(true);
+    expect(resultado.ok).toBe(true);
+    expect(informes.guardados.has(id)).toBe(false);
   });
 
   it("avisa si el informe ya no existe", async () => {
