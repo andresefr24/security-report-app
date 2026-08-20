@@ -18,20 +18,30 @@ import { textoObligatorio } from "@/domain/shared/validacion";
 export const ESTADOS_INFORME = ["borrador", "finalizado"] as const;
 
 /**
- * Quién firma un informe: el coordinador (obligatoria, es su prueba de presencia)
- * y quien lo recibe en obra (opcional). El promotor no firma, y la subcontrata
- * tampoco: la regla "la subcontrata con incumplimiento firma" se eliminó en el
- * modelo v2 porque no aparece en ninguno de los 8 informes reales.
- * Ver docs/entity-informe#signatures.
+ * Quién firma un informe: SOLO el coordinador, y es obligatoria — es su prueba
+ * de presencia y lo que da valor legal al documento.
+ *
+ * Hubo un rol "recibido" para quien recogía el informe en obra, pero en la
+ * práctica nunca se firmaba desde la app y su hueco salía vacío en el PDF, así
+ * que los coordinadores lo quitaron. El promotor y la subcontrata tampoco
+ * firman. Ver docs/entity-informe#signatures.
  */
-export const ROLES_FIRMANTE = ["coordinador", "recibido"] as const;
+export const ROLES_FIRMANTE = ["coordinador"] as const;
 
 /**
- * De qué tipo es una actividad. Invisible en la pantalla a propósito (hoy nadie
- * lo rellena): existe para no perder la señal estructurada de cara al futuro —
- * poder contar incidencias sin rehacer el modelo. D9, afinado 1.
+ * En qué estado está una observación. Sustituye al `tipo` invisible que dejó D9
+ * (afinado 1): la idea era la misma —no perder la señal estructurada— pero los
+ * coordinadores pidieron verla, con colores, y con estos tres valores, que son
+ * los que usan en sus informes de verdad.
+ *
+ * El coordinador elige uno con un botón; la etiqueta y el color del PDF los
+ * pone la app, nunca se teclean.
  */
-export const TIPOS_ACTIVIDAD = ["normal", "incidencia"] as const;
+export const ESTADOS_OBSERVACION = [
+  "medida-requerida",
+  "observacion-preventiva",
+  "subsanado",
+] as const;
 
 /** Una foto adjunta: imagen reducida (dataURL) con un id para poder borrarla. */
 export const esquemaFoto = z.object({
@@ -42,30 +52,34 @@ export const esquemaFoto = z.object({
 });
 
 /**
- * Una actividad: la pieza que se repite dentro del informe. En los informes
- * reales es el bloque "SITUACIÓN DE LA ACTUACIÓN: <dónde>" + "DESCRIPCIÓN DE LA
- * ACTIVIDAD: <qué>" seguido de sus fotos.
+ * Una observación: la pieza que se repite dentro del informe. Es el bloque que
+ * en el documento encabeza como "OBSERVACIÓN 1 · <título>", con su etiqueta de
+ * estado al lado, su ubicación y sus fotos.
  *
- * `descripcion` es opcional AQUÍ (el borrador se guarda a medias, y una actividad
- * recién añadida está vacía) pero completitud.ts exige al menos una con texto
- * para poder finalizar.
+ * El TÍTULO es el titular corto ("Grupo electrógeno sin medios de extinción
+ * cercanos"); la DESCRIPCIÓN es el texto largo, que puede no hacer falta cuando
+ * el comentario de la foto ya lo cuenta todo.
+ *
+ * Los dos son opcionales AQUÍ (el borrador se guarda a medias, y una observación
+ * recién añadida está vacía); completitud.ts es quien exige al menos una con
+ * título para poder finalizar.
  */
-export const esquemaActividad = z.object({
+export const esquemaObservacion = z.object({
   id: z.string(),
+  /** El titular corto que encabeza el bloque en el PDF. */
+  titulo: z.string().optional(),
   /** Dónde ocurre: "(M-300) PK 31+400 – ZONA 4 - ESTE". */
   ubicacion: z.string().optional(),
   descripcion: z.string().optional(),
-  tipo: z.enum(TIPOS_ACTIVIDAD).optional(),
+  estado: z.enum(ESTADOS_OBSERVACION).optional(),
+  /**
+   * Marca esta observación como el seguimiento de la anterior: comparte su
+   * número en el documento. Sirve para lo que hacen de verdad — apuntan una
+   * medida requerida, se la arreglan durante la visita, y añaden la misma
+   * observación otra vez como subsanada.
+   */
+  continuaAnterior: z.boolean().optional(),
   fotos: z.array(esquemaFoto).optional(),
-});
-
-/**
- * Quien recibe el informe en obra. Vive en el INFORME y no en la obra porque
- * cambia en cada visita (D9, afinado 2). Todo opcional: nunca bloquea el cierre.
- */
-export const esquemaReceptor = z.object({
-  nombre: z.string().optional(),
-  empresa: z.string().optional(),
 });
 
 /** Una firma recogida en el dispositivo: quién firma, en qué papel y el trazo. */
@@ -88,7 +102,6 @@ export const esquemaInforme = z.object({
   resumenSemana: z.string().optional(),
   /** Estado general de la obra. Opcional: los informes semanales no lo usan. */
   situacion: z.string().optional(),
-  actividades: z.array(esquemaActividad).optional(),
-  receptor: esquemaReceptor.optional(),
+  observaciones: z.array(esquemaObservacion).optional(),
   firmas: z.array(esquemaFirmaInforme).optional(),
 });

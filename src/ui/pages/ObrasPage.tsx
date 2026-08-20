@@ -16,17 +16,23 @@ import {
 } from "@/application/use-cases/listar-proyectos";
 import { type ListarInformes } from "@/application/use-cases/listar-informes";
 import { type BorrarInforme } from "@/application/use-cases/borrar-informe";
+import { type BorrarProyecto } from "@/application/use-cases/borrar-proyecto";
 import { type Informe } from "@/domain/informe/informe";
 import { type Id } from "@/domain/shared/id";
 import { Button } from "@/ui/components/button";
 import { Card } from "@/ui/components/card";
 import { ETIQUETAS_FRECUENCIA } from "@/ui/pages/obra-campos";
 
-/** Papelera: icono en trazo, hereda color y tamaño de quien la usa. */
+/**
+ * Papelera: icono en trazo, hereda el color de quien la usa.
+ *
+ * El `!` es necesario: el botón encoge por defecto cualquier icono a 16px, y a
+ * ese tamaño no se distingue. Con presbicia eso no es un detalle.
+ */
 function IconoPapelera() {
   return (
     <svg
-      className="h-6 w-6"
+      className="!h-6 !w-6"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -42,11 +48,6 @@ function IconoPapelera() {
   );
 }
 
-/** Concuerda el singular: "1 destinatario", pero "0 / 2 destinatarios". */
-function textoDestinatarios(cuantos: number): string {
-  return cuantos === 1 ? "1 destinatario" : `${cuantos} destinatarios`;
-}
-
 /** "2026-07-01T09:30" -> "1 de julio de 2026, 9:30" (legible para el coordinador). */
 function fechaLegible(fechaHora: string): string {
   const fecha = new Date(fechaHora);
@@ -58,9 +59,15 @@ export interface ObrasPageProps {
   listarProyectos: ListarProyectos;
   listarInformes: ListarInformes;
   borrarInforme: BorrarInforme;
+  borrarProyecto: BorrarProyecto;
 }
 
-export function ObrasPage({ listarProyectos, listarInformes, borrarInforme }: ObrasPageProps) {
+export function ObrasPage({
+  listarProyectos,
+  listarInformes,
+  borrarInforme,
+  borrarProyecto,
+}: ObrasPageProps) {
   const [obras, setObras] = useState<ObraConPromotor[]>([]);
   const [informesPorObra, setInformesPorObra] = useState<Record<Id, Informe[]>>({});
   const [cargando, setCargando] = useState(true);
@@ -68,6 +75,30 @@ export function ObrasPage({ listarProyectos, listarInformes, borrarInforme }: Ob
   // hace en dos toques: "Borrar" y luego "Sí, borrar". Sin ventanas del
   // navegador, que en el móvil salen diminutas.
   const [porConfirmar, setPorConfirmar] = useState<Id | null>(null);
+  // Igual para la obra, más su aviso si no se puede (tiene informes dentro).
+  const [obraPorConfirmar, setObraPorConfirmar] = useState<Id | null>(null);
+  const [avisoObra, setAvisoObra] = useState<string | null>(null);
+
+  async function confirmarBorradoDeObra(obraId: Id) {
+    const resultado = await borrarProyecto.ejecutar(obraId);
+    setObraPorConfirmar(null);
+    if (!resultado.ok) {
+      setAvisoObra(resultado.errores.join(" "));
+      return;
+    }
+    setAvisoObra(null);
+    setObras((actual) => actual.filter((o) => o.proyecto.id !== obraId));
+    setInformesPorObra((actual) => ({ ...actual, [obraId]: [] }));
+  }
+
+  /** Lo que se pierde al borrar la obra, dicho en su idioma. */
+  function loQueSeLleva(obraId: Id): string {
+    const cuantos = (informesPorObra[obraId] ?? []).length;
+    if (cuantos === 0) return "No tiene informes.";
+    return cuantos === 1
+      ? "Se borrará también su informe."
+      : `Se borrarán también sus ${cuantos} informes.`;
+  }
 
   async function confirmarBorrado(obraId: Id, informeId: Id) {
     const resultado = await borrarInforme.ejecutar(informeId);
@@ -139,9 +170,16 @@ export function ObrasPage({ listarProyectos, listarInformes, borrarInforme }: Ob
                     )}
                   </p>
                   <p className="text-[16px] text-muted-foreground">
-                    Visita {ETIQUETAS_FRECUENCIA[proyecto.frecuenciaVisita].toLowerCase()} ·{" "}
-                    {textoDestinatarios(proyecto.listaDistribucion?.length ?? 0)}
+                    Visita {ETIQUETAS_FRECUENCIA[proyecto.frecuenciaVisita].toLowerCase()}
                   </p>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="mt-2 h-[52px] w-full text-[18px]"
+                  >
+                    <Link to={`/obras/${proyecto.id}`}>Editar los datos de la obra</Link>
+                  </Button>
+
                   {(informesPorObra[proyecto.id] ?? []).length > 0 && (
                     <div className="space-y-2 pt-2">
                       <p className="text-[16px] font-semibold">Informes de esta obra</p>
@@ -161,39 +199,40 @@ export function ObrasPage({ listarProyectos, listarInformes, borrarInforme }: Ob
 
                             {/* Solo los borradores se pueden tirar: uno cerrado
                                 está firmado y es evidencia de la visita. */}
-                            {informe.estado === "borrador" &&
-                              (porConfirmar === informe.id ? (
-                                <div className="space-y-2 rounded-md bg-secondary p-3">
-                                  <p className="text-[16px]">
-                                    ¿Seguro que quieres borrar este borrador? No se puede
-                                    deshacer.
-                                  </p>
-                                  <Button
-                                    variant="destructive"
-                                    onClick={() => confirmarBorrado(proyecto.id, informe.id)}
-                                    className="h-[52px] w-full gap-2 text-[18px]"
-                                  >
-                                    <IconoPapelera />
-                                    Sí, borrar el borrador
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => setPorConfirmar(null)}
-                                    className="h-[52px] w-full text-[18px]"
-                                  >
-                                    No, dejarlo
-                                  </Button>
-                                </div>
-                              ) : (
+                            {porConfirmar === informe.id ? (
+                              <div className="space-y-2 rounded-md bg-secondary p-3">
+                                <p className="text-[16px]">
+                                  {informe.estado === "finalizado"
+                                    ? "Este informe está cerrado y firmado: es la evidencia de esa visita. Asegúrate de tener guardado el PDF antes de borrarlo."
+                                    : "¿Seguro que quieres borrar este borrador?"}{" "}
+                                  No se puede deshacer.
+                                </p>
                                 <Button
                                   variant="destructive"
-                                  onClick={() => setPorConfirmar(informe.id)}
+                                  onClick={() => confirmarBorrado(proyecto.id, informe.id)}
                                   className="h-[52px] w-full gap-2 text-[18px]"
                                 >
                                   <IconoPapelera />
-                                  Borrar borrador del {fechaLegible(informe.fechaHora)}
+                                  Sí, borrar el informe
                                 </Button>
-                              ))}
+                                <Button
+                                  variant="outline"
+                                  onClick={() => setPorConfirmar(null)}
+                                  className="h-[52px] w-full text-[18px]"
+                                >
+                                  No, dejarlo
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                variant="destructive"
+                                onClick={() => setPorConfirmar(informe.id)}
+                                className="h-[52px] w-full gap-2 text-[18px]"
+                              >
+                                <IconoPapelera />
+                                Borrar el informe del {fechaLegible(informe.fechaHora)}
+                              </Button>
+                            )}
                           </li>
                         ))}
                       </ul>
@@ -203,6 +242,50 @@ export function ObrasPage({ listarProyectos, listarInformes, borrarInforme }: Ob
                   <Button asChild className="mt-2 h-[52px] w-full text-[18px]">
                     <Link to={`/obras/${proyecto.id}/informes/nuevo`}>Nuevo informe</Link>
                   </Button>
+
+                  {/* Borrar la obra entera. Solo se puede si no tiene informes:
+                      son la evidencia de las visitas. */}
+                  {obraPorConfirmar === proyecto.id ? (
+                    <div className="mt-2 space-y-2 rounded-md bg-secondary p-3">
+                      <p className="text-[16px]">
+                        ¿Seguro que quieres borrar la obra {proyecto.codigoObra}?{" "}
+                        {loQueSeLleva(proyecto.id)} No se puede deshacer.
+                      </p>
+                      <Button
+                        variant="destructive"
+                        onClick={() => confirmarBorradoDeObra(proyecto.id)}
+                        className="h-[52px] w-full gap-2 text-[18px]"
+                      >
+                        <IconoPapelera />
+                        Sí, borrar la obra
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setObraPorConfirmar(null)}
+                        className="h-[52px] w-full text-[18px]"
+                      >
+                        No, dejarla
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        setAvisoObra(null);
+                        setObraPorConfirmar(proyecto.id);
+                      }}
+                      className="mt-2 h-[52px] w-full gap-2 text-[18px]"
+                    >
+                      <IconoPapelera />
+                      Borrar la obra {proyecto.codigoObra}
+                    </Button>
+                  )}
+
+                  {avisoObra && obraPorConfirmar === null && (
+                    <p className="pt-2 text-[16px] text-destructive" role="alert">
+                      {avisoObra}
+                    </p>
+                  )}
                 </Card>
               </li>
             ))}

@@ -67,6 +67,10 @@ export class LocalForageProyectoRepository implements ProyectoRepository {
     return todas.filter((proyecto) => proyecto.promotorId === promotorId);
   }
 
+  async borrar(id: Id): Promise<void> {
+    await this.caja.removeItem(id);
+  }
+
   /**
    * MIGRAR y DESPUÉS validar, nunca al revés: así zod solo ve la forma de hoy y
    * jamás descarta un campo por venir con un nombre viejo. Los escalones están

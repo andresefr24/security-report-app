@@ -75,7 +75,7 @@ describe("EntregarInformePage", () => {
       codigoObra: "OB-001",
       promotorId: alta.valor.id,
       frecuenciaVisita: "semanal",
-      listaDistribucion: [{ correo: "marta@canal.es", rol: "promotor" }],
+      correos: "marta@canal.es; jefe@contrata.es",
     });
     if (!obra.ok) throw new Error("crear la obra debería funcionar");
     const borrador = await new CrearBorradorInforme(informes, proyectos).ejecutar(obra.valor.id);
@@ -121,7 +121,7 @@ describe("EntregarInformePage", () => {
 
   it("prepara el informe también en desarrollo, con el doble montaje de StrictMode", async () => {
     const informeId = await unInforme({
-      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
+      observaciones: [{ id: "o1", titulo: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
 
@@ -134,7 +134,7 @@ describe("EntregarInformePage", () => {
 
   it("cierra el informe y muestra el PDF listo para compartir", async () => {
     const informeId = await unInforme({
-      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
+      observaciones: [{ id: "o1", titulo: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
 
@@ -146,7 +146,7 @@ describe("EntregarInformePage", () => {
   });
 
   it("avisa de lo que falta y deja volver al informe, sin cerrarlo", async () => {
-    const informeId = await unInforme({ actividades: [{ id: "a1", descripcion: "Sin firmar" }] });
+    const informeId = await unInforme({ observaciones: [{ id: "o1", titulo: "Sin firmar" }] });
 
     montar(informeId, new SharePortFalso());
 
@@ -160,7 +160,7 @@ describe("EntregarInformePage", () => {
 
   it("comparte el PDF con el nombre del archivo", async () => {
     const informeId = await unInforme({
-      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
+      observaciones: [{ id: "o1", titulo: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
     const compartir = new SharePortFalso();
@@ -175,7 +175,7 @@ describe("EntregarInformePage", () => {
 
   it("oculta el botón de compartir si el dispositivo no puede (caso iOS)", async () => {
     const informeId = await unInforme({
-      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
+      observaciones: [{ id: "o1", titulo: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
 
@@ -189,7 +189,7 @@ describe("EntregarInformePage", () => {
 
   it("avisa si no se pudo compartir y se descargó en su lugar", async () => {
     const informeId = await unInforme({
-      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
+      observaciones: [{ id: "o1", titulo: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
 
@@ -200,22 +200,23 @@ describe("EntregarInformePage", () => {
     expect(await screen.findByText(/se ha descargado el archivo/i)).toBeInTheDocument();
   });
 
-  it("muestra los destinatarios de la obra y avisa de que la app no envía correos", async () => {
+  it("muestra los correos de la obra y avisa de que la app no los envía", async () => {
     const informeId = await unInforme({
-      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
+      observaciones: [{ id: "o1", titulo: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
 
     montar(informeId, new SharePortFalso());
     await screen.findByText("Informe listo");
 
-    expect(screen.getByText("marta@canal.es")).toBeInTheDocument();
+    // Salen tal cual se escribieron en la obra, listos para copiar y pegar.
+    expect(screen.getByText("marta@canal.es; jefe@contrata.es")).toBeInTheDocument();
     expect(screen.getByText(/no envía correos/i)).toBeInTheDocument();
   });
 
   it("no genera el PDF si el coordinador no tiene perfil, y le lleva a rellenarlo", async () => {
     const informeId = await unInforme({
-      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
+      observaciones: [{ id: "o1", titulo: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
     coordinadores.guardado = null;

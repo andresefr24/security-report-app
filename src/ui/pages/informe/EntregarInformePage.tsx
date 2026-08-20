@@ -21,7 +21,6 @@ import { type SharePort } from "@/domain/ports/share-port";
 import { type Proyecto } from "@/domain/proyecto/proyecto";
 import { Button } from "@/ui/components/button";
 import { Card } from "@/ui/components/card";
-import { ETIQUETAS_ROL } from "@/ui/pages/obra-campos";
 
 interface PdfListo {
   blob: Blob;
@@ -165,7 +164,7 @@ export function EntregarInformePage({
     );
   }
 
-  const destinatarios = proyecto?.listaDistribucion ?? [];
+  const correos = proyecto?.correos;
   // Se calcula una vez, no en cada render (crea un File para preguntarlo).
   const sePuedeCompartir = compartir.sePuedeCompartir(pdf.blob, pdf.nombre);
 
@@ -210,19 +209,10 @@ export function EntregarInformePage({
         <p className="text-[15px] text-muted-foreground">
           La aplicación no envía correos. Comparte el archivo o descárgalo y adjúntalo tú.
         </p>
-        {destinatarios.length === 0 ? (
-          <p className="text-[18px]">Esta obra aún no tiene destinatarios.</p>
+        {correos ? (
+          <p className="text-[18px] break-words">{correos}</p>
         ) : (
-          <ul className="space-y-1">
-            {destinatarios.map((destinatario) => (
-              <li key={`${destinatario.correo}-${destinatario.rol}`} className="text-[18px]">
-                {destinatario.correo}{" "}
-                <span className="text-[16px] text-muted-foreground">
-                  ({ETIQUETAS_ROL[destinatario.rol]})
-                </span>
-              </li>
-            ))}
-          </ul>
+          <p className="text-[18px]">Esta obra aún no tiene correos anotados.</p>
         )}
       </Card>
 

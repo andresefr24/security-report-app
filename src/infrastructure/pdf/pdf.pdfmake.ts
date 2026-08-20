@@ -105,6 +105,60 @@ function aBloqueDePdfmake(bloque: BloqueDocumento): Content {
         margin: [0, 10, 0, 6],
       };
 
+    // El encabezado de una observación: "OBSERVACIÓN 1" y su título a la
+    // izquierda, y a la derecha la etiqueta de estado con su color.
+    case "observacion": {
+      const izquierda: Content = {
+        stack: [
+          { text: bloque.encabezado, fontSize: 11, bold: true, color: "#1b3a6b" },
+          { text: bloque.titulo, fontSize: 12, bold: true, color: "#1b3a6b" },
+        ],
+        margin: [6, 6, 6, 6],
+      };
+      const derecha: Content = bloque.estado
+        ? {
+            text: bloque.estado.etiqueta,
+            fontSize: 9,
+            bold: true,
+            alignment: "center",
+            color: bloque.estado.texto,
+            fillColor: bloque.estado.fondo,
+            margin: [4, 10, 4, 10],
+          }
+        : { text: "" };
+
+      const borde = bloque.estado ? bloque.estado.borde : "#cccccc";
+      return {
+        // `unbreakable` mantiene la cabecera entera en la misma página: sin esto
+        // el título se quedaba solo al pie y su contenido pasaba a la siguiente.
+        unbreakable: true,
+        stack: [
+          {
+            table: { widths: ["*", 150], body: [[izquierda, derecha]] },
+            layout: {
+              hLineColor: () => borde,
+              vLineColor: () => borde,
+              hLineWidth: () => 0.8,
+              vLineWidth: () => 0.8,
+            },
+          },
+          ...(bloque.lineas.length > 0
+            ? [
+                {
+                  stack: bloque.lineas.map((linea) => ({
+                    text: linea,
+                    fontSize: 11,
+                    margin: [0, 2, 0, 0] as [number, number, number, number],
+                  })),
+                  margin: [6, 6, 0, 0] as [number, number, number, number],
+                },
+              ]
+            : []),
+        ],
+        margin: [0, 14, 0, 8],
+      };
+    }
+
     case "parrafo":
       return {
         text: bloque.texto,
@@ -113,46 +167,45 @@ function aBloqueDePdfmake(bloque: BloqueDocumento): Content {
         margin: [0, 0, 0, 6],
       };
 
-    // Las fotos de una fila, con su comentario en negrita debajo de cada una.
+    // Las fotos de una fila, con su número y su comentario debajo.
     //
-    // El ancho se calcula con las fotos que CABEN en la fila, no con las que hay:
-    // así una foto suelta al final ocupa media página como en los informes
-    // reales, en vez de estirarse hasta el ancho completo.
+    // Cuando la fila lleva UNA sola foto, el comentario ocupa todo el ancho de
+    // la página en vez de la columna de la foto: si no, quedaba en una tira
+    // estrecha de seis o siete renglones.
     case "filaFotos": {
       const porFila = Math.max(bloque.fotosPorFila, bloque.fotos.length);
       const ancho = (ANCHO_UTIL - (porFila - 1) * 10) / porFila;
-      // Si la fila va incompleta, se reparte el hueco a los dos lados para que la
-      // foto quede centrada en la página y no pegada al margen izquierdo.
-      const hueco = ((porFila - bloque.fotos.length) * (ancho + 10)) / 2;
-      const relleno: Column[] = hueco > 0 ? [{ width: hueco, text: "" }] : [];
-      const columnas: Column[] = [
-        ...relleno,
-        ...bloque.fotos.map((foto): Column => ({
+
+      const pieDeFoto = (texto: string, negrita: boolean, arriba: number): Content => ({
+        text: texto,
+        fontSize: 9,
+        bold: negrita,
+        alignment: "center",
+        margin: [0, arriba, 0, 0],
+      });
+
+      if (bloque.fotos.length === 1) {
+        const [foto] = bloque.fotos;
+        return {
+          stack: [
+            { image: foto.imagen, fit: [ancho, ancho * 1.1], alignment: "center" },
+            pieDeFoto(foto.numero, true, 4),
+            ...(foto.comentario ? [pieDeFoto(foto.comentario, true, 2)] : []),
+          ],
+          margin: [0, 0, 0, 12],
+        };
+      }
+
+      const columnas: Column[] = bloque.fotos.map(
+        (foto): Column => ({
           width: ancho,
           stack: [
             { image: foto.imagen, fit: [ancho, ancho * 1.1] },
-            {
-              text: foto.numero,
-              fontSize: 9,
-              bold: true,
-              alignment: "center" as const,
-              margin: [0, 4, 0, 0] as [number, number, number, number],
-            },
-            ...(foto.comentario
-              ? [
-                  {
-                    text: foto.comentario,
-                    fontSize: 9,
-                    bold: true,
-                    alignment: "center" as const,
-                    margin: [0, 2, 0, 0] as [number, number, number, number],
-                  },
-                ]
-              : []),
+            pieDeFoto(foto.numero, true, 4),
+            ...(foto.comentario ? [pieDeFoto(foto.comentario, true, 2)] : []),
           ],
-        })),
-        ...relleno,
-      ];
+        }),
+      );
 
       return { columns: columnas, columnGap: 10, margin: [0, 0, 0, 12] };
     }
@@ -182,29 +235,74 @@ function aBloqueDePdfmake(bloque: BloqueDocumento): Content {
         margin: [4, 4, 4, 4] as [number, number, number, number],
       });
 
+      // Sin "recibido por", el recuadro es de una sola columna y no se estira a
+      // toda la página: un cuadro vacío al lado de la firma quedaba raro.
+      const anchos = bloque.derecha ? ["*", "*"] : [280];
+      const fila = bloque.derecha
+        ? [columna(bloque.izquierda), columna(bloque.derecha)]
+        : [columna(bloque.izquierda)];
+
       return {
-        table: {
-          widths: ["*", "*"],
-          body: [
-            [
-              columna(bloque.izquierda),
-              bloque.derecha ? columna(bloque.derecha) : { text: "" },
-            ],
-          ],
-        },
+        // Igual que la cabecera de la observación: el recuadro de firmas se
+        // partía entre dos páginas y quedaba la mitad en cada una.
+        unbreakable: true,
+        table: { widths: anchos, body: [fila] },
         margin: [0, 20, 0, 0],
       };
     }
 
+    // Un correo por línea: en el documento se leen, no se copian, así que el
+    // punto y coma sobra. En la obra sí se escriben todos seguidos.
     case "distribucion":
       return {
+        // La lista es corta y siempre cabe: que no se parta y deje un correo
+        // suelto al principio de la página siguiente.
+        unbreakable: true,
         stack: [
-          { text: bloque.titulo, fontSize: 10, bold: true, margin: [0, 0, 0, 2] },
-          { text: bloque.correos, fontSize: 10 },
+          { text: bloque.titulo, fontSize: 10, bold: true, margin: [0, 0, 0, 4] },
+          ...bloque.correos.map((correo) => ({
+            text: correo,
+            fontSize: 10,
+            margin: [0, 0, 0, 2] as [number, number, number, number],
+          })),
         ],
         margin: [0, 16, 0, 0],
       };
   }
+}
+
+/**
+ * Junta en un mismo bloque las parejas que no deben acabar en páginas distintas:
+ *
+ *  - Cada observación con su PRIMERA fila de fotos. Sin esto, cuando la
+ *    observación caía al final de una página su foto saltaba a la siguiente y
+ *    había que pasar hoja para ver de qué hablaba el texto. Solo la primera
+ *    fila: pegarlas todas dejaría una observación con muchas fotos sin caber en
+ *    una página.
+ *  - El recuadro de firmas con la lista de correos, que es el pie del
+ *    documento y se lee de una vez.
+ */
+function agrupandoLoQueNoDebeSepararse(bloques: BloqueDocumento[]): Content[] {
+  const contenido: Content[] = [];
+  for (let i = 0; i < bloques.length; i++) {
+    const bloque = bloques[i];
+    const siguiente = bloques[i + 1];
+
+    const vanJuntos =
+      (bloque.tipo === "observacion" && siguiente?.tipo === "filaFotos") ||
+      (bloque.tipo === "firmas" && siguiente?.tipo === "distribucion");
+
+    if (vanJuntos && siguiente) {
+      contenido.push({
+        unbreakable: true,
+        stack: [aBloqueDePdfmake(bloque), aBloqueDePdfmake(siguiente)],
+      });
+      i++;
+      continue;
+    }
+    contenido.push(aBloqueDePdfmake(bloque));
+  }
+  return contenido;
 }
 
 export class PdfMakeAdapter implements PdfPort {
@@ -223,7 +321,14 @@ export class PdfMakeAdapter implements PdfPort {
           widths: [110, "*", 110],
           body: [
             [
-              { text: "", fontSize: 8 },
+              documento.cabeceraPagina.logo
+                ? {
+                    image: documento.cabeceraPagina.logo,
+                    fit: [100, 42] as [number, number],
+                    alignment: "center" as const,
+                    margin: [4, 6, 4, 6] as [number, number, number, number],
+                  }
+                : { text: "", fontSize: 8 },
               {
                 stack: documento.cabeceraPagina.titulo.map((linea) => ({
                   text: linea,
@@ -264,7 +369,7 @@ export class PdfMakeAdapter implements PdfPort {
         alignment: "right",
       }),
 
-      content: documento.bloques.map(aBloqueDePdfmake),
+      content: agrupandoLoQueNoDebeSepararse(documento.bloques),
     };
 
     const pdfMake = await cargarPdfMake();

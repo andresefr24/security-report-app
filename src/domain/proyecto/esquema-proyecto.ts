@@ -8,29 +8,10 @@
 // sostienen el resto: código, promotor y frecuencia. Ver docs/entity-proyecto.md.
 
 import { z } from "zod";
-import { correoObligatorio, textoObligatorio } from "@/domain/shared/validacion";
+import { textoObligatorio } from "@/domain/shared/validacion";
 
 /** Cada cuánto visita el coordinador la obra. Marca la cadencia de los informes. */
 export const FRECUENCIAS_VISITA = ["diaria", "semanal"] as const;
-
-/**
- * Roles de la lista de distribución. La subcontrata solo entra en un informe
- * concreto cuando ese día se le marca un incumplimiento (ver entity-informe).
- */
-export const ROLES_DESTINATARIO = [
-  "promotor",
-  "direccion-facultativa",
-  "tecnico-prl",
-  "contratista",
-  "subcontrata",
-] as const;
-
-/** Un destinatario de los informes de esta obra: su correo y su papel. */
-export const esquemaDestinatario = z.object({
-  nombre: z.string().optional(),
-  correo: correoObligatorio,
-  rol: z.enum(ROLES_DESTINATARIO, { message: "Indique el rol del destinatario." }),
-});
 
 export const esquemaProyecto = z.object({
   id: z.string().optional(),
@@ -68,7 +49,11 @@ export const esquemaProyecto = z.object({
   frecuenciaVisita: z.enum(FRECUENCIAS_VISITA, {
     message: "Indique la frecuencia de visita.",
   }),
-  // Puede crearse la obra sin destinatarios e irlos añadiendo después; pero los
-  // que haya tienen que estar bien (correo válido y rol).
-  listaDistribucion: z.array(esquemaDestinatario).optional(),
+  /**
+   * A quién se le manda el informe, en un solo texto con los correos separados
+   * por ";". Antes era una lista de destinatarios con su rol, y los
+   * coordinadores lo pidieron así: es lo que hacen de verdad, copiar el texto
+   * entero y pegarlo en el "Para:" del correo.
+   */
+  correos: z.string().optional(),
 });

@@ -12,12 +12,12 @@ import { AsistenteInforme, type PasoWizard } from "@/ui/components/asistente-inf
 import { type ObtenerInforme } from "@/application/use-cases/obtener-informe";
 import { type GuardarInforme } from "@/application/use-cases/guardar-informe";
 import { PasoDatos } from "@/ui/pages/informe/PasoDatos";
-import { PasoActividades } from "@/ui/pages/informe/PasoActividades";
+import { PasoObservaciones } from "@/ui/pages/informe/PasoObservaciones";
 import { PasoFirmas } from "@/ui/pages/informe/PasoFirmas";
 
 const PASOS: PasoWizard[] = [
   { titulo: "Datos de la visita", contenido: (props) => <PasoDatos {...props} /> },
-  { titulo: "Situación y actividades", contenido: (props) => <PasoActividades {...props} /> },
+  { titulo: "Situación y observaciones", contenido: (props) => <PasoObservaciones {...props} /> },
   { titulo: "Firmas", contenido: (props) => <PasoFirmas {...props} /> },
 ];
 

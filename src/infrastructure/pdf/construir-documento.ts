@@ -15,6 +15,7 @@ import { type DatosDelPdf } from "@/domain/ports/pdf-port";
 import { type Foto } from "@/domain/informe/informe";
 import {
   PLANTILLA_SEMANAL,
+  type PintaEstadoPdf,
   type PlantillaInforme,
 } from "@/infrastructure/pdf/plantilla-informe";
 
@@ -49,18 +50,38 @@ export type BloqueDocumento =
   /** Un rótulo de sección: en mayúsculas y dentro de su recuadro. */
   | { tipo: "rotulo"; lineas: string[] }
   | { tipo: "parrafo"; texto: string }
+  /**
+   * La cabecera de una observación: su número y título, la etiqueta de estado de
+   * color, y debajo la ubicación y la explicación. Va todo en un bloque para que
+   * no se parta entre dos páginas y deje el título huérfano al pie.
+   */
+  | {
+      tipo: "observacion";
+      encabezado: string;
+      titulo: string;
+      estado?: PintaEstadoPdf;
+      lineas: string[];
+    }
   /** Una fila de fotos (tantas como diga la plantilla) con su comentario debajo. */
   | { tipo: "filaFotos"; fotos: FotoDocumento[]; fotosPorFila: number }
-  /** El recuadro de firmas al pie: coordinador a la izquierda, receptor a la derecha. */
+  /**
+   * El recuadro de firmas al pie. Solo firma el coordinador: quien recibía el
+   * informe no llegaba a firmar nunca en la app, así que su hueco vacío sobraba.
+   */
   | { tipo: "firmas"; izquierda: FirmaDocumento; derecha?: FirmaDocumento }
-  /** La lista de distribución: a quién se le envía. */
-  | { tipo: "distribucion"; titulo: string; correos: string };
+  /** La lista de distribución: a quién se le envía, uno por línea. */
+  | { tipo: "distribucion"; titulo: string; correos: string[] };
 
 export interface DocumentoInforme {
   /** Va en las propiedades del PDF y en el nombre del archivo. */
   titulo: string;
   /** La banda superior, que se repite en todas las páginas. */
-  cabeceraPagina: { titulo: string[]; formato: string[] };
+  cabeceraPagina: {
+    titulo: string[];
+    formato: string[];
+    /** El logotipo del promotor, si lo tiene. A la izquierda del título. */
+    logo?: string;
+  };
   /** El texto de la derecha del título: "ING. CSS " + la empresa del perfil. */
   emisorCabecera: string;
   bloques: BloqueDocumento[];
@@ -126,9 +147,10 @@ export function construirDocumento(
   const { etiquetas, rotulos } = plantilla;
 
   // --- La tabla de cabecera ---
-  bloques.push({
-    tipo: "cabecera",
-    filas: [
+  //
+  // Solo se pintan las filas que TIENEN valor: antes salían "Ubicación:" o
+  // "Plazo de ejecución:" en blanco y el documento parecía a medio rellenar.
+  const filasCabecera: FilaCabecera[] = [
       {
         etiqueta: etiquetas.obra,
         valor: proyecto.descripcion
@@ -147,7 +169,7 @@ export function construirDocumento(
         etiqueta: etiquetas.plazoEjecucion,
         valor: proyecto.plazoEjecucion ?? "",
         etiqueta2: proyecto.fechaInicio ? etiquetas.fechaInicio : undefined,
-        valor2: proyecto.fechaInicio,
+        valor2: proyecto.fechaInicio ? fechaCorta(proyecto.fechaInicio) : undefined,
       },
       {
         etiqueta: etiquetas.presupuestoEjecucion,
@@ -170,13 +192,11 @@ export function construirDocumento(
         etiqueta2: etiquetas.empresaEmisor,
         valor2: coordinador.contacto?.empresa ?? "",
       },
-      {
-        etiqueta: etiquetas.receptor,
-        valor: informe.receptor?.nombre ?? "",
-        etiqueta2: etiquetas.empresaReceptor,
-        valor2: informe.receptor?.empresa ?? "",
-      },
-    ],
+  ];
+
+  bloques.push({
+    tipo: "cabecera",
+    filas: filasCabecera.filter((fila) => fila.valor.trim() !== ""),
   });
 
   bloques.push({ tipo: "parrafo", texto: plantilla.avisoAlcance });
@@ -196,17 +216,32 @@ export function construirDocumento(
   // --- Las actividades: el cuerpo del informe ---
   // Las fotos se numeran seguidas a lo largo de todo el informe.
   let numeroDeFoto = 1;
-  for (const actividad of informe.actividades ?? []) {
+  let numeroDeObservacion = 0;
+  const observaciones = informe.observaciones ?? [];
+  for (const [indice, observacion] of observaciones.entries()) {
+    // Una observación marcada como continuación repite el número de la de
+    // arriba: en la misma visita se detecta algo y se subsana, y las dos salen
+    // como "OBSERVACIÓN 1". La primera nunca continúa a nadie.
+    if (!observacion.continuaAnterior || indice === 0) numeroDeObservacion++;
     const lineas: string[] = [];
-    if (actividad.ubicacion) {
-      lineas.push(`${rotulos.ubicacionActividad}: ${actividad.ubicacion}`);
+    if (observacion.ubicacion) {
+      lineas.push(`${rotulos.ubicacionActividad}: ${observacion.ubicacion}`);
     }
-    if (actividad.descripcion) {
-      lineas.push(`${rotulos.descripcionActividad}: ${actividad.descripcion}`);
+    if (observacion.descripcion) {
+      lineas.push(`${rotulos.descripcionActividad}: ${observacion.descripcion}`);
     }
-    if (lineas.length > 0) bloques.push({ tipo: "rotulo", lineas });
 
-    const fotos = actividad.fotos ?? [];
+    bloques.push({
+      tipo: "observacion",
+      encabezado: `${rotulos.observacion} ${numeroDeObservacion}`,
+      titulo: observacion.titulo ?? "",
+      // El color y el rótulo salen de la plantilla: el coordinador solo elige
+      // el estado, nunca escribe la etiqueta.
+      estado: observacion.estado ? plantilla.estados[observacion.estado] : undefined,
+      lineas,
+    });
+
+    const fotos = observacion.fotos ?? [];
     for (const fila of enFilas(
       fotos,
       plantilla.fotosPorFila,
@@ -220,7 +255,6 @@ export function construirDocumento(
 
   // --- El recuadro de firmas ---
   const firmaCoordinador = (informe.firmas ?? []).find((f) => f.rol === "coordinador");
-  const firmaRecibido = (informe.firmas ?? []).find((f) => f.rol === "recibido");
   const registro = `${plantilla.firmas.cargoCoordinador} - ${plantilla.firmas.etiquetaRegistro} ${coordinador.numeroRegistroIrsst}`;
 
   bloques.push({
@@ -234,33 +268,29 @@ export function construirDocumento(
         coordinador.contacto?.empresa ?? "",
       ].filter(Boolean),
     },
-    derecha: {
-      titulo: plantilla.firmas.tituloRecibido,
-      imagen: firmaRecibido?.firma,
-      lineas: [
-        firmaRecibido?.nombre ?? informe.receptor?.nombre
-          ? `Fdo: ${firmaRecibido?.nombre ?? informe.receptor?.nombre}`
-          : "",
-        informe.receptor?.empresa ?? "",
-      ].filter(Boolean),
-    },
   });
 
   // --- A quién se le envía ---
-  // Los correos van en UNA línea separados por ";", no en lista: así se copian
-  // y se pegan de golpe en el "Para:" del correo, que es lo que hacen ellos.
-  const destinatarios = proyecto.listaDistribucion ?? [];
-  if (destinatarios.length > 0) {
-    bloques.push({
-      tipo: "distribucion",
-      titulo: rotulos.distribucion,
-      correos: destinatarios.map((d) => d.correo).join("; "),
-    });
+  // En la obra se escriben todos seguidos separados por ";" porque así se copian
+  // y se pegan de golpe; en el documento se leen mejor en lista, uno debajo de
+  // otro y sin el punto y coma a la vista.
+  const correos = (proyecto.correos ?? "")
+    .split(";")
+    .map((correo) => correo.trim())
+    .filter(Boolean);
+  if (correos.length > 0) {
+    bloques.push({ tipo: "distribucion", titulo: rotulos.distribucion, correos });
   }
 
   return {
     titulo: `Informe ${proyecto.codigoObra} — ${fechaLegible(informe.fechaHora)}`,
-    cabeceraPagina: { titulo: plantilla.titulo, formato: plantilla.formato },
+    cabeceraPagina: {
+      titulo: plantilla.titulo,
+      formato: plantilla.formato,
+      // El hueco de la izquierda es del promotor: si no tiene logo, se queda
+      // vacío y el documento sale igual de bien.
+      logo: promotor?.logo,
+    },
     emisorCabecera: `${plantilla.prefijoEmisorCabecera}${coordinador.contacto?.empresa ?? ""}`.trim(),
     bloques,
   };

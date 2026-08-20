@@ -15,12 +15,12 @@ import {
   esquemaInforme,
   type ESTADOS_INFORME,
   type ROLES_FIRMANTE,
-  type TIPOS_ACTIVIDAD,
+  type ESTADOS_OBSERVACION,
 } from "@/domain/informe/esquema-informe";
 
 export type EstadoInforme = (typeof ESTADOS_INFORME)[number];
 export type RolFirmante = (typeof ROLES_FIRMANTE)[number];
-export type TipoActividad = (typeof TIPOS_ACTIVIDAD)[number];
+export type EstadoObservacion = (typeof ESTADOS_OBSERVACION)[number];
 
 /**
  * Una foto adjunta al informe: imagen reducida (dataURL) con id para borrarla.
@@ -37,26 +37,23 @@ export interface Foto {
 }
 
 /**
- * Una actividad del informe: la pieza que se repite. Es el bloque que en los
- * informes reales abre con "SITUACIÓN DE LA ACTUACIÓN: <dónde>" y "DESCRIPCIÓN
- * DE LA ACTIVIDAD: <qué>", seguido de sus fotos.
+ * Una observación del informe: la pieza que se repite. En el documento encabeza
+ * como "OBSERVACIÓN 1 · <título>", con su etiqueta de estado al lado.
  *
- * Una incidencia NO es un caso especial: es una actividad más. Solo se marca con
- * `tipo` para poder contarlas el día de mañana.
+ * El `titulo` es el titular corto; la `descripcion` es el texto largo, que puede
+ * sobrar cuando el comentario de la foto ya lo cuenta todo.
  */
-export interface Actividad {
+export interface Observacion {
   id: Id;
+  /** El titular corto que encabeza el bloque en el PDF. */
+  titulo?: string;
   /** Dónde ocurre: "(M-300) PK 31+400 – ZONA 4 - ESTE". */
   ubicacion?: string;
   descripcion?: string;
-  tipo?: TipoActividad;
+  estado?: EstadoObservacion;
+  /** Comparte número con la observación de arriba: es su seguimiento. */
+  continuaAnterior?: boolean;
   fotos?: Foto[];
-}
-
-/** Quien recibe el informe en obra. Cambia en cada visita; nunca bloquea. */
-export interface Receptor {
-  nombre?: string;
-  empresa?: string;
 }
 
 /** Una firma recogida en el dispositivo: la del coordinador o la de quien recibe. */
@@ -80,8 +77,7 @@ export interface DatosInforme {
   resumenSemana?: string;
   /** Estado general de la obra. Opcional: los informes semanales no lo usan. */
   situacion?: string;
-  actividades?: Actividad[];
-  receptor?: Receptor;
+  observaciones?: Observacion[];
   firmas?: FirmaInforme[];
 }
 

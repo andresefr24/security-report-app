@@ -28,7 +28,7 @@ describe("FinalizarInforme", () => {
 
   it("finaliza el informe cuando está completo", async () => {
     const borrador = await unBorrador({
-      actividades: [{ id: "a1", descripcion: "Visita sin incidencias." }],
+      observaciones: [{ id: "o1", titulo: "Visita sin incidencias." }],
       firmas: [FIRMA_COORDINADOR],
     });
 
@@ -40,9 +40,9 @@ describe("FinalizarInforme", () => {
     expect(informes.guardados.get(borrador.id)?.estado).toBe("finalizado");
   });
 
-  it("no finaliza si falta la actividad o la firma, y deja el informe intacto", async () => {
+  it("no finaliza si falta la observación o la firma, y deja el informe intacto", async () => {
     const borrador = await unBorrador({
-      actividades: [{ id: "a1", descripcion: "Descrita, pero sin firmar" }],
+      observaciones: [{ id: "o1", titulo: "Descrita, pero sin firmar" }],
     });
 
     const resultado = await new FinalizarInforme(informes).ejecutar(borrador.id);
@@ -55,8 +55,8 @@ describe("FinalizarInforme", () => {
 
   it("finaliza una incidencia con solo la firma del coordinador (nadie más firma)", async () => {
     const borrador = await unBorrador({
-      actividades: [
-        { id: "a1", descripcion: "Extensión eléctrica IP-20, no apta.", tipo: "incidencia" },
+      observaciones: [
+        { id: "o1", titulo: "Extensión eléctrica IP-20, no apta.", estado: "medida-requerida" },
       ],
       firmas: [FIRMA_COORDINADOR],
     });

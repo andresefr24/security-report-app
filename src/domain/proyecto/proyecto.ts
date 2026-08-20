@@ -14,18 +14,9 @@ import { idONuevo, type Id } from "@/domain/shared/id";
 import {
   esquemaProyecto,
   type FRECUENCIAS_VISITA,
-  type ROLES_DESTINATARIO,
 } from "@/domain/proyecto/esquema-proyecto";
 
 export type FrecuenciaVisita = (typeof FRECUENCIAS_VISITA)[number];
-export type RolDestinatario = (typeof ROLES_DESTINATARIO)[number];
-
-/** Un destinatario de los informes de esta obra. */
-export interface Destinatario {
-  nombre?: string;
-  correo: string;
-  rol: RolDestinatario;
-}
 
 /**
  * Forma de los datos de una obra.
@@ -56,7 +47,8 @@ export interface DatosProyecto {
   /** El del material del Estudio de Seguridad y Salud. */
   presupuestoEss?: string;
   frecuenciaVisita: FrecuenciaVisita;
-  listaDistribucion?: Destinatario[];
+  /** A quién se le manda el informe: los correos separados por ";". */
+  correos?: string;
 }
 
 /**

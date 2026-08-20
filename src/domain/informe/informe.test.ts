@@ -36,14 +36,13 @@ describe("crearBorrador", () => {
     if (!resultado.ok) expect(resultado.errores.join(" ")).toContain("obra");
   });
 
-  it("empieza vacío: sin actividades, sin firmas y sin receptor", () => {
+  it("empieza vacío: sin observaciones y sin firmas", () => {
     const resultado = crearBorrador({ proyectoId: "obra-1" });
 
     expect(resultado.ok).toBe(true);
     if (resultado.ok) {
-      expect(resultado.valor.actividades).toBeUndefined();
+      expect(resultado.valor.observaciones).toBeUndefined();
       expect(resultado.valor.firmas).toBeUndefined();
-      expect(resultado.valor.receptor).toBeUndefined();
     }
   });
 });
@@ -70,14 +69,15 @@ describe("crearInforme", () => {
     if (resultado.ok) expect(resultado.valor.estado).toBe("borrador");
   });
 
-  it("acepta el informe v2 entero: resumen, situación, actividades, receptor y firmas", () => {
+  it("acepta el informe entero: resumen, situación, observaciones y firmas", () => {
     const resultado = crearInforme(
       borradorGuardado({
         resumenSemana: "Semana del 03 al 07 de agosto de 2026.",
         situacion: "La obra avanza según programación.",
-        actividades: [
+        observaciones: [
           {
-            id: "a1",
+            id: "o1",
+            titulo: "Chapa metálica sin protección de bordes",
             ubicacion: "(M-103) PK 03+500 - Glorieta de Cobeña",
             descripcion: "Colocación de chapa metálica para encofrado.",
             fotos: [
@@ -89,42 +89,52 @@ describe("crearInforme", () => {
             ],
           },
         ],
-        receptor: { nombre: "Luis Jefe", empresa: "Constructora SL" },
         firmas: [{ nombre: "Ana", rol: "coordinador", firma: "data:image/png;base64,BBBB" }],
       }),
     );
 
     expect(resultado.ok).toBe(true);
     if (resultado.ok) {
-      expect(resultado.valor.actividades).toHaveLength(1);
-      expect(resultado.valor.actividades?.[0].fotos?.[0].comentario).toContain("Extintor");
-      expect(resultado.valor.receptor?.empresa).toBe("Constructora SL");
+      expect(resultado.valor.observaciones).toHaveLength(1);
+      expect(resultado.valor.observaciones?.[0].fotos?.[0].comentario).toContain("Extintor");
       expect(resultado.valor.firmas?.[0].rol).toBe("coordinador");
     }
   });
 
-  it("acepta una actividad recién añadida, todavía sin describir", () => {
-    const resultado = crearInforme(borradorGuardado({ actividades: [{ id: "a1" }] }));
+  it("acepta una observación recién añadida, todavía vacía", () => {
+    const resultado = crearInforme(borradorGuardado({ observaciones: [{ id: "o1" }] }));
 
-    // El borrador se guarda a medias; que la actividad esté vacía lo dirá
+    // El borrador se guarda a medias; que la observación esté vacía lo dirá
     // completitud al intentar finalizar, no el esquema.
     expect(resultado.ok).toBe(true);
   });
 
-  it("marca una incidencia como una actividad más, con su tipo", () => {
+  it("guarda el estado, que es lo que pinta el color en el PDF", () => {
     const resultado = crearInforme(
       borradorGuardado({
-        actividades: [{ id: "a1", descripcion: "Extensión eléctrica IP-20.", tipo: "incidencia" }],
+        observaciones: [
+          { id: "o1", titulo: "Extensión eléctrica IP-20.", estado: "medida-requerida" },
+        ],
       }),
     );
 
     expect(resultado.ok).toBe(true);
-    if (resultado.ok) expect(resultado.valor.actividades?.[0].tipo).toBe("incidencia");
+    if (resultado.ok) expect(resultado.valor.observaciones?.[0].estado).toBe("medida-requerida");
+  });
+
+  it("rechaza un estado que no está en el catálogo: solo existen esos tres", () => {
+    const resultado = crearInforme(
+      borradorGuardado({
+        observaciones: [{ id: "o1", titulo: "X", estado: "urgentísimo" as never }],
+      }),
+    );
+
+    expect(resultado.ok).toBe(false);
   });
 
   it("rechaza una foto sin imagen", () => {
     const resultado = crearInforme(
-      borradorGuardado({ actividades: [{ id: "a1", fotos: [{ id: "f1", imagen: "" }] }] }),
+      borradorGuardado({ observaciones: [{ id: "o1", fotos: [{ id: "f1", imagen: "" }] }] }),
     );
 
     expect(resultado.ok).toBe(false);
