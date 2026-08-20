@@ -51,13 +51,9 @@ export interface Observacion {
   ubicacion?: string;
   descripcion?: string;
   estado?: EstadoObservacion;
+  /** Comparte número con la observación de arriba: es su seguimiento. */
+  continuaAnterior?: boolean;
   fotos?: Foto[];
-}
-
-/** Quien recibe el informe en obra. Cambia en cada visita; nunca bloquea. */
-export interface Receptor {
-  nombre?: string;
-  empresa?: string;
 }
 
 /** Una firma recogida en el dispositivo: la del coordinador o la de quien recibe. */
@@ -82,7 +78,6 @@ export interface DatosInforme {
   /** Estado general de la obra. Opcional: los informes semanales no lo usan. */
   situacion?: string;
   observaciones?: Observacion[];
-  receptor?: Receptor;
   firmas?: FirmaInforme[];
 }
 

@@ -144,9 +144,10 @@ export function construirDocumento(
   const { etiquetas, rotulos } = plantilla;
 
   // --- La tabla de cabecera ---
-  bloques.push({
-    tipo: "cabecera",
-    filas: [
+  //
+  // Solo se pintan las filas que TIENEN valor: antes salían "Ubicación:" o
+  // "Plazo de ejecución:" en blanco y el documento parecía a medio rellenar.
+  const filasCabecera: FilaCabecera[] = [
       {
         etiqueta: etiquetas.obra,
         valor: proyecto.descripcion
@@ -165,7 +166,7 @@ export function construirDocumento(
         etiqueta: etiquetas.plazoEjecucion,
         valor: proyecto.plazoEjecucion ?? "",
         etiqueta2: proyecto.fechaInicio ? etiquetas.fechaInicio : undefined,
-        valor2: proyecto.fechaInicio,
+        valor2: proyecto.fechaInicio ? fechaCorta(proyecto.fechaInicio) : undefined,
       },
       {
         etiqueta: etiquetas.presupuestoEjecucion,
@@ -188,13 +189,11 @@ export function construirDocumento(
         etiqueta2: etiquetas.empresaEmisor,
         valor2: coordinador.contacto?.empresa ?? "",
       },
-      {
-        etiqueta: etiquetas.receptor,
-        valor: informe.receptor?.nombre ?? "",
-        etiqueta2: etiquetas.empresaReceptor,
-        valor2: informe.receptor?.empresa ?? "",
-      },
-    ],
+  ];
+
+  bloques.push({
+    tipo: "cabecera",
+    filas: filasCabecera.filter((fila) => fila.valor.trim() !== ""),
   });
 
   bloques.push({ tipo: "parrafo", texto: plantilla.avisoAlcance });
@@ -214,8 +213,13 @@ export function construirDocumento(
   // --- Las actividades: el cuerpo del informe ---
   // Las fotos se numeran seguidas a lo largo de todo el informe.
   let numeroDeFoto = 1;
-  let numeroDeObservacion = 1;
-  for (const observacion of informe.observaciones ?? []) {
+  let numeroDeObservacion = 0;
+  const observaciones = informe.observaciones ?? [];
+  for (const [indice, observacion] of observaciones.entries()) {
+    // Una observación marcada como continuación repite el número de la de
+    // arriba: en la misma visita se detecta algo y se subsana, y las dos salen
+    // como "OBSERVACIÓN 1". La primera nunca continúa a nadie.
+    if (!observacion.continuaAnterior || indice === 0) numeroDeObservacion++;
     const lineas: string[] = [];
     if (observacion.ubicacion) {
       lineas.push(`${rotulos.ubicacionActividad}: ${observacion.ubicacion}`);
@@ -233,7 +237,6 @@ export function construirDocumento(
       estado: observacion.estado ? plantilla.estados[observacion.estado] : undefined,
       lineas,
     });
-    numeroDeObservacion++;
 
     const fotos = observacion.fotos ?? [];
     for (const fila of enFilas(
@@ -266,25 +269,15 @@ export function construirDocumento(
     derecha: {
       titulo: plantilla.firmas.tituloRecibido,
       imagen: firmaRecibido?.firma,
-      lineas: [
-        firmaRecibido?.nombre ?? informe.receptor?.nombre
-          ? `Fdo: ${firmaRecibido?.nombre ?? informe.receptor?.nombre}`
-          : "",
-        informe.receptor?.empresa ?? "",
-      ].filter(Boolean),
+      lineas: [firmaRecibido?.nombre ? `Fdo: ${firmaRecibido.nombre}` : ""].filter(Boolean),
     },
   });
 
   // --- A quién se le envía ---
-  // Los correos van en UNA línea separados por ";", no en lista: así se copian
-  // y se pegan de golpe en el "Para:" del correo, que es lo que hacen ellos.
-  const destinatarios = proyecto.listaDistribucion ?? [];
-  if (destinatarios.length > 0) {
-    bloques.push({
-      tipo: "distribucion",
-      titulo: rotulos.distribucion,
-      correos: destinatarios.map((d) => d.correo).join("; "),
-    });
+  // Los correos salen tal y como los escribió el coordinador en la obra: en una
+  // línea, separados por ";", listos para copiar y pegar en el "Para:".
+  if (proyecto.correos) {
+    bloques.push({ tipo: "distribucion", titulo: rotulos.distribucion, correos: proyecto.correos });
   }
 
   return {

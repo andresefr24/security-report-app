@@ -23,8 +23,23 @@ import { Label } from "@/ui/components/label";
 import { Textarea } from "@/ui/components/textarea";
 import { cn } from "@/lib/utils";
 
+/**
+ * Qué número le toca a cada observación. Una marcada como continuación repite el
+ * de la de arriba, para que en el documento salgan las dos como "OBSERVACIÓN 1":
+ * el hallazgo y, debajo, cómo quedó.
+ */
+export function numerar(observaciones: { continuaAnterior?: boolean }[]): number[] {
+  let numero = 0;
+  return observaciones.map((observacion, indice) => {
+    // La primera nunca puede continuar a nadie, por mucho que esté marcada.
+    if (!observacion.continuaAnterior || indice === 0) numero++;
+    return numero;
+  });
+}
+
 export function PasoObservaciones({ informe, actualizar }: PropsPaso) {
   const observaciones = informe.observaciones ?? [];
+  const numeros = numerar(observaciones);
 
   function cambiar(id: string, parcial: Partial<Observacion>) {
     actualizar({
@@ -83,7 +98,35 @@ export function PasoObservaciones({ informe, actualizar }: PropsPaso) {
 
         {observaciones.map((observacion, indice) => (
           <Card key={observacion.id} className="space-y-4 p-4">
-            <p className="text-[18px] font-semibold">Observación {indice + 1}</p>
+            <p className="text-[18px] font-semibold">
+              Observación {numeros[indice]}
+              {observacion.continuaAnterior && indice > 0 && " · seguimiento"}
+            </p>
+
+            {/* Solo tiene sentido a partir de la segunda. */}
+            {indice > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                aria-pressed={Boolean(observacion.continuaAnterior)}
+                onClick={() =>
+                  cambiar(observacion.id, {
+                    continuaAnterior: !observacion.continuaAnterior,
+                    // Al enlazarla, hereda el título de la de arriba para no
+                    // tener que reescribirlo.
+                    titulo: observacion.continuaAnterior
+                      ? observacion.titulo
+                      : observacion.titulo || observaciones[indice - 1]?.titulo,
+                  })
+                }
+                className={cn(
+                  "h-[52px] w-full text-[18px]",
+                  observacion.continuaAnterior && "border-2 border-primary font-semibold",
+                )}
+              >
+                Es continuación de la anterior
+              </Button>
+            )}
 
             <div className="space-y-1.5">
               <Label

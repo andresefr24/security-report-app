@@ -70,16 +70,14 @@ export const esquemaObservacion = z.object({
   ubicacion: z.string().optional(),
   descripcion: z.string().optional(),
   estado: z.enum(ESTADOS_OBSERVACION).optional(),
+  /**
+   * Marca esta observación como el seguimiento de la anterior: comparte su
+   * número en el documento. Sirve para lo que hacen de verdad — apuntan una
+   * medida requerida, se la arreglan durante la visita, y añaden la misma
+   * observación otra vez como subsanada.
+   */
+  continuaAnterior: z.boolean().optional(),
   fotos: z.array(esquemaFoto).optional(),
-});
-
-/**
- * Quien recibe el informe en obra. Vive en el INFORME y no en la obra porque
- * cambia en cada visita (D9, afinado 2). Todo opcional: nunca bloquea el cierre.
- */
-export const esquemaReceptor = z.object({
-  nombre: z.string().optional(),
-  empresa: z.string().optional(),
 });
 
 /** Una firma recogida en el dispositivo: quién firma, en qué papel y el trazo. */
@@ -103,6 +101,5 @@ export const esquemaInforme = z.object({
   /** Estado general de la obra. Opcional: los informes semanales no lo usan. */
   situacion: z.string().optional(),
   observaciones: z.array(esquemaObservacion).optional(),
-  receptor: esquemaReceptor.optional(),
   firmas: z.array(esquemaFirmaInforme).optional(),
 });

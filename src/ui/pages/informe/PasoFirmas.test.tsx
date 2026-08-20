@@ -46,12 +46,6 @@ describe("PasoFirmas", () => {
     expect(aviso).not.toHaveTextContent("quien recibe");
   });
 
-  it("trae puesto el nombre del receptor escrito en el paso de datos", () => {
-    render(<Arnes inicial={{ ...base, receptor: { nombre: "Luis Jefe" } }} />);
-
-    expect(screen.getByDisplayValue("Luis Jefe")).toBeInTheDocument();
-  });
-
   it("solo escribe en el informe las firmas completas (nombre + trazo)", () => {
     render(<Arnes inicial={base} />);
 

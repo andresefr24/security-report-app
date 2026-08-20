@@ -7,6 +7,7 @@ import { CrearProyecto } from "@/application/use-cases/crear-proyecto";
 import { AltaPromotor } from "@/application/use-cases/alta-promotor";
 import { ListarInformes } from "@/application/use-cases/listar-informes";
 import { BorrarInforme } from "@/application/use-cases/borrar-informe";
+import { BorrarProyecto } from "@/application/use-cases/borrar-proyecto";
 import { CrearBorradorInforme } from "@/application/use-cases/crear-borrador-informe";
 import { FUTURE_COMPONENTE } from "@/app/opciones-router";
 import {
@@ -33,6 +34,7 @@ describe("ObrasPage", () => {
           listarProyectos={new ListarProyectos(proyectos, promotores)}
           listarInformes={new ListarInformes(informes)}
           borrarInforme={new BorrarInforme(informes)}
+          borrarProyecto={new BorrarProyecto(proyectos, informes)}
         />
       </MemoryRouter>,
     );
@@ -189,21 +191,6 @@ describe("ObrasPage", () => {
     expect(screen.getAllByText(/Informes de esta obra/i)).toHaveLength(1);
   });
 
-  it("concuerda el singular al contar los destinatarios", async () => {
-    const alta = await new AltaPromotor(promotores).ejecutar({ nombreRazonSocial: "Promotor" });
-    if (!alta.ok) throw new Error("el alta debería funcionar");
-    await new CrearProyecto(proyectos, promotores).ejecutar({
-      codigoObra: "OB-001",
-      promotorId: alta.valor.id,
-      frecuenciaVisita: "semanal",
-      listaDistribucion: [{ correo: "uno@obra.es", rol: "promotor" }],
-    });
-
-    montar();
-
-    expect(await screen.findByText(/1 destinatario$/)).toBeInTheDocument();
-  });
-
   it("avisa si la obra apunta a un promotor que ya no está", async () => {
     const alta = await new AltaPromotor(promotores).ejecutar({ nombreRazonSocial: "Se irá" });
     if (!alta.ok) throw new Error("el alta debería funcionar");
@@ -217,5 +204,44 @@ describe("ObrasPage", () => {
     montar();
 
     expect(await screen.findByText(/promotor de esta obra ya no está registrado/i)).toBeInTheDocument();
+  });
+  it("borra una obra vacía, pidiendo confirmación antes", async () => {
+    const alta = await new AltaPromotor(promotores).ejecutar({ nombreRazonSocial: "Promotor" });
+    if (!alta.ok) throw new Error("el alta debería funcionar");
+    await new CrearProyecto(proyectos, promotores).ejecutar({
+      codigoObra: "OB-001",
+      promotorId: alta.valor.id,
+      frecuenciaVisita: "semanal",
+    });
+
+    montar();
+
+    fireEvent.click(await screen.findByRole("button", { name: /Borrar la obra OB-001/i }));
+    expect(screen.getByText(/¿Seguro que quieres borrar la obra/i)).toBeInTheDocument();
+    expect(proyectos.guardados.size).toBe(1);
+
+    fireEvent.click(screen.getByRole("button", { name: /Sí, borrar la obra/i }));
+
+    await waitFor(() => expect(proyectos.guardados.size).toBe(0));
+  });
+
+  it("no deja borrar una obra que tiene informes, y explica por qué", async () => {
+    const alta = await new AltaPromotor(promotores).ejecutar({ nombreRazonSocial: "Promotor" });
+    if (!alta.ok) throw new Error("el alta debería funcionar");
+    const obra = await new CrearProyecto(proyectos, promotores).ejecutar({
+      codigoObra: "OB-001",
+      promotorId: alta.valor.id,
+      frecuenciaVisita: "semanal",
+    });
+    if (!obra.ok) throw new Error("crear la obra debería funcionar");
+    await new CrearBorradorInforme(informes, proyectos).ejecutar(obra.valor.id);
+
+    montar();
+
+    fireEvent.click(await screen.findByRole("button", { name: /Borrar la obra OB-001/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Sí, borrar la obra/i }));
+
+    expect(await screen.findByText(/Bórralo primero/i)).toBeInTheDocument();
+    expect(proyectos.guardados.size).toBe(1);
   });
 });

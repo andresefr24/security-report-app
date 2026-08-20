@@ -55,8 +55,9 @@ describe("LocalForageInformeRepository", () => {
     await repo.guardar(informe);
 
     const enDisco = await repo["caja"].getItem<{ schemaVersion?: number }>(informe.id);
-    // Dos escalones: el sello inicial y el paso de actividad a observación.
-    expect(enDisco?.schemaVersion).toBe(2);
+    // Tres escalones: el sello inicial, el paso a observación y la retirada
+    // del receptor.
+    expect(enDisco?.schemaVersion).toBe(3);
   });
 
   it("convierte en observaciones las actividades de los informes ya guardados", async () => {

@@ -89,6 +89,22 @@ describe("construirDocumento", () => {
       expect(texto).toContain("01/07/2026");
     });
 
+    it("no pinta las filas que se quedan en blanco", () => {
+      // La obra de prueba no tiene ubicación ni plazo ni presupuestos: esas
+      // filas no deben salir, o el documento parece a medio rellenar.
+      const texto = textoDe(construirDocumento(datosDelPdf()).bloques);
+
+      expect(texto).not.toContain("Ubicación:");
+      expect(texto).not.toContain("Plazo de ejecución:");
+      expect(texto).not.toContain("Presupuesto de ejecución:");
+    });
+
+    it("ya no pide el receptor: quien recibe el informe se recoge al firmar", () => {
+      const texto = textoDe(construirDocumento(datosDelPdf()).bloques);
+
+      expect(texto).not.toContain("Receptor:");
+    });
+
     it("lleva el contratista de la obra", () => {
       const { bloques } = construirDocumento(datosDelPdf({}, { contratista: "API Movilidad" }));
 
@@ -101,16 +117,6 @@ describe("construirDocumento", () => {
 
       expect(texto).toContain("Emisor: Ana García López");
       expect(texto).toContain("TPS Ingeniería");
-    });
-
-    it("nombra a quien recibe el informe, con su empresa", () => {
-      const { bloques } = construirDocumento(
-        datosDelPdf({ receptor: { nombre: "Luis Jefe", empresa: "Constructora SL" } }),
-      );
-      const texto = textoDe(bloques);
-
-      expect(texto).toContain("Receptor: Luis Jefe");
-      expect(texto).toContain("Constructora SL");
     });
 
     it("deriva el nº de documento de la fecha, sin pedírselo al coordinador", () => {
@@ -186,6 +192,24 @@ describe("construirDocumento", () => {
       expect(sinEstado.estado).toBeUndefined();
     });
 
+    it("una observación marcada como continuación repite el número de la anterior", () => {
+      const { bloques } = construirDocumento(
+        datosDelPdf({
+          observaciones: [
+            { id: "o1", titulo: "Grupo electrógeno", estado: "medida-requerida" },
+            { id: "o2", titulo: "Grupo electrógeno", estado: "subsanado", continuaAnterior: true },
+            { id: "o3", titulo: "Otra cosa" },
+          ],
+        }),
+      );
+
+      const encabezados = bloques
+        .filter((b) => b.tipo === "observacion")
+        .map((b) => b.encabezado);
+      // El hallazgo y cómo quedó son la misma observación; la siguiente ya es otra.
+      expect(encabezados).toEqual(["OBSERVACIÓN 1", "OBSERVACIÓN 1", "OBSERVACIÓN 2"]);
+    });
+
     it("lleva el calendario de la semana cuando lo hay", () => {
       const { bloques } = construirDocumento(
         datosDelPdf({ resumenSemana: "Semana del 03 al 07 de agosto de 2026." }),
@@ -207,6 +231,7 @@ describe("construirDocumento", () => {
   describe("cabecera con los datos de la obra", () => {
     const obraCompleta = {
       ubicacion: "Pº del Tren Talgo, 10, 28290 Las Rozas de Madrid",
+      contratista: "VIAS Y CONSTRUCCIONES, S.A.",
       cifContratista: "A28017986",
       plazoEjecucion: "18 meses",
       presupuestoEjecucion: "27.470.256,11 €",
@@ -341,12 +366,7 @@ describe("construirDocumento", () => {
       const { bloques } = construirDocumento(
         datosDelPdf(
           {},
-          {
-            listaDistribucion: [
-              { nombre: "Carlos Díaz", correo: "carlos@ejemplo.es", rol: "contratista" },
-              { correo: "belen@ejemplo.es", rol: "promotor" },
-            ],
-          },
+          { correos: "carlos@ejemplo.es; belen@ejemplo.es" },
         ),
       );
       const texto = textoDe(bloques);

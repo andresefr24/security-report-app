@@ -23,4 +23,31 @@ const separarLosDosPresupuestos: Escalon = (guardado) => {
   return { ...resto, presupuestoEjecucion: resto.presupuestoEjecucion ?? presupuesto };
 };
 
-export const ESCALONES_PROYECTO: Escalon[] = [separarLosDosPresupuestos];
+/**
+ * v1 → v2 · La lista de distribución pasa a ser un texto de correos.
+ *
+ * Antes cada destinatario era una ficha con nombre, correo y rol; los
+ * coordinadores pidieron un solo campo con los correos separados por ";", que es
+ * lo que hacen de verdad: copiarlo entero y pegarlo en el "Para:".
+ *
+ * Se conservan los correos que ya tenían escritos; el nombre y el rol se
+ * pierden, que es justo lo que querían quitarse de encima.
+ */
+const losDestinatariosPasanAUnTextoDeCorreos: Escalon = (guardado) => {
+  const { listaDistribucion, ...resto } = guardado as Guardado & {
+    listaDistribucion?: { correo?: string }[];
+  };
+  if (!Array.isArray(listaDistribucion)) return resto;
+
+  const correos = listaDistribucion
+    .map((destinatario) => destinatario?.correo)
+    .filter((correo): correo is string => Boolean(correo))
+    .join("; ");
+
+  return correos ? { ...resto, correos: resto.correos ?? correos } : resto;
+};
+
+export const ESCALONES_PROYECTO: Escalon[] = [
+  separarLosDosPresupuestos,
+  losDestinatariosPasanAUnTextoDeCorreos,
+];

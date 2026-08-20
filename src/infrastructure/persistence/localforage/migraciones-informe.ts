@@ -50,4 +50,24 @@ const laActividadPasaAObservacion: Escalon = (guardado) => {
   return { ...resto, observaciones };
 };
 
-export const ESCALONES_INFORME: Escalon[] = [soloSellar, laActividadPasaAObservacion];
+/**
+ * v2 → v3 · El receptor deja de estar en el informe.
+ *
+ * Se pedía dos veces: en el paso 1 del asistente y otra vez al firmar. Los
+ * coordinadores lo quitaron del asistente, porque quien recibe el informe ya se
+ * recoge donde tiene sentido: en su firma.
+ *
+ * El campo se retira sin más. Si llegaron a firmar, el nombre está en la firma;
+ * si no, no había nada que conservar.
+ */
+const fueraElReceptor: Escalon = (guardado) => {
+  const { receptor, ...resto } = guardado as Guardado & { receptor?: unknown };
+  void receptor;
+  return resto;
+};
+
+export const ESCALONES_INFORME: Escalon[] = [
+  soloSellar,
+  laActividadPasaAObservacion,
+  fueraElReceptor,
+];

@@ -167,46 +167,45 @@ function aBloqueDePdfmake(bloque: BloqueDocumento): Content {
         margin: [0, 0, 0, 6],
       };
 
-    // Las fotos de una fila, con su comentario en negrita debajo de cada una.
+    // Las fotos de una fila, con su número y su comentario debajo.
     //
-    // El ancho se calcula con las fotos que CABEN en la fila, no con las que hay:
-    // así una foto suelta al final ocupa media página como en los informes
-    // reales, en vez de estirarse hasta el ancho completo.
+    // Cuando la fila lleva UNA sola foto, el comentario ocupa todo el ancho de
+    // la página en vez de la columna de la foto: si no, quedaba en una tira
+    // estrecha de seis o siete renglones.
     case "filaFotos": {
       const porFila = Math.max(bloque.fotosPorFila, bloque.fotos.length);
       const ancho = (ANCHO_UTIL - (porFila - 1) * 10) / porFila;
-      // Si la fila va incompleta, se reparte el hueco a los dos lados para que la
-      // foto quede centrada en la página y no pegada al margen izquierdo.
-      const hueco = ((porFila - bloque.fotos.length) * (ancho + 10)) / 2;
-      const relleno: Column[] = hueco > 0 ? [{ width: hueco, text: "" }] : [];
-      const columnas: Column[] = [
-        ...relleno,
-        ...bloque.fotos.map((foto): Column => ({
+
+      const pieDeFoto = (texto: string, negrita: boolean, arriba: number): Content => ({
+        text: texto,
+        fontSize: 9,
+        bold: negrita,
+        alignment: "center",
+        margin: [0, arriba, 0, 0],
+      });
+
+      if (bloque.fotos.length === 1) {
+        const [foto] = bloque.fotos;
+        return {
+          stack: [
+            { image: foto.imagen, fit: [ancho, ancho * 1.1], alignment: "center" },
+            pieDeFoto(foto.numero, true, 4),
+            ...(foto.comentario ? [pieDeFoto(foto.comentario, true, 2)] : []),
+          ],
+          margin: [0, 0, 0, 12],
+        };
+      }
+
+      const columnas: Column[] = bloque.fotos.map(
+        (foto): Column => ({
           width: ancho,
           stack: [
             { image: foto.imagen, fit: [ancho, ancho * 1.1] },
-            {
-              text: foto.numero,
-              fontSize: 9,
-              bold: true,
-              alignment: "center" as const,
-              margin: [0, 4, 0, 0] as [number, number, number, number],
-            },
-            ...(foto.comentario
-              ? [
-                  {
-                    text: foto.comentario,
-                    fontSize: 9,
-                    bold: true,
-                    alignment: "center" as const,
-                    margin: [0, 2, 0, 0] as [number, number, number, number],
-                  },
-                ]
-              : []),
+            pieDeFoto(foto.numero, true, 4),
+            ...(foto.comentario ? [pieDeFoto(foto.comentario, true, 2)] : []),
           ],
-        })),
-        ...relleno,
-      ];
+        }),
+      );
 
       return { columns: columnas, columnGap: 10, margin: [0, 0, 0, 12] };
     }
@@ -262,6 +261,34 @@ function aBloqueDePdfmake(bloque: BloqueDocumento): Content {
         margin: [0, 16, 0, 0],
       };
   }
+}
+
+/**
+ * Junta la cabecera de cada observación con su PRIMERA fila de fotos en un
+ * bloque que no se parte.
+ *
+ * Sin esto, cuando la observación caía al final de una página su foto saltaba a
+ * la siguiente y había que pasar hoja para ver de qué hablaba el texto. Solo se
+ * pega la primera fila: si se pegaran todas, una observación con muchas fotos
+ * no cabría en una página y pdfmake haría lo que pudiera.
+ */
+function conLaPrimeraFotoPegadaASuObservacion(bloques: BloqueDocumento[]): Content[] {
+  const contenido: Content[] = [];
+  for (let i = 0; i < bloques.length; i++) {
+    const bloque = bloques[i];
+    const siguiente = bloques[i + 1];
+
+    if (bloque.tipo === "observacion" && siguiente?.tipo === "filaFotos") {
+      contenido.push({
+        unbreakable: true,
+        stack: [aBloqueDePdfmake(bloque), aBloqueDePdfmake(siguiente)],
+      });
+      i++;
+      continue;
+    }
+    contenido.push(aBloqueDePdfmake(bloque));
+  }
+  return contenido;
 }
 
 export class PdfMakeAdapter implements PdfPort {
@@ -328,7 +355,7 @@ export class PdfMakeAdapter implements PdfPort {
         alignment: "right",
       }),
 
-      content: documento.bloques.map(aBloqueDePdfmake),
+      content: conLaPrimeraFotoPegadaASuObservacion(documento.bloques),
     };
 
     const pdfMake = await cargarPdfMake();

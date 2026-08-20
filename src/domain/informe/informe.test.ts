@@ -36,14 +36,13 @@ describe("crearBorrador", () => {
     if (!resultado.ok) expect(resultado.errores.join(" ")).toContain("obra");
   });
 
-  it("empieza vacío: sin observaciones, sin firmas y sin receptor", () => {
+  it("empieza vacío: sin observaciones y sin firmas", () => {
     const resultado = crearBorrador({ proyectoId: "obra-1" });
 
     expect(resultado.ok).toBe(true);
     if (resultado.ok) {
       expect(resultado.valor.observaciones).toBeUndefined();
       expect(resultado.valor.firmas).toBeUndefined();
-      expect(resultado.valor.receptor).toBeUndefined();
     }
   });
 });
@@ -70,7 +69,7 @@ describe("crearInforme", () => {
     if (resultado.ok) expect(resultado.valor.estado).toBe("borrador");
   });
 
-  it("acepta el informe entero: resumen, situación, observaciones, receptor y firmas", () => {
+  it("acepta el informe entero: resumen, situación, observaciones y firmas", () => {
     const resultado = crearInforme(
       borradorGuardado({
         resumenSemana: "Semana del 03 al 07 de agosto de 2026.",
@@ -90,7 +89,6 @@ describe("crearInforme", () => {
             ],
           },
         ],
-        receptor: { nombre: "Luis Jefe", empresa: "Constructora SL" },
         firmas: [{ nombre: "Ana", rol: "coordinador", firma: "data:image/png;base64,BBBB" }],
       }),
     );
@@ -99,7 +97,6 @@ describe("crearInforme", () => {
     if (resultado.ok) {
       expect(resultado.valor.observaciones).toHaveLength(1);
       expect(resultado.valor.observaciones?.[0].fotos?.[0].comentario).toContain("Extintor");
-      expect(resultado.valor.receptor?.empresa).toBe("Constructora SL");
       expect(resultado.valor.firmas?.[0].rol).toBe("coordinador");
     }
   });

@@ -58,47 +58,20 @@ describe("crearProyecto", () => {
     if (!resultado.ok) expect(resultado.errores.join(" ")).toContain("frecuencia");
   });
 
-  it("acepta una obra sin destinatarios (se añaden después)", () => {
-    const resultado = crearProyecto(datosValidos({ listaDistribucion: [] }));
-
-    expect(resultado.ok).toBe(true);
+  it("acepta una obra sin correos (se ponen después)", () => {
+    expect(crearProyecto(datosValidos({ correos: "" })).ok).toBe(true);
+    expect(crearProyecto(datosValidos()).ok).toBe(true);
   });
 
-  it("acepta destinatarios bien formados con su rol", () => {
+  it("guarda los correos tal y como los escribió el coordinador", () => {
     const resultado = crearProyecto(
-      datosValidos({
-        listaDistribucion: [
-          { nombre: "Marta Ruiz", correo: "marta@canal.es", rol: "promotor" },
-          { correo: "jefe@contrata.es", rol: "contratista" },
-        ],
-      }),
+      datosValidos({ correos: "marta@canal.es; jefe@contrata.es" }),
     );
 
     expect(resultado.ok).toBe(true);
-    if (resultado.ok) {
-      expect(resultado.valor.listaDistribucion).toHaveLength(2);
-      expect(resultado.valor.listaDistribucion?.[1].rol).toBe("contratista");
-    }
-  });
-
-  it("rechaza un destinatario con el correo mal escrito", () => {
-    const resultado = crearProyecto(
-      datosValidos({
-        listaDistribucion: [{ correo: "esto-no-es-correo", rol: "promotor" }],
-      }),
-    );
-
-    expect(resultado.ok).toBe(false);
-    if (!resultado.ok) expect(resultado.errores.join(" ")).toContain("formato");
-  });
-
-  it("rechaza un destinatario sin correo", () => {
-    const resultado = crearProyecto(
-      datosValidos({ listaDistribucion: [{ correo: "", rol: "promotor" }] }),
-    );
-
-    expect(resultado.ok).toBe(false);
-    if (!resultado.ok) expect(resultado.errores.join(" ")).toContain("obligatorio");
+    // Es un texto libre a propósito: se copia y se pega en el "Para:", así que
+    // no lo troceamos ni lo validamos correo a correo.
+    if (resultado.ok) expect(resultado.valor.correos).toBe("marta@canal.es; jefe@contrata.es");
   });
 
   it("respeta el id que se le pasa (al editar una obra existente)", () => {

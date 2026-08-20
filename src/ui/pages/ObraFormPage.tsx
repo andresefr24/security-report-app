@@ -9,16 +9,16 @@
 // obra. Desviación consciente del design-system.
 
 import { useEffect, useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
 import { type CrearProyecto } from "@/application/use-cases/crear-proyecto";
 import { type ListarPromotores } from "@/application/use-cases/listar-promotores";
 import { type Promotor } from "@/domain/promotor/promotor";
-import { FRECUENCIAS_VISITA, ROLES_DESTINATARIO } from "@/domain/proyecto/esquema-proyecto";
+import { FRECUENCIAS_VISITA } from "@/domain/proyecto/esquema-proyecto";
 import { Button } from "@/ui/components/button";
 import { Card } from "@/ui/components/card";
-import { Input } from "@/ui/components/input";
+import { Textarea } from "@/ui/components/textarea";
 import { Label } from "@/ui/components/label";
 import { CamposTexto, mensajeError } from "@/ui/components/campos-formulario";
 import {
@@ -26,7 +26,6 @@ import {
   camposObra,
   esquemaFormularioObra,
   ETIQUETAS_FRECUENCIA,
-  ETIQUETAS_ROL,
   obraVacia,
   type FormularioObra,
 } from "@/ui/pages/obra-campos";
@@ -49,7 +48,6 @@ export function ObraFormPage({ crearProyecto, listarPromotores }: ObraFormPagePr
 
   const {
     register,
-    control,
     handleSubmit,
     watch,
     setValue,
@@ -59,7 +57,6 @@ export function ObraFormPage({ crearProyecto, listarPromotores }: ObraFormPagePr
     defaultValues: obraVacia,
   });
 
-  const { fields, append, remove } = useFieldArray({ control, name: "listaDistribucion" });
   const frecuencia = watch("frecuenciaVisita");
 
   // Cargamos los promotores para poder elegir uno.
@@ -159,76 +156,24 @@ export function ObraFormPage({ crearProyecto, listarPromotores }: ObraFormPagePr
           </div>
         </div>
 
-        {/* Lista de distribución: quién recibe los informes de esta obra. */}
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <Label className="text-[16px] font-semibold">Lista de distribución</Label>
-            <p className="text-[15px] text-muted-foreground">
-              Quién recibirá los informes de esta obra. Puedes añadirlos ahora o más tarde.
-            </p>
-          </div>
-
-          {fields.map((campo, indice) => (
-            <Card key={campo.id} className="space-y-3 p-4">
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor={`listaDistribucion.${indice}.correo`}
-                  className="text-[16px] font-semibold"
-                >
-                  Correo
-                </Label>
-                <Input
-                  id={`listaDistribucion.${indice}.correo`}
-                  type="email"
-                  className="h-[52px] text-[18px]"
-                  {...register(`listaDistribucion.${indice}.correo`)}
-                />
-                {mensajeError(errors, `listaDistribucion.${indice}.correo`) && (
-                  <p className="text-[15px] text-destructive">
-                    {mensajeError(errors, `listaDistribucion.${indice}.correo`)}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor={`listaDistribucion.${indice}.rol`}
-                  className="text-[16px] font-semibold"
-                >
-                  Rol
-                </Label>
-                <select
-                  id={`listaDistribucion.${indice}.rol`}
-                  className={CLASES_SELECT}
-                  {...register(`listaDistribucion.${indice}.rol`)}
-                >
-                  {ROLES_DESTINATARIO.map((rol) => (
-                    <option key={rol} value={rol}>
-                      {ETIQUETAS_ROL[rol]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => remove(indice)}
-                className="h-[52px] w-full text-[18px]"
-              >
-                Quitar destinatario
-              </Button>
-            </Card>
-          ))}
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => append({ correo: "", rol: "promotor" })}
-            className="h-[52px] w-full text-[18px]"
-          >
-            Añadir destinatario
-          </Button>
+        {/* A quién se le manda el informe: un solo campo, con los correos
+            separados por ";". Lo pidieron así porque es lo que hacen: copiarlo
+            entero y pegarlo en el "Para:" del correo. */}
+        <div className="space-y-1.5">
+          <Label htmlFor="correos" className="text-[16px] font-semibold">
+            Correos
+          </Label>
+          <p className="text-[15px] text-muted-foreground">
+            A quién se le manda el informe de esta obra. Escríbelos todos seguidos,
+            separados por punto y coma.
+          </p>
+          <Textarea
+            id="correos"
+            rows={3}
+            placeholder="uno@ejemplo.es; otro@ejemplo.es"
+            className="text-[18px]"
+            {...register("correos")}
+          />
         </div>
 
         {errorGeneral && (
