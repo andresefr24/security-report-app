@@ -11,8 +11,12 @@ const buttonVariants = cva(
       variant: {
         default:
           "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        // Borrar algo se avisa con el color, no a gritos: fondo claro y la letra
+        // en rojo, no un botón rojo macizo. Con el rojo de la marca sobre este
+        // fondo el contraste es de 4,6:1, por encima del mínimo exigible, que
+        // con presbicia no es un detalle.
         destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+          "border border-destructive/40 bg-destructive/5 text-destructive shadow-sm hover:bg-destructive/10",
         outline:
           "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
         secondary:
