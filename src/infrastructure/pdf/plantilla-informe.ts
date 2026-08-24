@@ -62,7 +62,6 @@ export interface PlantillaInforme {
     calendario: string;
     situacion: string;
     ubicacionActividad: string;
-    descripcionActividad: string;
     /** Cómo encabeza cada bloque: "OBSERVACIÓN 1". */
     observacion: string;
     distribucion: string;
@@ -128,9 +127,6 @@ export const PLANTILLA_SEMANAL: PlantillaInforme = {
     calendario: "CALENDARIO DE VISITAS Y TRABAJOS EN EJECUCIÓN",
     situacion: "SITUACIÓN DE LA OBRA",
     ubicacionActividad: "Ubicación",
-    // Lo pidieron así, con el nombre y las mayúsculas que usan ellos. Sí, la
-    // etiqueta de estado se llama igual: es su vocabulario y lo leen bien.
-    descripcionActividad: "Observación Preventiva de Seguridad (OPS)",
     observacion: "OBSERVACIÓN",
     distribucion: "Enviado por e-mail a:",
   },
