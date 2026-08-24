@@ -224,8 +224,11 @@ export function construirDocumento(
     if (observacion.ubicacion) {
       lineas.push(`${rotulos.ubicacionActividad}: ${observacion.ubicacion}`);
     }
+    // La explicación va SIN rótulo, tal cual la escribió el coordinador: el que
+    // tenía ("Observación Preventiva de Seguridad") repetía la etiqueta de
+    // estado, y encima mentía en las que son medida requerida o subsanado.
     if (observacion.descripcion) {
-      lineas.push(`${rotulos.descripcionActividad}: ${observacion.descripcion}`);
+      lineas.push(observacion.descripcion);
     }
 
     bloques.push({

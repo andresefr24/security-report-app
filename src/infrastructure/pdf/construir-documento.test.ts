@@ -133,7 +133,7 @@ describe("construirDocumento", () => {
   });
 
   describe("cuerpo", () => {
-    it("encabeza cada observacion con los rótulos del informe real", () => {
+    it("pone la ubicación con su rótulo y la explicación sin ninguno", () => {
       const { bloques } = construirDocumento(
         datosDelPdf({
           observaciones: [
@@ -151,9 +151,12 @@ describe("construirDocumento", () => {
       // ubicación, y así lo pidieron.
       expect(texto).toContain("Ubicación: (M-103) PK 03+500 - Glorieta de Cobeña");
       expect(texto).not.toContain("SITUACIÓN DE LA ACTUACIÓN");
-      expect(texto).toContain(
-        "Observación Preventiva de Seguridad (OPS): Colocación de chapa metálica.",
-      );
+
+      // La explicación va tal cual, sin rótulo delante: el que llevaba repetía
+      // la etiqueta de estado, y en una medida requerida o una subsanada decía
+      // algo que no era.
+      expect(texto).toContain("Colocación de chapa metálica.");
+      expect(texto).not.toContain("Observación Preventiva de Seguridad (OPS): Colocación");
     });
 
     it("pinta un encabezado por cada observación, numerado", () => {
