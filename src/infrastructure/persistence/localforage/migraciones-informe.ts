@@ -67,21 +67,22 @@ const fueraElReceptor: Escalon = (guardado) => {
 };
 
 /**
- * v3 → v4 · Fuera las firmas de "recibido".
+ * v3 → v4 · Ya no hace nada, a propósito.
  *
- * El rol desapareció: en la app nunca se llegaba a firmar ahí y el recuadro
- * salía vacío en el documento. Sin este escalón, un informe guardado con una
- * firma de ese rol ya no validaría y acabaría entero en cuarentena.
+ * Este escalón quitaba las firmas de "recibido" cuando el rol desapareció. El
+ * rol ha vuelto (ahora se puede firmar a mano o subir una foto de la firma), así
+ * que seguir borrándolas destruiría justo lo que queremos conservar.
+ *
+ * No se elimina el escalón ni se renumeran los de después: el número de versión
+ * marca por dónde va cada ficha, y moverlo haría que las guardadas como v4
+ * pareciesen de otra época. Se queda como escalón vacío, con su historia
+ * contada aquí.
  */
-const fueraLasFirmasDeRecibido: Escalon = (guardado) => {
-  const { firmas, ...resto } = guardado as Guardado & { firmas?: { rol?: string }[] };
-  if (!Array.isArray(firmas)) return resto;
-  return { ...resto, firmas: firmas.filter((firma) => firma?.rol !== "recibido") };
-};
+const yaNoHaceNada: Escalon = (guardado) => guardado;
 
 export const ESCALONES_INFORME: Escalon[] = [
   soloSellar,
   laActividadPasaAObservacion,
   fueraElReceptor,
-  fueraLasFirmasDeRecibido,
+  yaNoHaceNada,
 ];

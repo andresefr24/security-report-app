@@ -133,7 +133,7 @@ describe("construirDocumento", () => {
   });
 
   describe("cuerpo", () => {
-    it("encabeza cada observacion con los rótulos del informe real", () => {
+    it("pone la ubicación con su rótulo y la explicación sin ninguno", () => {
       const { bloques } = construirDocumento(
         datosDelPdf({
           observaciones: [
@@ -151,9 +151,12 @@ describe("construirDocumento", () => {
       // ubicación, y así lo pidieron.
       expect(texto).toContain("Ubicación: (M-103) PK 03+500 - Glorieta de Cobeña");
       expect(texto).not.toContain("SITUACIÓN DE LA ACTUACIÓN");
-      expect(texto).toContain(
-        "OBSERVACIÓN PREVENTIVA DE SEGURIDAD (OPS): Colocación de chapa metálica.",
-      );
+
+      // La explicación va tal cual, sin rótulo delante: el que llevaba repetía
+      // la etiqueta de estado, y en una medida requerida o una subsanada decía
+      // algo que no era.
+      expect(texto).toContain("Colocación de chapa metálica.");
+      expect(texto).not.toContain("Observación Preventiva de Seguridad (OPS): Colocación");
     });
 
     it("pinta un encabezado por cada observación, numerado", () => {
@@ -186,7 +189,7 @@ describe("construirDocumento", () => {
       );
 
       const [conEstado, sinEstado] = bloques.filter((b) => b.tipo === "observacion");
-      expect(conEstado.estado?.etiqueta).toBe("SUBSANADO");
+      expect(conEstado.estado?.etiqueta).toBe("Subsanado");
       // El color lo pone la app; el coordinador solo elige el estado.
       expect(conEstado.estado?.fondo).toMatch(/^#/);
       expect(sinEstado.estado).toBeUndefined();
@@ -354,10 +357,34 @@ describe("construirDocumento", () => {
       expect(firmas?.izquierda.lineas.join(" ")).toContain("Fdo. Ana García López");
     });
 
-    it("ya no pinta el recuadro de 'recibido por': nadie firmaba ahí", () => {
-      const { bloques } = construirDocumento(datosDelPdf());
+    it("pinta el recuadro de 'recibido por' aunque nadie lo haya firmado", () => {
+      // Es parte del formulario: si ese día no había nadie, se firma en papel.
+      const firmas = construirDocumento(datosDelPdf()).bloques.find((b) => b.tipo === "firmas");
 
-      expect(bloques.find((b) => b.tipo === "firmas")?.derecha).toBeUndefined();
+      expect(firmas?.derecha?.titulo).toBe("Recibido por:");
+      expect(firmas?.derecha?.imagen).toBeUndefined();
+    });
+
+    it("lleva la firma de quien recibe cuando la hay, con su nombre si lo escribió", () => {
+      const firmas = construirDocumento(
+        datosDelPdf({
+          firmas: [
+            { nombre: "Luis Jefe", rol: "recibido", firma: "data:image/png;base64,R" },
+          ],
+        }),
+      ).bloques.find((b) => b.tipo === "firmas");
+
+      expect(firmas?.derecha?.imagen).toBe("data:image/png;base64,R");
+      expect(firmas?.derecha?.lineas.join(" ")).toContain("Fdo. Luis Jefe");
+    });
+
+    it("una firma sin nombre no inventa ninguno", () => {
+      const firmas = construirDocumento(
+        datosDelPdf({ firmas: [{ rol: "recibido", firma: "data:image/png;base64,R" }] }),
+      ).bloques.find((b) => b.tipo === "firmas");
+
+      expect(firmas?.derecha?.imagen).toBe("data:image/png;base64,R");
+      expect(firmas?.derecha?.lineas).toEqual([]);
     });
 
     it("pone los correos en lista, uno por línea y sin el punto y coma", () => {

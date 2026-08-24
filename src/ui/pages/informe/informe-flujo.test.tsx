@@ -127,7 +127,7 @@ describe("Flujo del informe (crear borrador → wizard)", () => {
     fireEvent.change(screen.getByLabelText(/^Título$/i), {
       target: { value: "Limpieza de calzada con barredora." },
     });
-    fireEvent.click(screen.getByRole("button", { name: "MEDIDA REQUERIDA" }));
+    fireEvent.click(screen.getByRole("button", { name: "Medida requerida" }));
     fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
     await screen.findByText("Paso 3 de 3");
 
