@@ -135,6 +135,11 @@ export function ObrasPage({
         <p className="text-[18px] text-muted-foreground">
           Las obras que coordinas. De cada una salen sus informes de visita.
         </p>
+        {/* Qué versión están usando. Lo pidieron para poder decirnos "estoy en
+            la 1.0.0" cuando algo falla, y saber si ya está arreglado. */}
+        <p className="text-[14px] text-muted-foreground" data-testid="version">
+          Versión {__VERSION__} · {__COMMIT__}
+        </p>
       </header>
 
       {cargando ? (

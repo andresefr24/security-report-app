@@ -5,6 +5,11 @@
 // reutilizable que se pinta dentro de la actividad y no sabe nada del wizard:
 // recibe sus fotos y avisa de los cambios.
 //
+// El botón de añadir va DEBAJO de las fotos: arriba del todo no se veía que se
+// pudieran seguir añadiendo y los coordinadores se quedaban con una sola. Y
+// cambia a "Añadir otra foto" en cuanto hay alguna, que es lo que de verdad
+// invita a seguir.
+//
 // Se puede añadir DESDE LA CÁMARA O DESDE LA GALERÍA: el input no lleva `capture`
 // (con él, el móvil abre la cámara directamente y no da acceso al carrete).
 // Cada foto se reduce al añadirla (comprimir-foto) y se guarda como dataURL.
@@ -63,16 +68,6 @@ export function CampoFotos({ fotos, onChange, idPrefijo, numeroActividad }: Camp
         className="hidden"
       />
 
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => inputRef.current?.click()}
-        disabled={procesando}
-        className="h-[52px] w-full text-[18px]"
-      >
-        {procesando ? "Procesando…" : "Añadir foto"}
-      </Button>
-
       {error && <p className="text-[15px] text-destructive">{error}</p>}
 
       {fotos.map((foto, indice) => (
@@ -111,6 +106,22 @@ export function CampoFotos({ fotos, onChange, idPrefijo, numeroActividad }: Camp
           </Button>
         </div>
       ))}
+
+      {/* Al FINAL de las fotos, no antes: arriba del todo no se veía que se
+          pudieran seguir añadiendo, y los coordinadores se quedaban con una. */}
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => inputRef.current?.click()}
+        disabled={procesando}
+        className="h-[52px] w-full text-[18px]"
+      >
+        {procesando
+          ? "Procesando…"
+          : fotos.length === 0
+            ? "Añadir foto"
+            : "Añadir otra foto"}
+      </Button>
     </div>
   );
 }

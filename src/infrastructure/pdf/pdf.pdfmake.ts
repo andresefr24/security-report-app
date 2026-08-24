@@ -210,7 +210,8 @@ function aBloqueDePdfmake(bloque: BloqueDocumento): Content {
       return { columns: columnas, columnGap: 10, margin: [0, 0, 0, 12] };
     }
 
-    // El recuadro de firmas: coordinador a la izquierda, receptor a la derecha.
+    // El recuadro de firmas: el coordinador a la izquierda y quien recibe el
+    // informe a la derecha.
     case "firmas": {
       const columna = (firma: FirmaDocumento): Content => ({
         stack: [
@@ -235,8 +236,8 @@ function aBloqueDePdfmake(bloque: BloqueDocumento): Content {
         margin: [4, 4, 4, 4] as [number, number, number, number],
       });
 
-      // Sin "recibido por", el recuadro es de una sola columna y no se estira a
-      // toda la página: un cuadro vacío al lado de la firma quedaba raro.
+      // Con las dos cajas ocupa el ancho; si algún día viniera una sola, se
+      // queda estrecha en vez de estirarse con la mitad en blanco.
       const anchos = bloque.derecha ? ["*", "*"] : [280];
       const fila = bloque.derecha
         ? [columna(bloque.izquierda), columna(bloque.derecha)]

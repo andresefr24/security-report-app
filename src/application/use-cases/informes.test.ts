@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { CrearBorradorInforme } from "@/application/use-cases/crear-borrador-informe";
 import { GuardarInforme } from "@/application/use-cases/guardar-informe";
 import { ObtenerInforme } from "@/application/use-cases/obtener-informe";
@@ -108,5 +108,20 @@ describe("Casos de uso de informes", () => {
       const recuperado = await new ObtenerInforme(informes).ejecutar(borrador.valor.id);
       expect(recuperado?.situacion).toBe("A medias…");
     });
+  });
+});
+
+describe("GuardarInforme cuando el disco falla", () => {
+  it("lo cuenta como un fallo en vez de perderse por el camino", async () => {
+    const informes = new InformeRepositoryEnMemoria();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    // El dispositivo sin espacio: localForage lanza y hasta ahora nadie lo
+    // recogía, así que el coordinador no veía nada y perdía el trabajo.
+    vi.spyOn(informes, "guardar").mockRejectedValueOnce(new Error("QuotaExceededError"));
+
+    const resultado = await new GuardarInforme(informes).ejecutar({ proyectoId: "obra-1" });
+
+    expect(resultado.ok).toBe(false);
+    if (!resultado.ok) expect(resultado.errores.join(" ")).toContain("espacio en el dispositivo");
   });
 });

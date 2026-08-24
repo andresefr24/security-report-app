@@ -58,9 +58,10 @@ export interface Observacion {
 
 /** Una firma recogida en el dispositivo: la del coordinador o la de quien recibe. */
 export interface FirmaInforme {
-  nombre: string;
+  /** Opcional: hay firmas que se leen solas y no se teclea nada. */
+  nombre?: string;
   rol: RolFirmante;
-  /** Trazo de la firma como imagen dataURL. */
+  /** La firma como imagen dataURL: dibujada a mano o subida como foto. */
   firma: string;
 }
 

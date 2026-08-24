@@ -79,13 +79,14 @@ test("un coordinador crea un informe de punta a punta y llega al PDF", async ({ 
   await page.getByLabel(/Dónde/i).fill("(M-103) PK 03+500");
   await page.getByLabel(/Explicación/i).fill("Se requiere instalar extintores.");
   // El estado se elige con un botón; la app pone la etiqueta y el color.
-  await page.getByRole("button", { name: "MEDIDA REQUERIDA" }).click();
+  await page.getByRole("button", { name: "Medida requerida" }).click();
   await page.getByRole("button", { name: "Siguiente" }).click();
   await expect(page.getByText("Paso 3 de 3")).toBeVisible();
 
-  // 7) La firma del coordinador, la única que hay.
-  await page.getByLabel(/Nombre de quien firma/i).fill("Ana García López");
-  await firmar(page.getByLabel(/Zona para dibujar la firma/i));
+  // 7) La firma del coordinador, la primera de las dos cajas (la de quien
+  // recibe el informe es opcional).
+  await page.getByLabel(/Nombre de quien firma/i).first().fill("Ana García López");
+  await firmar(page.getByLabel(/Zona para dibujar la firma/i).first());
 
   // 8) Finalizar → pantalla de entrega con el PDF listo.
   await page.getByRole("button", { name: "Finalizar" }).click();
