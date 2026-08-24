@@ -129,7 +129,7 @@ describe("LocalForageInformeRepository", () => {
     expect(lista).toHaveLength(1);
   });
 
-  it("tira la firma de 'recibido' de los informes ya guardados, sin perder el resto", async () => {
+  it("conserva la firma de 'recibido' de los informes ya guardados", async () => {
     await repo["caja"].setItem("informe-con-recibido", {
       id: "informe-con-recibido",
       proyectoId: "obra-1",
@@ -143,10 +143,10 @@ describe("LocalForageInformeRepository", () => {
 
     const recuperado = await repo.obtenerPorId("informe-con-recibido");
 
-    // Sin el escalón, ese rol ya no valida y el informe ENTERO caería en
-    // cuarentena; así solo se va la firma que sobra.
-    expect(recuperado?.firmas).toHaveLength(1);
-    expect(recuperado?.firmas?.[0].rol).toBe("coordinador");
+    // El rol "recibido" se quitó una vuelta y volvió: el escalón que las
+    // borraba se dejó vacío a propósito, así que las dos siguen ahí.
+    expect(recuperado?.firmas).toHaveLength(2);
+    expect(recuperado?.firmas?.map((f) => f.rol)).toEqual(["coordinador", "recibido"]);
     expect(recuperado?.observaciones).toHaveLength(1);
   });
 

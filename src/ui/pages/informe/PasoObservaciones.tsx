@@ -162,9 +162,12 @@ export function PasoObservaciones({ informe, actualizar }: PropsPaso) {
                     onClick={() =>
                       cambiar(observacion.id, { estado: elegido ? undefined : valor })
                     }
+                    // El elegido va relleno de su color, como saldrá impreso;
+                    // los otros dos, en blanco con su color en el borde y la
+                    // letra. Los tres se leen igual de bien.
                     className={cn(
-                      "h-[52px] w-full text-[18px]",
-                      elegido && `border-2 font-semibold ${pinta.clases}`,
+                      "h-[52px] w-full border-2 text-[18px] font-semibold",
+                      elegido ? pinta.clasesElegido : pinta.clasesSuelto,
                     )}
                   >
                     {pinta.etiqueta}

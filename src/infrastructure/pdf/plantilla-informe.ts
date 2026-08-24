@@ -56,8 +56,6 @@ export interface PlantillaInforme {
     tipoDocumento: string;
     emisor: string;
     empresaEmisor: string;
-    receptor: string;
-    empresaReceptor: string;
   };
   /** Los rótulos de sección, en mayúsculas como en el original. */
   rotulos: {
@@ -80,7 +78,7 @@ export interface PlantillaInforme {
   fotosPorFila: number;
   /** Cómo se rotula cada foto en su pie: "Foto 3". */
   etiquetaFoto: string;
-  /** Los dos encabezados del recuadro de firmas y el cargo del coordinador. */
+  /** Los encabezados de las dos cajas de firma y el cargo del coordinador. */
   firmas: {
     tituloCoordinador: string;
     tituloRecibido: string;
@@ -125,38 +123,42 @@ export const PLANTILLA_SEMANAL: PlantillaInforme = {
     tipoDocumento: "Tipo Documento:",
     emisor: "Emisor:",
     empresaEmisor: "Empresa:",
-    receptor: "Receptor:",
-    empresaReceptor: "Empresa/Entidad:",
   },
   rotulos: {
     calendario: "CALENDARIO DE VISITAS Y TRABAJOS EN EJECUCIÓN",
     situacion: "SITUACIÓN DE LA OBRA",
     ubicacionActividad: "Ubicación",
-    // Lo pidieron así, con el nombre que usan ellos.
-    descripcionActividad: "OBSERVACIÓN PREVENTIVA DE SEGURIDAD (OPS)",
+    // Lo pidieron así, con el nombre y las mayúsculas que usan ellos. Sí, la
+    // etiqueta de estado se llama igual: es su vocabulario y lo leen bien.
+    descripcionActividad: "Observación Preventiva de Seguridad (OPS)",
     observacion: "OBSERVACIÓN",
     distribucion: "Enviado por e-mail a:",
   },
   // Los informes reales ponen una foto por fila y gastan una hoja por foto. El
   // stakeholder pidió expresamente dos: es una mejora deliberada, no una copia.
+  // La clasificación de colores es de Nicolás y Miren: OPS en rojo, medida
+  // requerida en amarillo, subsanado en verde. Fondo del color y letra encima —
+  // blanca sobre rojo y verde, negra sobre el amarillo, donde la blanca no se
+  // leería. Los mismos colores que en pantalla (ui/…/estados-observacion.ts),
+  // repetidos aquí a propósito: el documento es un formato aparte.
   estados: {
-    "medida-requerida": {
-      etiqueta: "MEDIDA REQUERIDA",
-      fondo: "#fdf3d7",
-      texto: "#8a5a00",
-      borde: "#e0b74a",
-    },
     "observacion-preventiva": {
-      etiqueta: "OBSERVACIÓN PREVENTIVA",
-      fondo: "#fdf3d7",
-      texto: "#8a5a00",
-      borde: "#e0b74a",
+      etiqueta: "Observación Preventiva de Seguridad (OPS)",
+      fondo: "#b3261e",
+      texto: "#ffffff",
+      borde: "#8f1e18",
+    },
+    "medida-requerida": {
+      etiqueta: "Medida requerida",
+      fondo: "#f5c518",
+      texto: "#000000",
+      borde: "#e6a700",
     },
     subsanado: {
-      etiqueta: "SUBSANADO",
-      fondo: "#e3f2e3",
-      texto: "#1c6b30",
-      borde: "#8cc79a",
+      etiqueta: "Subsanado",
+      fondo: "#1c6b30",
+      texto: "#ffffff",
+      borde: "#155224",
     },
   },
   fotosPorFila: 2,

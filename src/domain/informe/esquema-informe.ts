@@ -5,11 +5,11 @@
 // todo es opcional; lo único imprescindible para existir es a qué obra pertenece.
 // La comprobación de "está completo para firmar" vive en completitud.ts, no aquí.
 //
-// MODELO v2 (validated: true) — confirmado con los 8 informes reales del
-// stakeholder y aprobado en docs/decisions.md#d9-informe-v2. El informe es:
-// cabecera + resumen de la semana + una o varias ACTIVIDADES (cada una con su
-// ubicación, su descripción y sus fotos) + firmas. Ver docs/entity-informe.md y
-// docs/maqueta-informe-real.md.
+// EL MODELO — nació con los 8 informes reales del stakeholder
+// (docs/decisions.md#d9-informe-v2) y lo afinaron Nicolás y Miren usándolo. El
+// informe es: cabecera + resumen de la semana + una o varias OBSERVACIONES (cada
+// una con su título, su estado, su ubicación, su explicación y sus fotos) +
+// firmas. Ver docs/entity-informe.md y docs/maqueta-informe-real.md.
 
 import { z } from "zod";
 import { textoObligatorio } from "@/domain/shared/validacion";
@@ -18,15 +18,15 @@ import { textoObligatorio } from "@/domain/shared/validacion";
 export const ESTADOS_INFORME = ["borrador", "finalizado"] as const;
 
 /**
- * Quién firma un informe: SOLO el coordinador, y es obligatoria — es su prueba
- * de presencia y lo que da valor legal al documento.
+ * Quién firma un informe: el coordinador —su prueba de presencia, y lo que da
+ * valor legal al documento— y quien lo recibe en obra.
  *
- * Hubo un rol "recibido" para quien recogía el informe en obra, pero en la
- * práctica nunca se firmaba desde la app y su hueco salía vacío en el PDF, así
- * que los coordinadores lo quitaron. El promotor y la subcontrata tampoco
- * firman. Ver docs/entity-informe#signatures.
+ * El rol "recibido" se quitó una vuelta y volvió: se había ido porque nadie
+ * firmaba ahí, pero ahora se puede firmar a mano O subir una foto de la firma,
+ * que es como la consiguen de verdad. El promotor y la subcontrata no firman.
+ * Ver docs/entity-informe#signatures.
  */
-export const ROLES_FIRMANTE = ["coordinador"] as const;
+export const ROLES_FIRMANTE = ["coordinador", "recibido"] as const;
 
 /**
  * En qué estado está una observación. Sustituye al `tipo` invisible que dejó D9
@@ -82,9 +82,16 @@ export const esquemaObservacion = z.object({
   fotos: z.array(esquemaFoto).optional(),
 });
 
-/** Una firma recogida en el dispositivo: quién firma, en qué papel y el trazo. */
+/**
+ * Una firma recogida en el dispositivo: en qué papel firma, la imagen de la
+ * firma y, si lo escriben, el nombre.
+ *
+ * El NOMBRE es opcional: muchas firmas se leen solas, y obligarlo era una
+ * barrera para algo que se hace de pie en mitad de una obra. Lo que no puede
+ * faltar es la imagen: sin trazo no hay firma.
+ */
 export const esquemaFirmaInforme = z.object({
-  nombre: textoObligatorio("Indique quién firma."),
+  nombre: z.string().optional(),
   rol: z.enum(ROLES_FIRMANTE, { message: "Indique el rol de quien firma." }),
   firma: textoObligatorio("Falta el trazo de la firma."),
 });

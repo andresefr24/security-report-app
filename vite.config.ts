@@ -3,11 +3,31 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { execSync } from 'node:child_process'
+import paquete from './package.json'
+
+// De qué versión es lo que se está ejecutando. Los coordinadores prueban desde
+// el móvil y necesitan poder decirnos "estoy en la 1.0.0 · a1b2c3d" para saber
+// si el fallo que ven ya está arreglado.
+//
+// El commit se lee en el momento de compilar. En Vercel hay git, así que sale el
+// de verdad; si algún día no lo hubiera, se queda en "local" y no rompe nada.
+function commitCorto(): string {
+  try {
+    return execSync('git rev-parse --short HEAD').toString().trim()
+  } catch {
+    return 'local'
+  }
+}
 
 // Configuración de Vite. Activamos React y la PWA (service worker + manifiesto).
 // El manifiesto aquí es MÍNIMO (M0); el afinado real —iconos definitivos,
 // nombre comercial, caché offline— es trabajo de M5.
 export default defineConfig({
+  define: {
+    __VERSION__: JSON.stringify(paquete.version),
+    __COMMIT__: JSON.stringify(commitCorto()),
+  },
   // '@' apunta a src/ (lo usan shadcn/ui y nuestros imports).
   resolve: {
     alias: {
