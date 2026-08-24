@@ -53,19 +53,19 @@ describe("PasoObservaciones", () => {
   it("ofrece exactamente los tres estados, ni uno más", () => {
     render(<Arnes inicial={{ ...base, observaciones: [{ id: "o1" }] }} />);
 
-    expect(screen.getByRole("button", { name: "MEDIDA REQUERIDA" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "OBSERVACIÓN PREVENTIVA" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "SUBSANADO" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Medida requerida" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Observación Preventiva de Seguridad (OPS)" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Subsanado" })).toBeInTheDocument();
   });
 
   it("marca el estado al pulsar su botón, sin teclear nada", () => {
     render(<Arnes inicial={{ ...base, observaciones: [{ id: "o1" }] }} />);
     expect(screen.getByTestId("estado-1")).toHaveTextContent("sin estado");
 
-    fireEvent.click(screen.getByRole("button", { name: "SUBSANADO" }));
+    fireEvent.click(screen.getByRole("button", { name: "Subsanado" }));
 
     expect(screen.getByTestId("estado-1")).toHaveTextContent("subsanado");
-    expect(screen.getByRole("button", { name: "SUBSANADO" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Subsanado" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
@@ -74,7 +74,7 @@ describe("PasoObservaciones", () => {
   it("volver a pulsar el estado elegido lo quita: el estado es opcional", () => {
     render(<Arnes inicial={{ ...base, observaciones: [{ id: "o1", estado: "subsanado" }] }} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "SUBSANADO" }));
+    fireEvent.click(screen.getByRole("button", { name: "Subsanado" }));
 
     expect(screen.getByTestId("estado-1")).toHaveTextContent("sin estado");
   });
@@ -82,10 +82,10 @@ describe("PasoObservaciones", () => {
   it("cambiar de estado sustituye al anterior, no los suma", () => {
     render(<Arnes inicial={{ ...base, observaciones: [{ id: "o1", estado: "subsanado" }] }} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "MEDIDA REQUERIDA" }));
+    fireEvent.click(screen.getByRole("button", { name: "Medida requerida" }));
 
     expect(screen.getByTestId("estado-1")).toHaveTextContent("medida-requerida");
-    expect(screen.getByRole("button", { name: "SUBSANADO" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Subsanado" })).toHaveAttribute(
       "aria-pressed",
       "false",
     );

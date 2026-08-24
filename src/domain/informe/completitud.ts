@@ -21,6 +21,8 @@
 //    completo en docs/maqueta-informe-real.md §7 y docs/propuesta-informe-estructura-real.md §4b.
 //  - La firma de quien recibe el informe: puede no haber nadie para firmar ese
 //    día, y eso no puede impedir que el coordinador cierre su informe.
+//  - El NOMBRE de quien firma, en ninguna de las dos: muchas firmas se leen
+//    solas y teclear el nombre de pie en una obra era una barrera.
 //  - Las fotos ni sus comentarios. Lo normal es que haya fotos (son la forma de
 //    evidenciar la visita), pero puede haber visitas sin nada que fotografiar.
 //  - La DESCRIPCIÓN larga de la observación: muchas veces el título y el

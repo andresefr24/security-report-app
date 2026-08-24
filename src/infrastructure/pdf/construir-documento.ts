@@ -64,10 +64,7 @@ export type BloqueDocumento =
     }
   /** Una fila de fotos (tantas como diga la plantilla) con su comentario debajo. */
   | { tipo: "filaFotos"; fotos: FotoDocumento[]; fotosPorFila: number }
-  /**
-   * El recuadro de firmas al pie. Solo firma el coordinador: quien recibía el
-   * informe no llegaba a firmar nunca en la app, así que su hueco vacío sobraba.
-   */
+  /** El recuadro de firmas al pie: el coordinador y quien recibe el informe. */
   | { tipo: "firmas"; izquierda: FirmaDocumento; derecha?: FirmaDocumento }
   /** La lista de distribución: a quién se le envía, uno por línea. */
   | { tipo: "distribucion"; titulo: string; correos: string[] };
@@ -255,6 +252,7 @@ export function construirDocumento(
 
   // --- El recuadro de firmas ---
   const firmaCoordinador = (informe.firmas ?? []).find((f) => f.rol === "coordinador");
+  const firmaRecibido = (informe.firmas ?? []).find((f) => f.rol === "recibido");
   const registro = `${plantilla.firmas.cargoCoordinador} - ${plantilla.firmas.etiquetaRegistro} ${coordinador.numeroRegistroIrsst}`;
 
   bloques.push({
@@ -267,6 +265,13 @@ export function construirDocumento(
         registro,
         coordinador.contacto?.empresa ?? "",
       ].filter(Boolean),
+    },
+    // La caja de quien recibe el informe se pinta SIEMPRE, firmada o no: es
+    // parte del formulario, y si ese día no había nadie se firma en papel.
+    derecha: {
+      titulo: plantilla.firmas.tituloRecibido,
+      imagen: firmaRecibido?.firma,
+      lineas: firmaRecibido?.nombre ? [`Fdo. ${firmaRecibido.nombre}`] : [],
     },
   });
 
