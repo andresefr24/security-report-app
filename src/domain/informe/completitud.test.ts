@@ -63,6 +63,24 @@ describe("loQueFaltaParaFinalizar", () => {
     expect(loQueFaltaParaFinalizar(informeListo({ firmas: [FIRMA_COORDINADOR] }))).toEqual([]);
   });
 
+  it("le vale que quien recibe deje solo su nombre, sin firmar", () => {
+    const falta = loQueFaltaParaFinalizar(
+      informeListo({ firmas: [FIRMA_COORDINADOR, { nombre: "Luis", rol: "recibido" }] }),
+    );
+
+    expect(falta).toEqual([]);
+  });
+
+  it("la del coordinador sin trazo NO cierra el informe, aunque lleve nombre", () => {
+    // El nombre solo vale para quien RECIBE. La del coordinador es su prueba de
+    // presencia: sin el trazo, el documento no tiene valor legal.
+    const falta = loQueFaltaParaFinalizar(
+      informeListo({ firmas: [{ nombre: "Ana Coordinadora", rol: "coordinador" }] }),
+    );
+
+    expect(falta).toEqual(["Falta la firma del coordinador."]);
+  });
+
   it("NO exige la situación general: los informes semanales no la usan", () => {
     expect(loQueFaltaParaFinalizar(informeListo({ situacion: undefined }))).toEqual([]);
   });
