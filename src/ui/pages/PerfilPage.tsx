@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { type ConfigurarPerfil } from "@/application/use-cases/configurar-perfil";
 import { Button } from "@/ui/components/button";
 import { CampoFirma } from "@/ui/components/campo-firma";
+import { CampoLogo } from "@/ui/components/campo-logo";
 import { CamposTexto } from "@/ui/components/campos-formulario";
 import {
   aDatosCoordinador,
@@ -56,6 +57,7 @@ export function PerfilPage({ configurarPerfil }: PerfilPageProps) {
   }, [configurarPerfil, reset]);
 
   const firma = watch("firma");
+  const logo = watch("logo");
 
   async function onSubmit(datos: FormularioPerfil) {
     setGuardado(false);
@@ -88,6 +90,16 @@ export function PerfilPage({ configurarPerfil }: PerfilPageProps) {
         noValidate
       >
         <CamposTexto campos={camposPerfil} register={register} errors={errors} />
+
+        <CampoLogo
+          valor={logo || undefined}
+          onChange={(valor) => {
+            setValue("logo", valor ?? "", { shouldDirty: true });
+            setGuardado(false);
+          }}
+          descripcion="Sale arriba a la derecha en cada informe, en el recuadro que antes llevaba los códigos."
+          alt="Tu logotipo"
+        />
 
         <div className="space-y-1.5">
           <CampoFirma

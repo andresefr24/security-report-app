@@ -9,6 +9,11 @@
 //
 // Los rótulos salen de la lectura de los 8 informes reales: ver
 // docs/maqueta-informe-real.md, que es la ficha de la que se copió todo esto.
+//
+// Lo que NO está aquí y antes sí: los códigos de calidad de la esquina superior
+// derecha ("Formato 02_03 / G13a- SSFE / Revisión: 0"). No les decían nada y
+// ocupaban el sitio de su logotipo. Ese recuadro lo llena ahora el coordinador
+// desde su perfil (logotipo y/o texto).
 
 import { type EstadoObservacion } from "@/domain/informe/informe";
 
@@ -23,14 +28,6 @@ export interface PintaEstadoPdf {
 export interface PlantillaInforme {
   /** El título de la banda superior, una línea por renglón. */
   titulo: string[];
-  /** El bloque de la derecha de la banda: código de formato y revisión. */
-  formato: string[];
-  /**
-   * El texto que acompaña al emisor a la derecha del título. Se completa con la
-   * empresa del PERFIL del coordinador: en los informes reales firman personas
-   * distintas, así que nunca se fija aquí.
-   */
-  prefijoEmisorCabecera: string;
   /** El valor fijo del campo "Tipo Documento" de la cabecera. */
   tipoDocumento: string;
   /**
@@ -48,11 +45,8 @@ export interface PlantillaInforme {
     fecha: string;
     ubicacion: string;
     cifContratista: string;
-    plazoEjecucion: string;
     presupuestoEjecucion: string;
     presupuestoEss: string;
-    fechaInicio: string;
-    fechaFin: string;
     tipoDocumento: string;
     emisor: string;
     empresaEmisor: string;
@@ -95,8 +89,6 @@ export interface PlantillaInforme {
  */
 export const PLANTILLA_SEMANAL: PlantillaInforme = {
   titulo: ["INFORME DE VISITA DEL COORDINADOR", "DE SEGURIDAD Y SALUD"],
-  formato: ["Formato 02_03", "G13a- SSFE", "Revisión: 0"],
-  prefijoEmisorCabecera: "ING. CSS ",
   tipoDocumento: "INFORMATIVO",
   avisoAlcance:
     "Las observaciones recogidas en el presente informe se limitan a las condiciones " +
@@ -114,11 +106,8 @@ export const PLANTILLA_SEMANAL: PlantillaInforme = {
     fecha: "Fecha:",
     ubicacion: "Ubicación:",
     cifContratista: "CIF:",
-    plazoEjecucion: "Plazo de ejecución:",
     presupuestoEjecucion: "Presupuesto de ejecución:",
     presupuestoEss: "Presupuesto ESS:",
-    fechaInicio: "Inicio:",
-    fechaFin: "Fin:",
     tipoDocumento: "Tipo Documento:",
     emisor: "Emisor:",
     empresaEmisor: "Empresa:",
