@@ -63,6 +63,9 @@ function cargarPdfMake(): Promise<ApiPdfMake> {
 /** El ancho útil de una A4 con los márgenes de este documento. */
 const ANCHO_UTIL = 515;
 
+/** Lo que mide el hueco de una firma, firmada o no. Ver el bloque "firmas". */
+const ALTO_FIRMA = 60;
+
 /** Traduce un bloque de nuestra receta al formato que entiende pdfmake. */
 function aBloqueDePdfmake(bloque: BloqueDocumento): Content {
   switch (bloque.tipo) {
@@ -213,20 +216,31 @@ function aBloqueDePdfmake(bloque: BloqueDocumento): Content {
     // El recuadro de firmas: el coordinador a la izquierda y quien recibe el
     // informe a la derecha.
     case "firmas": {
+      // El hueco de la firma mide LO MISMO haya trazo o no: es una tabla de una
+      // celda con altura fija. Así el "Fdo." cae siempre al pie de la caja, en
+      // las dos columnas, y encima queda el espacio para firmar A MANO si
+      // imprimen el informe. Sin esto, la caja sin firma ponía el nombre a media
+      // altura y no había dónde firmar.
+      const huecoDeFirma = (imagen?: string): Content => ({
+        table: {
+          widths: ["*"],
+          heights: [ALTO_FIRMA],
+          body: [
+            [
+              imagen
+                ? { image: imagen, fit: [180, ALTO_FIRMA], alignment: "center" as const }
+                : { text: "" },
+            ],
+          ],
+        },
+        layout: "noBorders",
+        margin: [0, 6, 0, 4] as [number, number, number, number],
+      });
+
       const columna = (firma: FirmaDocumento): Content => ({
         stack: [
           { text: firma.titulo, fontSize: 10 },
-          firma.imagen
-            ? {
-                image: firma.imagen,
-                fit: [180, 60],
-                alignment: "center" as const,
-                margin: [0, 8, 0, 4] as [number, number, number, number],
-              }
-            : {
-                text: " ",
-                margin: [0, 20, 0, 0] as [number, number, number, number],
-              },
+          huecoDeFirma(firma.imagen),
           ...firma.lineas.map((linea) => ({
             text: linea,
             fontSize: 8,
