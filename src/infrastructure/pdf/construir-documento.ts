@@ -75,12 +75,15 @@ export interface DocumentoInforme {
   /** La banda superior, que se repite en todas las páginas. */
   cabeceraPagina: {
     titulo: string[];
-    formato: string[];
     /** El logotipo del promotor, si lo tiene. A la izquierda del título. */
     logo?: string;
+    /**
+     * El recuadro de la derecha, que es del COORDINADOR: su logotipo, su texto,
+     * los dos o ninguno. Lo rellena él desde su perfil; antes había ahí unos
+     * códigos de calidad fijos que no les decían nada.
+     */
+    emisor: { logo?: string; texto?: string };
   };
-  /** El texto de la derecha del título: "ING. CSS " + la empresa del perfil. */
-  emisorCabecera: string;
   bloques: BloqueDocumento[];
 }
 
@@ -145,8 +148,12 @@ export function construirDocumento(
 
   // --- La tabla de cabecera ---
   //
-  // Solo se pintan las filas que TIENEN valor: antes salían "Ubicación:" o
-  // "Plazo de ejecución:" en blanco y el documento parecía a medio rellenar.
+  // Solo se pintan las filas que TIENEN valor: antes salía "Ubicación:" en
+  // blanco y el documento parecía a medio rellenar.
+  //
+  // El PLAZO Y LAS FECHAS de la obra NO van aquí: los coordinadores los pidieron
+  // fuera del informe porque son datos del contrato, no de la visita, y ocupaban
+  // una fila entera de la cabecera. Se siguen guardando en la ficha de la obra.
   const filasCabecera: FilaCabecera[] = [
       {
         etiqueta: etiquetas.obra,
@@ -161,12 +168,6 @@ export function construirDocumento(
         valor: proyecto.contratista ?? "",
         etiqueta2: proyecto.cifContratista ? etiquetas.cifContratista : undefined,
         valor2: proyecto.cifContratista,
-      },
-      {
-        etiqueta: etiquetas.plazoEjecucion,
-        valor: proyecto.plazoEjecucion ?? "",
-        etiqueta2: proyecto.fechaInicio ? etiquetas.fechaInicio : undefined,
-        valor2: proyecto.fechaInicio ? fechaCorta(proyecto.fechaInicio) : undefined,
       },
       {
         etiqueta: etiquetas.presupuestoEjecucion,
@@ -294,12 +295,14 @@ export function construirDocumento(
     titulo: `Informe ${proyecto.codigoObra} — ${fechaLegible(informe.fechaHora)}`,
     cabeceraPagina: {
       titulo: plantilla.titulo,
-      formato: plantilla.formato,
       // El hueco de la izquierda es del promotor: si no tiene logo, se queda
       // vacío y el documento sale igual de bien.
       logo: promotor?.logo,
+      emisor: {
+        logo: coordinador.logo,
+        texto: coordinador.textoCabecera?.trim() || undefined,
+      },
     },
-    emisorCabecera: `${plantilla.prefijoEmisorCabecera}${coordinador.contacto?.empresa ?? ""}`.trim(),
     bloques,
   };
 }

@@ -15,9 +15,18 @@ import { Label } from "@/ui/components/label";
 export interface CampoLogoProps {
   valor?: string;
   onChange: (logo: string | undefined) => void;
+  /** Para qué sirve el logotipo aquí. Cambia entre el promotor y el perfil. */
+  descripcion?: string;
+  /** El texto alternativo de la imagen, para quien no la ve. */
+  alt?: string;
 }
 
-export function CampoLogo({ valor, onChange }: CampoLogoProps) {
+export function CampoLogo({
+  valor,
+  onChange,
+  descripcion = "Si lo tienes, saldrá en la cabecera de los informes de sus obras.",
+  alt = "Logotipo del promotor",
+}: CampoLogoProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,9 +50,7 @@ export function CampoLogo({ valor, onChange }: CampoLogoProps) {
   return (
     <div className="space-y-2">
       <Label className="text-[16px] font-semibold">Logotipo (opcional)</Label>
-      <p className="text-[15px] text-muted-foreground">
-        Si lo tienes, saldrá en la cabecera de los informes de sus obras.
-      </p>
+      <p className="text-[15px] text-muted-foreground">{descripcion}</p>
 
       <input
         ref={inputRef}
@@ -57,7 +64,7 @@ export function CampoLogo({ valor, onChange }: CampoLogoProps) {
       {valor && (
         <img
           src={valor}
-          alt="Logotipo del promotor"
+          alt={alt}
           className="max-h-24 w-auto rounded-md border border-border bg-white p-2"
         />
       )}

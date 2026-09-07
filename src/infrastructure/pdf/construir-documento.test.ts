@@ -90,12 +90,11 @@ describe("construirDocumento", () => {
     });
 
     it("no pinta las filas que se quedan en blanco", () => {
-      // La obra de prueba no tiene ubicación ni plazo ni presupuestos: esas
-      // filas no deben salir, o el documento parece a medio rellenar.
+      // La obra de prueba no tiene ubicación ni presupuestos: esas filas no
+      // deben salir, o el documento parece a medio rellenar.
       const texto = textoDe(construirDocumento(datosDelPdf()).bloques);
 
       expect(texto).not.toContain("Ubicación:");
-      expect(texto).not.toContain("Plazo de ejecución:");
       expect(texto).not.toContain("Presupuesto de ejecución:");
     });
 
@@ -242,14 +241,23 @@ describe("construirDocumento", () => {
       fechaInicio: "2024-04-11",
     };
 
-    it("lleva ubicación, plazo, presupuestos y CIF", () => {
+    it("lleva ubicación, presupuestos y CIF", () => {
       const texto = textoDe(construirDocumento(datosDelPdf({}, obraCompleta)).bloques);
 
       expect(texto).toContain("Ubicación: Pº del Tren Talgo, 10, 28290 Las Rozas de Madrid");
-      expect(texto).toContain("Plazo de ejecución: 18 meses");
       expect(texto).toContain("Presupuesto de ejecución: 27.470.256,11 €");
       expect(texto).toContain("Presupuesto ESS: 189.523,06 €");
       expect(texto).toContain("CIF: A28017986");
+    });
+
+    it("NO lleva el plazo ni las fechas de la obra, aunque estén rellenos", () => {
+      // Son datos del contrato, no de la visita: se quedan en la ficha de la
+      // obra, que es donde los consultan. Lo pidieron Nicolás y Miren.
+      const texto = textoDe(construirDocumento(datosDelPdf({}, obraCompleta)).bloques);
+
+      expect(texto).not.toContain("Plazo de ejecución");
+      expect(texto).not.toContain("18 meses");
+      expect(texto).not.toContain("11/04/2024");
     });
 
     it("sustituye la frase de contexto por el aviso de alcance", () => {
@@ -378,6 +386,17 @@ describe("construirDocumento", () => {
       expect(firmas?.derecha?.lineas.join(" ")).toContain("Fdo. Luis Jefe");
     });
 
+    it("saca el nombre de quien recibe aunque no haya firmado", () => {
+      // El caso de obra: da su nombre y firma luego en papel. El recuadro sale
+      // con "Fdo. Luis Jefe" bajo el hueco de la firma.
+      const firmas = construirDocumento(
+        datosDelPdf({ firmas: [{ nombre: "Luis Jefe", rol: "recibido" }] }),
+      ).bloques.find((b) => b.tipo === "firmas");
+
+      expect(firmas?.derecha?.imagen).toBeUndefined();
+      expect(firmas?.derecha?.lineas.join(" ")).toContain("Fdo. Luis Jefe");
+    });
+
     it("una firma sin nombre no inventa ninguno", () => {
       const firmas = construirDocumento(
         datosDelPdf({ firmas: [{ rol: "recibido", firma: "data:image/png;base64,R" }] }),
@@ -422,15 +441,52 @@ describe("construirDocumento", () => {
     expect(construirDocumento(datosDelPdf()).cabeceraPagina.logo).toBeUndefined();
   });
 
-  it("lleva el título nuevo y, a su derecha, quién emite el informe", () => {
-    const { cabeceraPagina, emisorCabecera } = construirDocumento(datosDelPdf());
+  it("lleva el título del formato", () => {
+    const { cabeceraPagina } = construirDocumento(datosDelPdf());
 
     expect(cabeceraPagina.titulo.join(" ")).toBe(
       "INFORME DE VISITA DEL COORDINADOR DE SEGURIDAD Y SALUD",
     );
-    expect(cabeceraPagina.formato.join(" ")).toContain("G13a- SSFE");
-    // El emisor sale del perfil, nunca fijado en la plantilla.
-    expect(emisorCabecera).toBe("ING. CSS TPS Ingeniería");
+  });
+
+  describe("el recuadro de la derecha, que es del coordinador", () => {
+    it("ya no lleva los códigos de calidad: no les decían nada", () => {
+      const documento = construirDocumento(datosDelPdf());
+
+      expect(JSON.stringify(documento)).not.toContain("G13a");
+      expect(JSON.stringify(documento)).not.toContain("Revisión: 0");
+    });
+
+    it("lleva su logotipo y su texto, los que puso en el perfil", () => {
+      const datos = datosDelPdf();
+      const { cabeceraPagina } = construirDocumento({
+        ...datos,
+        coordinador: {
+          ...datos.coordinador,
+          logo: "data:image/png;base64,LOGOTPF",
+          textoCabecera: "ING. CSS TPF Getinsa Euroestudios",
+        },
+      });
+
+      expect(cabeceraPagina.emisor.logo).toBe("data:image/png;base64,LOGOTPF");
+      expect(cabeceraPagina.emisor.texto).toBe("ING. CSS TPF Getinsa Euroestudios");
+    });
+
+    it("se queda en blanco si no ha puesto ninguno de los dos", () => {
+      const { cabeceraPagina } = construirDocumento(datosDelPdf());
+
+      expect(cabeceraPagina.emisor).toEqual({ logo: undefined, texto: undefined });
+    });
+
+    it("un texto de solo espacios cuenta como vacío", () => {
+      const datos = datosDelPdf();
+      const { cabeceraPagina } = construirDocumento({
+        ...datos,
+        coordinador: { ...datos.coordinador, textoCabecera: "   " },
+      });
+
+      expect(cabeceraPagina.emisor.texto).toBeUndefined();
+    });
   });
 
   it("el título identifica la obra y la fecha (sirve para el nombre del archivo)", () => {

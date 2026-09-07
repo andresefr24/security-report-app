@@ -36,4 +36,11 @@ export const esquemaCoordinador = z.object({
     })
     .optional(),
   firma: z.string().optional(),
+  /**
+   * Lo que va en el recuadro de arriba a la derecha del informe. Antes había ahí
+   * unos códigos de calidad fijos ("Formato 02_03 / G13a- SSFE / Revisión: 0")
+   * que no les decían nada; ahora lo pone el propio coordinador.
+   */
+  logo: z.string().optional(),
+  textoCabecera: z.string().optional(),
 });

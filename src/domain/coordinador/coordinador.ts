@@ -41,6 +41,16 @@ export interface DatosCoordinador {
   contacto?: ContactoCoordinador;
   /** Firma capturada en el dispositivo, como imagen dataURL. Opcional en el dominio. */
   firma?: string;
+  /**
+   * Su logotipo (el de su empresa), como imagen dataURL. Va en el recuadro de
+   * arriba a la derecha del informe.
+   */
+  logo?: string;
+  /**
+   * El texto de ese mismo recuadro. Puede ir con el logotipo o en su lugar; lo
+   * escribe el coordinador (p. ej. "ING. CSS TPF Getinsa Euroestudios").
+   */
+  textoCabecera?: string;
 }
 
 /**

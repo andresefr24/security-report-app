@@ -314,8 +314,9 @@ export class PdfMakeAdapter implements PdfPort {
       info: { title: documento.titulo },
       pageMargins: [40, 90, 40, 40],
 
-      // La banda superior se repite en TODAS las páginas, como en el original:
-      // logotipos (aún no), título centrado y código de formato a la derecha.
+      // La banda superior se repite en TODAS las páginas: el logotipo del
+      // promotor a la izquierda, el título centrado, y a la derecha el logotipo
+      // y/o el texto que el coordinador puso en su perfil.
       header: () => ({
         margin: [40, 25, 40, 0],
         table: {
@@ -340,19 +341,27 @@ export class PdfMakeAdapter implements PdfPort {
                 margin: [0, 4, 0, 4] as [number, number, number, number],
               },
               {
+                // El recuadro de la derecha es del coordinador: su logotipo,
+                // su texto, los dos o ninguno (entonces se queda en blanco).
                 stack: [
-                  ...documento.cabeceraPagina.formato.map((linea) => ({
-                    text: linea,
-                    fontSize: 8,
-                  })),
-                  // A la derecha del título, quién emite: lo pidieron para que se
-                  // vea de un vistazo de qué coordinador es el informe.
-                  {
-                    text: documento.emisorCabecera,
-                    fontSize: 8,
-                    bold: true,
-                    margin: [0, 4, 0, 0] as [number, number, number, number],
-                  },
+                  ...(documento.cabeceraPagina.emisor.logo
+                    ? [
+                        {
+                          image: documento.cabeceraPagina.emisor.logo,
+                          fit: [100, 34] as [number, number],
+                          margin: [0, 0, 0, 4] as [number, number, number, number],
+                        },
+                      ]
+                    : []),
+                  ...(documento.cabeceraPagina.emisor.texto
+                    ? [
+                        {
+                          text: documento.cabeceraPagina.emisor.texto,
+                          fontSize: 8,
+                          bold: true,
+                        },
+                      ]
+                    : []),
                 ],
                 margin: [4, 4, 0, 4] as [number, number, number, number],
               },
