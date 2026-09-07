@@ -20,7 +20,8 @@
 //    coordinador a rellenar un hueco que su formato real no tiene. Ver el porqué
 //    completo en docs/maqueta-informe-real.md §7 y docs/propuesta-informe-estructura-real.md §4b.
 //  - La firma de quien recibe el informe: puede no haber nadie para firmar ese
-//    día, y eso no puede impedir que el coordinador cierre su informe.
+//    día, y eso no puede impedir que el coordinador cierre su informe. Vale
+//    incluso con que dé su nombre y no firme.
 //  - El NOMBRE de quien firma, en ninguna de las dos: muchas firmas se leen
 //    solas y teclear el nombre de pie en una obra era una barrera.
 //  - Las fotos ni sus comentarios. Lo normal es que haya fotos (son la forma de
@@ -42,7 +43,11 @@ export function loQueFaltaParaFinalizar(informe: DatosInforme): string[] {
     falta.push("Falta el título de al menos una observación.");
   }
 
-  const firmaDelCoordinador = (informe.firmas ?? []).some((f) => f.rol === "coordinador");
+  // Con TRAZO: desde que el nombre solo vale como firma (para el que recibe el
+  // informe), un "coordinador" sin imagen no puede colar como firmado.
+  const firmaDelCoordinador = (informe.firmas ?? []).some(
+    (f) => f.rol === "coordinador" && tieneTexto(f.firma),
+  );
   if (!firmaDelCoordinador) {
     falta.push("Falta la firma del coordinador.");
   }

@@ -63,6 +63,20 @@ function cargarPdfMake(): Promise<ApiPdfMake> {
 /** El ancho útil de una A4 con los márgenes de este documento. */
 const ANCHO_UTIL = 515;
 
+/** Lo que mide el hueco de una firma, firmada o no. Ver el bloque "firmas". */
+const ALTO_FIRMA = 60;
+
+/**
+ * Lo que mide la banda superior, con logotipos o sin ellos.
+ *
+ * Es una altura fija por la misma razón que el hueco de la firma: si la banda
+ * creciera y menguara según lo que haya puesto cada uno, o se sale del margen
+ * que tiene reservado (y pdfmake RECORTA lo que sobra, sin avisar) o deja un
+ * claro raro entre el título y la tabla de datos. El margen de página de arriba
+ * se calcula a partir de esto.
+ */
+const ALTO_BANDA = 78;
+
 /** Traduce un bloque de nuestra receta al formato que entiende pdfmake. */
 function aBloqueDePdfmake(bloque: BloqueDocumento): Content {
   switch (bloque.tipo) {
@@ -213,20 +227,31 @@ function aBloqueDePdfmake(bloque: BloqueDocumento): Content {
     // El recuadro de firmas: el coordinador a la izquierda y quien recibe el
     // informe a la derecha.
     case "firmas": {
+      // El hueco de la firma mide LO MISMO haya trazo o no: es una tabla de una
+      // celda con altura fija. Así el "Fdo." cae siempre al pie de la caja, en
+      // las dos columnas, y encima queda el espacio para firmar A MANO si
+      // imprimen el informe. Sin esto, la caja sin firma ponía el nombre a media
+      // altura y no había dónde firmar.
+      const huecoDeFirma = (imagen?: string): Content => ({
+        table: {
+          widths: ["*"],
+          heights: [ALTO_FIRMA],
+          body: [
+            [
+              imagen
+                ? { image: imagen, fit: [180, ALTO_FIRMA], alignment: "center" as const }
+                : { text: "" },
+            ],
+          ],
+        },
+        layout: "noBorders",
+        margin: [0, 6, 0, 4] as [number, number, number, number],
+      });
+
       const columna = (firma: FirmaDocumento): Content => ({
         stack: [
           { text: firma.titulo, fontSize: 10 },
-          firma.imagen
-            ? {
-                image: firma.imagen,
-                fit: [180, 60],
-                alignment: "center" as const,
-                margin: [0, 8, 0, 4] as [number, number, number, number],
-              }
-            : {
-                text: " ",
-                margin: [0, 20, 0, 0] as [number, number, number, number],
-              },
+          huecoDeFirma(firma.imagen),
           ...firma.lineas.map((linea) => ({
             text: linea,
             fontSize: 8,
@@ -312,13 +337,19 @@ export class PdfMakeAdapter implements PdfPort {
 
     const definicion: TDocumentDefinitions = {
       info: { title: documento.titulo },
-      pageMargins: [40, 90, 40, 40],
+      // Arriba, el sitio de la banda: lo que empieza (25) más lo que mide, y un
+      // dedo de aire. Lo que se salga de aquí, pdfmake lo recorta sin avisar.
+      pageMargins: [40, 25 + ALTO_BANDA + 10, 40, 40],
 
-      // La banda superior se repite en TODAS las páginas, como en el original:
-      // logotipos (aún no), título centrado y código de formato a la derecha.
+      // La banda superior se repite en TODAS las páginas: el logotipo del
+      // promotor a la izquierda, el título centrado, y a la derecha el logotipo
+      // y/o el texto que el coordinador puso en su perfil.
       header: () => ({
         margin: [40, 25, 40, 0],
         table: {
+          // La primera celda fija el alto de la banda (ver ALTO_BANDA), así que
+          // mide lo mismo lleve logotipo el promotor o no.
+          heights: [ALTO_BANDA],
           widths: [110, "*", 110],
           body: [
             [
@@ -340,19 +371,27 @@ export class PdfMakeAdapter implements PdfPort {
                 margin: [0, 4, 0, 4] as [number, number, number, number],
               },
               {
+                // El recuadro de la derecha es del coordinador: su logotipo,
+                // su texto, los dos o ninguno (entonces se queda en blanco).
                 stack: [
-                  ...documento.cabeceraPagina.formato.map((linea) => ({
-                    text: linea,
-                    fontSize: 8,
-                  })),
-                  // A la derecha del título, quién emite: lo pidieron para que se
-                  // vea de un vistazo de qué coordinador es el informe.
-                  {
-                    text: documento.emisorCabecera,
-                    fontSize: 8,
-                    bold: true,
-                    margin: [0, 4, 0, 0] as [number, number, number, number],
-                  },
+                  ...(documento.cabeceraPagina.emisor.logo
+                    ? [
+                        {
+                          image: documento.cabeceraPagina.emisor.logo,
+                          fit: [100, 34] as [number, number],
+                          margin: [0, 0, 0, 4] as [number, number, number, number],
+                        },
+                      ]
+                    : []),
+                  ...(documento.cabeceraPagina.emisor.texto
+                    ? [
+                        {
+                          text: documento.cabeceraPagina.emisor.texto,
+                          fontSize: 8,
+                          bold: true,
+                        },
+                      ]
+                    : []),
                 ],
                 margin: [4, 4, 0, 4] as [number, number, number, number],
               },

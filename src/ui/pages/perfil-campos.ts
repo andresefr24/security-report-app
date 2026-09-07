@@ -41,6 +41,12 @@ export const camposPerfil: CampoTexto<FormularioPerfil>[] = [
   { nombre: "contacto.correo", etiqueta: "Correo", tipo: "email" },
   { nombre: "contacto.telefono", etiqueta: "Teléfono", tipo: "tel" },
   { nombre: "contacto.empresa", etiqueta: "Empresa" },
+  {
+    nombre: "textoCabecera",
+    etiqueta: "Texto de la cabecera del informe",
+    ayuda:
+      "Sale arriba a la derecha en cada informe, junto a tu logotipo. Por ejemplo: ING. CSS TPF Getinsa Euroestudios.",
+  },
 ];
 
 // Valores iniciales del formulario (todo vacío la primera vez).
@@ -51,6 +57,8 @@ export const perfilVacio: FormularioPerfil = {
   numeroColegiado: "",
   contacto: { correo: "", telefono: "", empresa: "" },
   firma: "",
+  logo: "",
+  textoCabecera: "",
 };
 
 /** Coordinador guardado -> valores del formulario (para editar un perfil ya creado). */
@@ -66,6 +74,8 @@ export function aFormulario(coordinador: Coordinador): FormularioPerfil {
       empresa: coordinador.contacto?.empresa ?? "",
     },
     firma: coordinador.firma ?? "",
+    logo: coordinador.logo ?? "",
+    textoCabecera: coordinador.textoCabecera ?? "",
   };
 }
 
@@ -85,5 +95,7 @@ export function aDatosCoordinador(form: FormularioPerfil): DatosCoordinador {
     numeroColegiado: opcional(form.numeroColegiado),
     contacto: tieneContacto ? contacto : undefined,
     firma: opcional(form.firma),
+    logo: opcional(form.logo),
+    textoCabecera: opcional(form.textoCabecera),
   };
 }

@@ -68,6 +68,56 @@ describe("ObrasPage", () => {
     expect(screen.getByText(/Visita diaria/i)).toBeInTheDocument();
   });
 
+  it("enseña el calendario de la obra, que ya no se imprime en el informe", async () => {
+    // El plazo y las fechas salieron de la cabecera del PDF (son del contrato,
+    // no de la visita) y se quedaron sin sitio donde verse. Si se rellenan y no
+    // se ven en ningún lado, sobran.
+    const alta = await new AltaPromotor(promotores).ejecutar({ nombreRazonSocial: "Canal" });
+    if (!alta.ok) throw new Error("el alta debería funcionar");
+    await new CrearProyecto(proyectos, promotores).ejecutar({
+      codigoObra: "OB-2026-014",
+      promotorId: alta.valor.id,
+      frecuenciaVisita: "semanal",
+      fechaInicio: "2026-01-15",
+      fechaFin: "2027-01-15",
+      plazoEjecucion: "18 meses",
+    });
+
+    montar();
+
+    expect(await screen.findByText(/Del 15\/01\/2026 al 15\/01\/2027 · 18 meses/)).toBeInTheDocument();
+  });
+
+  it("no pinta una línea vacía si la obra no tiene ni plazo ni fechas", async () => {
+    const alta = await new AltaPromotor(promotores).ejecutar({ nombreRazonSocial: "Canal" });
+    if (!alta.ok) throw new Error("el alta debería funcionar");
+    await new CrearProyecto(proyectos, promotores).ejecutar({
+      codigoObra: "OB-2026-014",
+      promotorId: alta.valor.id,
+      frecuenciaVisita: "semanal",
+    });
+
+    montar();
+
+    await screen.findByText("OB-2026-014");
+    expect(screen.queryByText(/^Del |^Desde el |^Hasta el /)).not.toBeInTheDocument();
+  });
+
+  it("se apaña con la fecha de inicio sola", async () => {
+    const alta = await new AltaPromotor(promotores).ejecutar({ nombreRazonSocial: "Canal" });
+    if (!alta.ok) throw new Error("el alta debería funcionar");
+    await new CrearProyecto(proyectos, promotores).ejecutar({
+      codigoObra: "OB-2026-014",
+      promotorId: alta.valor.id,
+      frecuenciaVisita: "semanal",
+      fechaInicio: "2026-01-15",
+    });
+
+    montar();
+
+    expect(await screen.findByText(/Desde el 15\/01\/2026/)).toBeInTheDocument();
+  });
+
   it("no muestra lista de informes en una obra que no tiene ninguno", async () => {
     const alta = await new AltaPromotor(promotores).ejecutar({ nombreRazonSocial: "Promotor" });
     if (!alta.ok) throw new Error("el alta debería funcionar");

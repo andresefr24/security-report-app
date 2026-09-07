@@ -61,8 +61,11 @@ export interface FirmaInforme {
   /** Opcional: hay firmas que se leen solas y no se teclea nada. */
   nombre?: string;
   rol: RolFirmante;
-  /** La firma como imagen dataURL: dibujada a mano o subida como foto. */
-  firma: string;
+  /**
+   * La firma como imagen dataURL: dibujada a mano o subida como foto. Opcional:
+   * quien recibe el informe puede dar solo su nombre y firmar en papel.
+   */
+  firma?: string;
 }
 
 /**

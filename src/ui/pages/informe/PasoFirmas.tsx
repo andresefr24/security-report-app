@@ -9,6 +9,9 @@
 //    nombre de pie en mitad de una obra era una barrera.
 //  - Se puede firmar A MANO sobre el recuadro o SUBIR UNA FOTO de la firma, que
 //    es como consiguen las firmas digitales que ya tienen guardadas.
+//  - Y en la de RECIBIDO vale con el nombre, sin trazo ninguno: en obra pasa que
+//    quien recibe el informe se identifica y firma luego en papel. Antes ese
+//    nombre se perdía sin avisar y la caja salía vacía en el PDF.
 //
 // Decisión que se mantiene del M3: avisamos si falta la del coordinador, pero
 // NO bloqueamos desde aquí; de eso se encarga completitud.ts al cerrar.
@@ -27,11 +30,18 @@ interface Ranura {
   rol: RolFirmante;
   etiqueta: string;
   obligatoria: boolean;
+  /** Una línea debajo del encabezado, para lo que no se ve solo. */
+  ayuda?: string;
 }
 
 const RANURAS: Ranura[] = [
   { rol: "coordinador", etiqueta: "Firma del coordinador", obligatoria: true },
-  { rol: "recibido", etiqueta: "Recibido por (opcional)", obligatoria: false },
+  {
+    rol: "recibido",
+    etiqueta: "Recibido por (opcional)",
+    obligatoria: false,
+    ayuda: "Con poner su nombre basta. Si no puede firmar ahora, el informe sale igual.",
+  },
 ];
 
 /** Una caja de firma: nombre opcional, y firma dibujada o subida como foto. */
@@ -71,6 +81,7 @@ function CajaDeFirma({
   return (
     <Card className="space-y-3 p-4">
       <p className="text-[18px] font-semibold">{ranura.etiqueta}</p>
+      {ranura.ayuda && <p className="text-[16px] text-muted-foreground">{ranura.ayuda}</p>}
 
       <div className="space-y-1.5">
         <Label htmlFor={`firma-${ranura.rol}-nombre`} className="text-[16px] font-semibold">
@@ -138,13 +149,13 @@ function CajaDeFirma({
 }
 
 export function PasoFirmas({ informe, actualizar }: PropsPaso) {
-  // Las firmas a medias viven en estado LOCAL; en el informe (que se autoguarda)
-  // solo se escriben las que tienen imagen, para que un firmante a medias no
-  // bloquee el autoguardado del borrador.
+  // Las firmas a medias viven en estado LOCAL: aquí el nombre y el trazo son
+  // siempre cadenas (vacías si no hay nada), y al informe solo sube lo que de
+  // verdad se ha rellenado.
   const [local, setLocal] = useState<Record<string, { nombre: string; firma: string }>>(() => {
     const inicial: Record<string, { nombre: string; firma: string }> = {};
     for (const f of informe.firmas ?? []) {
-      inicial[f.rol] = { nombre: f.nombre ?? "", firma: f.firma };
+      inicial[f.rol] = { nombre: f.nombre ?? "", firma: f.firma ?? "" };
     }
     return inicial;
   });
@@ -154,11 +165,15 @@ export function PasoFirmas({ informe, actualizar }: PropsPaso) {
     const siguiente = { ...local, [rol]: { ...actual, ...cambios } };
     setLocal(siguiente);
 
-    // Lo que hace que una firma exista es la IMAGEN, no el nombre.
-    const firmas: FirmaInforme[] = RANURAS.filter((r) => siguiente[r.rol]?.firma).map((r) => ({
+    // Una firma existe si tiene TRAZO O NOMBRE: apuntar quién recibió el informe
+    // ya es información, aunque no llegue a firmar. Lo que se queda fuera es la
+    // ranura vacía del todo.
+    const firmas: FirmaInforme[] = RANURAS.filter(
+      (r) => siguiente[r.rol]?.firma || siguiente[r.rol]?.nombre.trim(),
+    ).map((r) => ({
       nombre: siguiente[r.rol].nombre.trim() || undefined,
       rol: r.rol,
-      firma: siguiente[r.rol].firma,
+      firma: siguiente[r.rol].firma || undefined,
     }));
     actualizar({ firmas });
   }
