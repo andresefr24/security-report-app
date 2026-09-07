@@ -55,6 +55,38 @@ function fechaLegible(fechaHora: string): string {
   return fecha.toLocaleString("es", { dateStyle: "long", timeStyle: "short" });
 }
 
+/** "2026-01-15" -> "15/01/2026". Las fechas de la obra vienen sin hora. */
+function diaLegible(dia: string): string {
+  const fecha = new Date(dia);
+  if (Number.isNaN(fecha.getTime())) return dia;
+  return fecha.toLocaleDateString("es", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+/**
+ * El calendario de la obra, en una línea: "Del 15/01/2026 al 15/01/2027 · 18 meses".
+ *
+ * Estos tres datos DEJARON DE IMPRIMIRSE en el informe (son del contrato, no de
+ * la visita) y se quedaron sin sitio donde verse: solo aparecían volviendo a
+ * abrir el formulario. Se enseñan aquí para que no haya campos que se rellenan
+ * y no se ven nunca. Devuelve null si no hay ninguno, y así no pinta una línea
+ * vacía.
+ */
+function calendarioDeLaObra(proyecto: ObraConPromotor["proyecto"]): string | null {
+  const { fechaInicio, fechaFin, plazoEjecucion } = proyecto;
+  const partes: string[] = [];
+
+  if (fechaInicio && fechaFin) {
+    partes.push(`Del ${diaLegible(fechaInicio)} al ${diaLegible(fechaFin)}`);
+  } else if (fechaInicio) {
+    partes.push(`Desde el ${diaLegible(fechaInicio)}`);
+  } else if (fechaFin) {
+    partes.push(`Hasta el ${diaLegible(fechaFin)}`);
+  }
+  if (plazoEjecucion) partes.push(plazoEjecucion);
+
+  return partes.length > 0 ? partes.join(" · ") : null;
+}
+
 export interface ObrasPageProps {
   listarProyectos: ListarProyectos;
   listarInformes: ListarInformes;
@@ -177,6 +209,11 @@ export function ObrasPage({
                   <p className="text-[16px] text-muted-foreground">
                     Visita {ETIQUETAS_FRECUENCIA[proyecto.frecuenciaVisita].toLowerCase()}
                   </p>
+                  {calendarioDeLaObra(proyecto) && (
+                    <p className="text-[16px] text-muted-foreground">
+                      {calendarioDeLaObra(proyecto)}
+                    </p>
+                  )}
                   <Button
                     asChild
                     variant="outline"
