@@ -66,6 +66,17 @@ const ANCHO_UTIL = 515;
 /** Lo que mide el hueco de una firma, firmada o no. Ver el bloque "firmas". */
 const ALTO_FIRMA = 60;
 
+/**
+ * Lo que mide la banda superior, con logotipos o sin ellos.
+ *
+ * Es una altura fija por la misma razón que el hueco de la firma: si la banda
+ * creciera y menguara según lo que haya puesto cada uno, o se sale del margen
+ * que tiene reservado (y pdfmake RECORTA lo que sobra, sin avisar) o deja un
+ * claro raro entre el título y la tabla de datos. El margen de página de arriba
+ * se calcula a partir de esto.
+ */
+const ALTO_BANDA = 78;
+
 /** Traduce un bloque de nuestra receta al formato que entiende pdfmake. */
 function aBloqueDePdfmake(bloque: BloqueDocumento): Content {
   switch (bloque.tipo) {
@@ -326,7 +337,9 @@ export class PdfMakeAdapter implements PdfPort {
 
     const definicion: TDocumentDefinitions = {
       info: { title: documento.titulo },
-      pageMargins: [40, 90, 40, 40],
+      // Arriba, el sitio de la banda: lo que empieza (25) más lo que mide, y un
+      // dedo de aire. Lo que se salga de aquí, pdfmake lo recorta sin avisar.
+      pageMargins: [40, 25 + ALTO_BANDA + 10, 40, 40],
 
       // La banda superior se repite en TODAS las páginas: el logotipo del
       // promotor a la izquierda, el título centrado, y a la derecha el logotipo
@@ -334,6 +347,9 @@ export class PdfMakeAdapter implements PdfPort {
       header: () => ({
         margin: [40, 25, 40, 0],
         table: {
+          // La primera celda fija el alto de la banda (ver ALTO_BANDA), así que
+          // mide lo mismo lleve logotipo el promotor o no.
+          heights: [ALTO_BANDA],
           widths: [110, "*", 110],
           body: [
             [
