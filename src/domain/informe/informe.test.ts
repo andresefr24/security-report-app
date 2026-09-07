@@ -140,13 +140,16 @@ describe("crearInforme", () => {
     expect(resultado.ok).toBe(false);
   });
 
-  it("rechaza una firma sin trazo", () => {
+  it("acepta una firma sin trazo: vale con el nombre de quien recibe", () => {
+    // El trazo dejó de ser obligatorio aquí a propósito: quien recibe el informe
+    // en obra da su nombre y a veces firma luego en papel, y ese nombre no se
+    // puede perder. Que la del COORDINADOR lleve trazo lo exige completitud.ts
+    // al cerrar el informe, no el esquema.
     const resultado = crearInforme(
-      borradorGuardado({ firmas: [{ nombre: "Ana", rol: "coordinador", firma: "" }] }),
+      borradorGuardado({ firmas: [{ nombre: "Luis", rol: "recibido" }] }),
     );
 
-    expect(resultado.ok).toBe(false);
-    if (!resultado.ok) expect(resultado.errores.join(" ")).toContain("firma");
+    expect(resultado.ok).toBe(true);
   });
 
   it("rechaza una firma con un rol no permitido (p. ej. el promotor, que no firma)", () => {

@@ -42,12 +42,25 @@ export const camposObra: CampoTexto<FormularioObra>[] = [
     ayuda: "La empresa que ejecuta la obra. Aparece en la cabecera del informe.",
   },
   { nombre: "cifContratista", etiqueta: "CIF del contratista" },
-  { nombre: "fechaInicio", etiqueta: "Fecha de inicio", tipo: "date" },
-  { nombre: "fechaFin", etiqueta: "Fecha de fin", tipo: "date" },
+  // Estos tres NO se imprimen en el informe: son del contrato, no de la visita.
+  // Se ven en la ficha de la obra, en el listado. La ayuda lo dice para que
+  // nadie rellene un campo pensando que va a salir en el documento.
+  {
+    nombre: "fechaInicio",
+    etiqueta: "Fecha de inicio",
+    tipo: "date",
+    ayuda: "Para tu ficha de la obra. No sale impresa en el informe.",
+  },
+  {
+    nombre: "fechaFin",
+    etiqueta: "Fecha de fin",
+    tipo: "date",
+    ayuda: "Para tu ficha de la obra. No sale impresa en el informe.",
+  },
   {
     nombre: "plazoEjecucion",
     etiqueta: "Plazo de ejecución",
-    ayuda: "Cuánto dura la obra. Por ejemplo: 18 meses.",
+    ayuda: "Cuánto dura la obra. Por ejemplo: 18 meses. No sale impreso en el informe.",
   },
   { nombre: "presupuestoEjecucion", etiqueta: "Presupuesto de ejecución" },
   {

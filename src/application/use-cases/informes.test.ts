@@ -75,7 +75,10 @@ describe("Casos de uso de informes", () => {
       expect(informes.guardados.get(borrador.valor.id)?.situacion).toBe("Visita sin incidencias.");
     });
 
-    it("no guarda si los datos son inválidos (una firma sin trazo)", async () => {
+    it("no guarda si los datos son inválidos (una foto sin imagen)", async () => {
+      // Antes este caso usaba una firma sin trazo. Dejó de valer: el trazo ya no
+      // es obligatorio (quien recibe el informe puede dar solo su nombre), así
+      // que se comprueba con otro dato que sí es imposible.
       const proyectoId = await unaObra();
       const borrador = await new CrearBorradorInforme(informes, proyectos).ejecutar(proyectoId);
       if (!borrador.ok) throw new Error("el borrador debería crearse");
@@ -83,7 +86,7 @@ describe("Casos de uso de informes", () => {
 
       const guardado = await new GuardarInforme(informes).ejecutar({
         ...borrador.valor,
-        firmas: [{ nombre: "Ana", rol: "coordinador", firma: "" }],
+        observaciones: [{ id: "o1", fotos: [{ id: "f1", imagen: "" }] }],
       });
 
       expect(guardado.ok).toBe(false);
