@@ -90,10 +90,21 @@ export const esquemaObservacion = z.object({
  * barrera para algo que se hace de pie en mitad de una obra. Lo que no puede
  * faltar es la imagen: sin trazo no hay firma.
  */
+/**
+ * Una firma del informe. TODO es opcional menos el rol.
+ *
+ * El trazo era obligatorio y se soltó a propósito: en obra pasa mucho que quien
+ * recibe el informe da su nombre y no firma en el momento ("ya lo firmo luego"),
+ * y ese nombre se estaba PERDIENDO sin avisar. Ahora vale con el nombre solo.
+ *
+ * Que la del COORDINADOR sí lleve trazo se exige donde toca, al cerrar el
+ * informe (completitud.ts), no aquí: un borrador a medias tiene que poder
+ * guardarse.
+ */
 export const esquemaFirmaInforme = z.object({
   nombre: z.string().optional(),
   rol: z.enum(ROLES_FIRMANTE, { message: "Indique el rol de quien firma." }),
-  firma: textoObligatorio("Falta el trazo de la firma."),
+  firma: z.string().optional(),
 });
 
 export const esquemaInforme = z.object({

@@ -78,14 +78,33 @@ describe("PasoFirmas", () => {
     expect(screen.getByTestId("firmas")).toHaveTextContent("coordinador:Ana Coordinadora:");
   });
 
-  it("un nombre sin trazo no cuenta como firma", () => {
+  it("en la caja de recibido, el nombre solo YA cuenta: no se pierde", () => {
+    // Pasó en obra: el encargado daba su nombre, no firmaba en el momento, y el
+    // nombre desaparecía sin avisar. La caja salía vacía en el PDF.
+    render(<Arnes inicial={base} />);
+
+    fireEvent.change(screen.getAllByLabelText(/Nombre de quien firma/i)[1], {
+      target: { value: "Luis Encargado" },
+    });
+
+    expect(screen.getByTestId("firmas")).toHaveTextContent("recibido:Luis Encargado:");
+  });
+
+  it("un nombre sin trazo en la del coordinador no cierra el informe", () => {
+    // Se guarda (no se pierde nada), pero el aviso sigue: cerrar exige el trazo.
     render(<Arnes inicial={base} />);
 
     fireEvent.change(screen.getAllByLabelText(/Nombre de quien firma/i)[0], {
       target: { value: "Ana Coordinadora" },
     });
 
-    expect(screen.getByTestId("firmas")).toHaveTextContent("");
+    expect(screen.getByText(/Falta tu firma/i)).toBeInTheDocument();
+  });
+
+  it("dice que con el nombre basta en la caja de quien recibe", () => {
+    render(<Arnes inicial={base} />);
+
+    expect(screen.getByText(/Con poner su nombre basta/i)).toBeInTheDocument();
   });
 
   it("acepta una foto de la firma en vez del trazo", async () => {
