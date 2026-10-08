@@ -101,6 +101,7 @@ export const router = createBrowserRouter([
       <InformeWizardPage
         obtenerInforme={casosDeUso.obtenerInforme}
         guardarInforme={casosDeUso.guardarInforme}
+        observacionesPendientes={casosDeUso.observacionesPendientes}
       />
     ),
   },

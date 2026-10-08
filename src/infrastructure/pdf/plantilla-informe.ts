@@ -58,6 +58,12 @@ export interface PlantillaInforme {
     ubicacionActividad: string;
     /** Cómo encabeza cada bloque: "OBSERVACIÓN 1". */
     observacion: string;
+    /**
+     * Lo que precede a la fecha en una observación que se arrastra: "Señalada en
+     * la visita del 17/08/2026 (hace 8 días)". La antigüedad la calcula el
+     * documento; aquí solo está cómo se llama.
+     */
+    vieneDe: string;
     distribucion: string;
   };
   /**
@@ -117,6 +123,7 @@ export const PLANTILLA_SEMANAL: PlantillaInforme = {
     situacion: "SITUACIÓN DE LA OBRA",
     ubicacionActividad: "Ubicación",
     observacion: "OBSERVACIÓN",
+    vieneDe: "Señalada en la visita del",
     distribucion: "Enviado por e-mail a:",
   },
   // Los informes reales ponen una foto por fila y gastan una hoja por foto. El
