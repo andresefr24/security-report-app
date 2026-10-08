@@ -158,6 +158,69 @@ describe("construirDocumento", () => {
       expect(texto).not.toContain("Observación Preventiva de Seguridad (OPS): Colocación");
     });
 
+    it("dice de qué visita viene una observación que se arrastra, y cuánto lleva", () => {
+      // Lo hacen a mano en sus informes: "señalada en el informe de visita de
+      // fecha 17/08/2026 (hace 8 días)". Una deficiencia de ocho días no pesa
+      // lo mismo que una de hoy.
+      const { bloques } = construirDocumento(
+        datosDelPdf({
+          fechaHora: "2026-08-25T09:30",
+          observaciones: [
+            {
+              id: "o1",
+              titulo: "Acopio junto al borde del talud",
+              estado: "medida-requerida",
+              vieneDe: { informeId: "informe-anterior", fecha: "2026-08-17T09:00" },
+            },
+          ],
+        }),
+      );
+
+      expect(textoDe(bloques)).toContain("Señalada en la visita del 17/08/2026 (hace 8 días)");
+    });
+
+    it("dice 'hace 1 día' en singular", () => {
+      const { bloques } = construirDocumento(
+        datosDelPdf({
+          fechaHora: "2026-08-18T09:30",
+          observaciones: [
+            {
+              id: "o1",
+              titulo: "Sigue igual",
+              vieneDe: { informeId: "anterior", fecha: "2026-08-17T09:00" },
+            },
+          ],
+        }),
+      );
+
+      expect(textoDe(bloques)).toContain("(hace 1 día)");
+    });
+
+    it("no cuenta antigüedad si es del mismo día", () => {
+      const { bloques } = construirDocumento(
+        datosDelPdf({
+          fechaHora: "2026-08-17T18:00",
+          observaciones: [
+            {
+              id: "o1",
+              titulo: "De esta misma mañana",
+              vieneDe: { informeId: "anterior", fecha: "2026-08-17T09:00" },
+            },
+          ],
+        }),
+      );
+      const texto = textoDe(bloques);
+
+      expect(texto).toContain("Señalada en la visita del 17/08/2026");
+      expect(texto).not.toContain("hace");
+    });
+
+    it("una observación normal no dice nada de visitas anteriores", () => {
+      const texto = textoDe(construirDocumento(datosDelPdf()).bloques);
+
+      expect(texto).not.toContain("Señalada en la visita");
+    });
+
     it("pinta un encabezado por cada observación, numerado", () => {
       const { bloques } = construirDocumento(
         datosDelPdf({
