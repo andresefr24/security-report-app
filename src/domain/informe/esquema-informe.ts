@@ -79,6 +79,25 @@ export const esquemaObservacion = z.object({
    * observación otra vez como subsanada.
    */
   continuaAnterior: z.boolean().optional(),
+  /**
+   * De dónde viene una observación que se ARRASTRA de una visita anterior: el
+   * informe donde se señaló por primera vez y la fecha de aquella visita.
+   *
+   * Es lo que hacen en los informes de verdad, y no es un adorno: cuando algo
+   * sigue sin arreglarse lo dejan escrito con su antigüedad —"señalada en el
+   * informe de visita de fecha 17/08/2026 (hace 8 días)"—, porque una
+   * deficiencia que lleva ocho días abierta no pesa lo mismo que una de hoy.
+   *
+   * Guarda la fecha ORIGINAL, no la de la visita anterior: si una observación se
+   * arrastra tres semanas seguidas, lo que cuenta es cuándo se vio por primera
+   * vez. Quien la copia se encarga de conservar este dato tal cual.
+   */
+  vieneDe: z
+    .object({
+      informeId: z.string(),
+      fecha: z.string(),
+    })
+    .optional(),
   fotos: z.array(esquemaFoto).optional(),
 });
 

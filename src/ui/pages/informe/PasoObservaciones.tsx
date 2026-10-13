@@ -11,9 +11,15 @@
 // Para finalizar hace falta al menos una observación CON TÍTULO (completitud.ts);
 // el resto de campos nunca bloquean.
 
+import { useEffect, useState } from "react";
 import { type PropsPaso } from "@/ui/components/asistente-informe";
+import {
+  type ObservacionesPendientes,
+  type ObservacionPendiente,
+} from "@/application/use-cases/observaciones-pendientes";
 import { type Observacion } from "@/domain/informe/informe";
 import { nuevoId } from "@/domain/shared/id";
+import { TraerPendientes } from "@/ui/pages/informe/traer-pendientes";
 import { CampoFotos } from "@/ui/pages/informe/campo-fotos";
 import { ESTADOS } from "@/ui/pages/informe/estados-observacion";
 import { Button } from "@/ui/components/button";
@@ -37,9 +43,35 @@ export function numerar(observaciones: { continuaAnterior?: boolean }[]): number
   });
 }
 
-export function PasoObservaciones({ informe, actualizar }: PropsPaso) {
+export interface PasoObservacionesProps extends PropsPaso {
+  observacionesPendientes: ObservacionesPendientes;
+}
+
+export function PasoObservaciones({
+  informe,
+  actualizar,
+  observacionesPendientes,
+}: PasoObservacionesProps) {
   const observaciones = informe.observaciones ?? [];
   const numeros = numerar(observaciones);
+  const [pendientes, setPendientes] = useState<ObservacionPendiente[]>([]);
+
+  // Lo que quedó abierto la última visita. Si falla la consulta no se avisa de
+  // nada: es una ayuda, y el paso tiene que seguir funcionando sin ella.
+  useEffect(() => {
+    let activo = true;
+    observacionesPendientes
+      .ejecutar(informe.proyectoId)
+      .then((encontradas) => {
+        // Si no hay nada que ofrecer no se toca el estado: ya está vacío, y así
+        // el caso normal (la primera visita de una obra) no repinta el paso.
+        if (activo && encontradas.length > 0) setPendientes(encontradas);
+      })
+      .catch(() => {});
+    return () => {
+      activo = false;
+    };
+  }, [observacionesPendientes, informe.proyectoId]);
 
   function cambiar(id: string, parcial: Partial<Observacion>) {
     actualizar({
@@ -91,6 +123,11 @@ export function PasoObservaciones({ informe, actualizar }: PropsPaso) {
             una, con su título, para poder cerrar el informe.
           </p>
         </div>
+
+        <TraerPendientes
+          pendientes={pendientes}
+          onTraer={(traidas) => actualizar({ observaciones: [...observaciones, ...traidas] })}
+        />
 
         {observaciones.length === 0 && (
           <p className="text-[18px] text-muted-foreground">Aún no has añadido observaciones.</p>

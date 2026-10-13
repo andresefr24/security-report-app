@@ -7,6 +7,7 @@ import { InformeWizardPage } from "@/ui/pages/informe/InformeWizardPage";
 import { CrearBorradorInforme } from "@/application/use-cases/crear-borrador-informe";
 import { GuardarInforme } from "@/application/use-cases/guardar-informe";
 import { ObtenerInforme } from "@/application/use-cases/obtener-informe";
+import { ObservacionesPendientes } from "@/application/use-cases/observaciones-pendientes";
 import { AltaPromotor } from "@/application/use-cases/alta-promotor";
 import { CrearProyecto } from "@/application/use-cases/crear-proyecto";
 import { type Id } from "@/domain/shared/id";
@@ -68,6 +69,7 @@ describe("Flujo del informe (crear borrador → wizard)", () => {
             <InformeWizardPage
               obtenerInforme={new ObtenerInforme(informes)}
               guardarInforme={new GuardarInforme(informes)}
+              observacionesPendientes={new ObservacionesPendientes(informes)}
             />
           ),
         },

@@ -53,7 +53,20 @@ export interface Observacion {
   estado?: EstadoObservacion;
   /** Comparte número con la observación de arriba: es su seguimiento. */
   continuaAnterior?: boolean;
+  /**
+   * Si se arrastró de una visita anterior, dónde y cuándo se señaló POR PRIMERA
+   * VEZ. El documento lo imprime con su antigüedad: "Señalada en la visita del
+   * 17/08/2026 (hace 8 días)".
+   */
+  vieneDe?: OrigenObservacion;
   fotos?: Foto[];
+}
+
+/** La visita donde se señaló por primera vez una observación que se arrastra. */
+export interface OrigenObservacion {
+  informeId: Id;
+  /** La fecha de AQUELLA visita, en el mismo formato que `fechaHora`. */
+  fecha: string;
 }
 
 /** Una firma recogida en el dispositivo: la del coordinador o la de quien recibe. */
