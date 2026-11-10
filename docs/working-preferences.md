@@ -33,7 +33,7 @@ Be concise and direct. If a word can be removed without losing meaning, remove i
 
 ## Validation discipline (project-specific)
 
-The AI-assisted filling is validated by **dual independent audit**: the the two pilot coordinators each use the tool on their own and audit the other's output, so they don't bias each other. Claude's job is to fold their observations back into the prompting/context. The same dual audit **gates the design prototypes before any code is written** — see [[decisions#d8-prototype-review-gate]].
+The AI-assisted filling is validated by **dual independent audit**: the two pilot coordinators each use the tool on their own and audit the other's output, so they don't bias each other. Claude's job is to fold their observations back into the prompting/context. The same dual audit **gates the design prototypes before any code is written** — see [[decisions#d8-prototype-review-gate]].
 
 ## Skill-ization bias
 
@@ -41,4 +41,4 @@ On serious projects, watch for repetitive work worth skill-izing and **flag cand
 
 ## Roles on this project
 
-**Andrés — PM.** Leads scope, sequencing and product decisions; co-designs the solution and guides the build. **Josune — fullstack.** Implements F1 (architecture, data layer, AI integration, PDF, UI). The the two pilot coordinators are the domain experts and pilot users who validate by dual independent audit ([[#validation-discipline-project-specific]]). Win-win: a daily-work tool for the pilots, possibly monetizable, and a clean DDD/hexagonal build for the team.
+**Andrés — PM.** Leads scope, sequencing and product decisions; co-designs the solution and guides the build. **Josune — fullstack.** Implements F1 (architecture, data layer, AI integration, PDF, UI). The stakeholder and la segunda coordinadora piloto are the domain experts and pilot users who validate by dual independent audit ([[#validation-discipline-project-specific]]). Win-win: a daily-work tool for the pilots, possibly monetizable, and a clean DDD/hexagonal build for the team.

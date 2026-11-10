@@ -16,7 +16,7 @@ tags: [informe, propuesta, aprobada, Q2, d9]
 
 El informe era el punto `validated: false` más importante ([[stakeholder-questions#q2-campos-informe]]). Ya tenemos **los informes reales** (formato la ingeniería del stakeholder "02_03 G13a-SSFE"), así que podemos cerrar Q2. El stakeholder ha probado la app y ha dado feedback; además pide que el PDF **se parezca visualmente** a sus informes actuales.
 
-El coordinador de los informes reales es **Ana García López, IRSST 1234** — exactamente el nº de registro que ya modelamos en el M1. Buena señal: la entidad `Coordinador` encaja.
+El coordinador de los informes reales es **el coordinador piloto** — exactamente el nº de registro que ya modelamos en el M1. Buena señal: la entidad `Coordinador` encaja.
 
 ## 2. El feedback (qué pide el stakeholder)
 

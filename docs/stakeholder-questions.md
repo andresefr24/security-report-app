@@ -8,7 +8,7 @@ tags: [open-question, stakeholder]
 
 # Stakeholder questions
 
-Preguntas abiertas que necesitan respuesta del stakeholder (coordinador) o de la segunda coordinadora piloto para cerrar modelo y alcance. Se resuelven en las interacciones de validación; al confirmarse, la respuesta se traslada al `entity-*` o decisión que corresponda y se marca aquí como resuelta. Newest concern first.
+Preguntas abiertas que necesitan respuesta de los coordinadores piloto para cerrar modelo y alcance. Se resuelven en las interacciones de validación; al confirmarse, la respuesta se traslada al `entity-*` o decisión que corresponda y se marca aquí como resuelta. Newest concern first.
 
 ## Pendientes
 
