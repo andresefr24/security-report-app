@@ -15,6 +15,7 @@ import { CrearBorradorInforme } from "@/application/use-cases/crear-borrador-inf
 import { GuardarInforme } from "@/application/use-cases/guardar-informe";
 import { ObtenerInforme } from "@/application/use-cases/obtener-informe";
 import { ListarInformes } from "@/application/use-cases/listar-informes";
+import { ObservacionesPendientes } from "@/application/use-cases/observaciones-pendientes";
 import { BorrarInforme } from "@/application/use-cases/borrar-informe";
 import { BorrarProyecto } from "@/application/use-cases/borrar-proyecto";
 import { EditarProyecto } from "@/application/use-cases/editar-proyecto";
@@ -52,6 +53,7 @@ export const casosDeUso = {
   guardarInforme: new GuardarInforme(informeRepository),
   obtenerInforme: new ObtenerInforme(informeRepository),
   listarInformes: new ListarInformes(informeRepository),
+  observacionesPendientes: new ObservacionesPendientes(informeRepository),
   borrarInforme: new BorrarInforme(informeRepository),
   borrarProyecto: new BorrarProyecto(proyectoRepository, informeRepository),
   editarProyecto: new EditarProyecto(proyectoRepository, promotorRepository),

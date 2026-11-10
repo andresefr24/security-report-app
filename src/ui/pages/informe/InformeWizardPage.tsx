@@ -11,22 +11,23 @@ import { useParams, useNavigate } from "react-router-dom";
 import { AsistenteInforme, type PasoWizard } from "@/ui/components/asistente-informe";
 import { type ObtenerInforme } from "@/application/use-cases/obtener-informe";
 import { type GuardarInforme } from "@/application/use-cases/guardar-informe";
+import { type ObservacionesPendientes } from "@/application/use-cases/observaciones-pendientes";
 import { PasoDatos } from "@/ui/pages/informe/PasoDatos";
 import { PasoObservaciones } from "@/ui/pages/informe/PasoObservaciones";
 import { PasoFirmas } from "@/ui/pages/informe/PasoFirmas";
 
-const PASOS: PasoWizard[] = [
-  { titulo: "Datos de la visita", contenido: (props) => <PasoDatos {...props} /> },
-  { titulo: "Situación y observaciones", contenido: (props) => <PasoObservaciones {...props} /> },
-  { titulo: "Firmas", contenido: (props) => <PasoFirmas {...props} /> },
-];
-
 export interface InformeWizardPageProps {
   obtenerInforme: ObtenerInforme;
   guardarInforme: GuardarInforme;
+  /** Para ofrecer en el paso 2 lo que quedó abierto la visita anterior. */
+  observacionesPendientes: ObservacionesPendientes;
 }
 
-export function InformeWizardPage({ obtenerInforme, guardarInforme }: InformeWizardPageProps) {
+export function InformeWizardPage({
+  obtenerInforme,
+  guardarInforme,
+  observacionesPendientes,
+}: InformeWizardPageProps) {
   const { id } = useParams<{ id: string }>();
   const navegar = useNavigate();
 
@@ -38,10 +39,23 @@ export function InformeWizardPage({ obtenerInforme, guardarInforme }: InformeWiz
     );
   }
 
+  // Los pasos se arman aquí y no fuera del componente porque el de
+  // observaciones necesita un caso de uso que llega por props.
+  const pasos: PasoWizard[] = [
+    { titulo: "Datos de la visita", contenido: (props) => <PasoDatos {...props} /> },
+    {
+      titulo: "Situación y observaciones",
+      contenido: (props) => (
+        <PasoObservaciones {...props} observacionesPendientes={observacionesPendientes} />
+      ),
+    },
+    { titulo: "Firmas", contenido: (props) => <PasoFirmas {...props} /> },
+  ];
+
   return (
     <AsistenteInforme
       informeId={id}
-      pasos={PASOS}
+      pasos={pasos}
       obtenerInforme={obtenerInforme}
       guardarInforme={guardarInforme}
       // Al terminar los pasos se va a la entrega: cerrar, ver el PDF y compartir.

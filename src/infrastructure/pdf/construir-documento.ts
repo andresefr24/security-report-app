@@ -114,6 +114,24 @@ function identificacion(fechaHora: string): string {
 }
 
 /**
+ * Cuánto lleva abierta una observación que se arrastra: "(hace 8 días)".
+ *
+ * No es un adorno. En sus informes de verdad lo escriben a mano, porque una
+ * deficiencia que lleva ocho días sin resolver no pesa lo mismo que una de hoy,
+ * y es lo que justifica subir el tono con la contrata. Si no llega al día (la
+ * misma jornada) no se dice nada: no habría antigüedad que contar.
+ */
+function antiguedad(desde: string, hasta: string): string {
+  const inicio = new Date(desde);
+  const fin = new Date(hasta);
+  if (Number.isNaN(inicio.getTime()) || Number.isNaN(fin.getTime())) return "";
+
+  const dias = Math.floor((fin.getTime() - inicio.getTime()) / 86_400_000);
+  if (dias < 1) return "";
+  return dias === 1 ? " (hace 1 día)" : ` (hace ${dias} días)`;
+}
+
+/**
  * Reparte las fotos en filas de `porFila` y les pone su número.
  *
  * La numeración es CORRELATIVA EN TODO EL INFORME (Foto 1, 2, 3…), no por
@@ -222,6 +240,14 @@ export function construirDocumento(
     // como "OBSERVACIÓN 1". La primera nunca continúa a nadie.
     if (!observacion.continuaAnterior || indice === 0) numeroDeObservacion++;
     const lineas: string[] = [];
+    // Lo primero, si se arrastra de otra visita: de cuándo viene y cuánto
+    // lleva. Va delante de todo porque es lo que cambia cómo se lee el resto.
+    if (observacion.vieneDe) {
+      lineas.push(
+        `${rotulos.vieneDe} ${fechaCorta(observacion.vieneDe.fecha)}` +
+          antiguedad(observacion.vieneDe.fecha, informe.fechaHora),
+      );
+    }
     if (observacion.ubicacion) {
       lineas.push(`${rotulos.ubicacionActividad}: ${observacion.ubicacion}`);
     }
