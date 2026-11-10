@@ -18,7 +18,7 @@ Este proyecto es un poco distinto a lo habitual. **Gran parte del material ya vi
 2. **Tu trabajo no es solo "teclear lo que dice el plan".** Es entenderlo, implementarlo bien y avisar cuando algo no encaje con la realidad del código. Eres la persona que convierte el plan en algo que funciona de verdad.
 3. **No tienes que entenderlo todo de golpe.** Nadie espera eso. Lee, pregunta, prueba. El objetivo de las primeras semanas es que te sientas orientada, no que lo domines todo.
 
-Andrés es el PM (lleva el alcance y las decisiones, y te acompaña en el diseño técnico). El stakeholder y **la segunda coordinadora piloto** son los expertos del mundo real (coordinadores de seguridad) y quienes probarán la app. Tú eres quien la construye.
+Andrés es el PM (lleva el alcance y las decisiones, y te acompaña en el diseño técnico). Los **dos coordinadores piloto** son los expertos del mundo real (coordinadores de seguridad) y quienes probarán la app. Tú eres quien la construye.
 
 ## Qué estamos construyendo (en cristiano)
 

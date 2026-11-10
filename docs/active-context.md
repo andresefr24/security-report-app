@@ -8,7 +8,16 @@ tags: [product, status]
 
 # Active context
 
-Last updated: 2026-08-11
+Last updated: 2026-11-10
+
+## ⏸️ En pausa (2026-11-10)
+
+**El proyecto se pausa.** los coordinadores piloto están usando las aplicaciones internas de las empresas
+en las que trabajan ahora, así que de momento no hay usuarios activos.
+
+Todo el estado —qué está en producción, qué quedó terminado sin fusionar (PR #17), qué quedó
+propuesto sin decidir (PR #18), el análisis del informe mensual y por dónde empezar si se
+retoma— está en **[[pausa-2026-11]]**. Lo de abajo es anterior a la pausa.
 
 ## Al día (2026-08-11)
 

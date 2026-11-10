@@ -14,6 +14,8 @@ This is the project vault: the `docs/` folder of the `security-report-app` repo.
 
 ## Start here
 
+- [[pausa-2026-11]] — **el proyecto está en pausa desde el 2026-11-10.** Dónde quedó todo, qué
+  está terminado sin fusionar y por dónde empezar si se retoma. **Empieza por aquí.**
 - [[active-context]] — what we know, what's decided, what's next. Read this first every session.
 - [[product-overview]] — what the product is, who it's for, the scope of phase 1.
 - [[domain-model]] — the four core entities and how they relate. The conceptual heart of the KB.

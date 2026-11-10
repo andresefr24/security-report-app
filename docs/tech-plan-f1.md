@@ -101,7 +101,7 @@ Hitos:
 - **M6 — Adaptadores OpenAI.** `TranscriptionPort` (`gpt-4o-transcribe`, `language:"es"`, prompt con jerga) y `ReportCompositionPort` con **Structured Outputs** (`zod` → JSON Schema, `strict:true`) para devolver los campos del informe de forma determinista. Ver [[tech-research#fill]].
 - **M7 — Captura de voz.** UI de grabación (`MediaRecorder`), envío a transcripción, manejo de offline (encolar / avisar; la IA es online-only).
 - **M8 — Composición + auditoría.** Inyectar transcripción + plantilla + ejemplos do/don't; volcar el borrador en el informe; pantalla de **auditoría** donde el coordinador corrige a mano y/o vuelve a pedir al agente.
-- **M9 — Bucle de ajuste.** Soporte para iterar prompt/contexto con las observaciones de la auditoría dual (los dos coordinadores piloto), [[working-preferences#validation-discipline-project-specific]].
+- **M9 — Bucle de ajuste.** Soporte para iterar prompt/contexto con las observaciones de la auditoría dual (los dos coordinadores piloten), [[working-preferences#validation-discipline-project-specific]].
 
 ## 10. Transversales
 

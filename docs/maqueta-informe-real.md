@@ -33,7 +33,7 @@ Una tabla de 3 celdas con borde negro fino, pegada arriba:
 ```
 ┌──────────────┬────────────────────────────────┬──────────────────┐
 │  <logotipos> │   INFORME SEMANAL DE VISITAS   │ Formato 02_03    │
-│   logotipos │   DE COORDINACIÓN DE S. Y S.   │ G13a- SSFE       │
+│   logotipos  │   DE COORDINACIÓN DE S. Y S.   │ G13a- SSFE       │
 │              │        (centrado, negrita)     │ Revisión: 0      │
 └──────────────┴────────────────────────────────┴──────────────────┘
 ```

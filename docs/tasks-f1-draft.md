@@ -240,7 +240,7 @@ La meta del 1.2 es sustituir el paso "Contenido" del informe (que en el 1.1 se e
 
 ## M9 · Afinar la IA con el feedback 🟡 Provisional (es un proceso, no una pantalla)
 
-**Por qué.** Que la IA funcione no es lo mismo que que escriba informes fiables. Este hito es el **bucle de ajuste**: el los dos coordinadores piloto usan la app por separado, auditan los informes que salen, y nosotros vamos mejorando el prompt y los ejemplos hasta que la calidad sea de fiar.
+**Por qué.** Que la IA funcione no es lo mismo que que escriba informes fiables. Este hito es el **bucle de ajuste**: los dos coordinadores piloto usan la app por separado, auditan los informes que salen, y nosotros vamos mejorando el prompt y los ejemplos hasta que la calidad sea de fiar.
 
 **Qué construyes.** Más que código nuevo, es soporte para iterar: una forma cómoda de cambiar la plantilla/ejemplos/instrucciones que usa la IA, y de recoger las observaciones de la auditoría dual ([[working-preferences#validation-discipline-project-specific]]) para incorporarlas.
 
